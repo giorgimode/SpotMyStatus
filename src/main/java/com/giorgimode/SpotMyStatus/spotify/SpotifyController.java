@@ -1,6 +1,5 @@
 package com.giorgimode.SpotMyStatus.spotify;
 
-import com.wrapper.spotify.SpotifyApi;
 import java.net.URI;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,9 +14,8 @@ public class SpotifyController {
 	public SpotifyAgent spotifyAgent;
 
 	@RequestMapping("/test")
-	public String index() {
-		spotifyAgent.test();
-		return "Say hello to my little friend!";
+	public String currentTrack() {
+		return spotifyAgent.getCurrentTrack();
 	}
 
 

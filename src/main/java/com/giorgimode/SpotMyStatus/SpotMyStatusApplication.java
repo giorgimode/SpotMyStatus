@@ -2,10 +2,13 @@ package com.giorgimode.SpotMyStatus;
 
 import com.wrapper.spotify.SpotifyApi;
 import java.net.URI;
+import java.time.Duration;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
+import org.springframework.web.client.RestTemplate;
 
 @SpringBootApplication
 public class SpotMyStatusApplication {
@@ -25,7 +28,14 @@ public class SpotMyStatusApplication {
         return new SpotifyApi.Builder()
             .setClientId(spotifyClientId)
             .setClientSecret(spotifyClientSecret)
-            .setRedirectUri(URI.create(spotifyClientSecret))
+            .setRedirectUri(URI.create("http://localhost:8080/redirect"))
             .build();
+    }
+
+    @Bean
+    public RestTemplate restTemplate(RestTemplateBuilder restTemplateBuilder) {
+        restTemplateBuilder.setReadTimeout(Duration.ofSeconds(5));
+        restTemplateBuilder.setConnectTimeout(Duration.ofSeconds(2));
+        return restTemplateBuilder.build();
     }
 }
