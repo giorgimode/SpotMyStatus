@@ -9,4 +9,8 @@ public enum SpotifyScopes {
     SpotifyScopes(String scope) {
         this.scope = scope;
     }
+
+    public String scope() {
+        return scope;
+    }
 }
