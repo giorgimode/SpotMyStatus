@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet author="gio" id="1439225004329-1">
+        <createTable tableName="users">
+            <column name="id" type="BIGINT">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="email" type="VARCHAR(255)">
+                <constraints unique="true" nullable="false"/>
+            </column>
+            <column name="slack_access_token" type="text">
+                <constraints unique="true" nullable="false"/>
+            </column>
+            <column name="spotify_refresh_token" type="text">
+                <constraints unique="true"/>
+            </column>
+            <column name="spotify_access_token" type="text">
+                <constraints unique="true"/>
+            </column>
+            <column name="state" type="uuid">
+                <constraints unique="true"/>
+            </column>
+            <column name="slack_status" type="text"/>
+            <column name="updated_at" type="TIMESTAMP"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+</databaseChangeLog>
