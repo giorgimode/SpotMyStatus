@@ -13,10 +13,9 @@ public class SlackController {
     @Autowired
     public SlackAgent slackAgent;
 
-    @RequestMapping("/redirect2")
+/*    @RequestMapping("/redirect2")
     public String redirectEndpoint(@RequestParam(value = "code") String slackCode) {
         log.info("****Slack Code: x" + slackCode);
-        slackAgent.updateAuthToken(slackCode);
-        return slackAgent.updateStatus();
-    }
+        return slackAgent.updateAuthToken(slackCode);
+    }*/
 }
