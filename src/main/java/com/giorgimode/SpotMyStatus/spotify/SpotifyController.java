@@ -21,20 +21,28 @@ public class SpotifyController {
 
     @RequestMapping("/start")
     public void triggerApiCall(HttpServletResponse httpServletResponse) {
+        String authorization = slackAgent.requestAuthorization();
+        log.info("****Redirect1***" + authorization);
+        httpServletResponse.setHeader("Location", authorization);
+        httpServletResponse.setStatus(302);
+    }
+
+    @RequestMapping("/redirect2")
+    public void redirectEndpoint2(@RequestParam(value = "code") String slackCode, HttpServletResponse httpServletResponse) {
+        log.info("****Slack Code: x" + slackCode);
+        slackAgent.updateAuthToken(slackCode);
+
         URI authorization = spotifyAgent.requestAuthorization();
-        log.info("****Redirect***" + authorization.toString());
+        log.info("****Redirect2***" + authorization.toString());
         httpServletResponse.setHeader("Location", authorization.toString());
         httpServletResponse.setStatus(302);
     }
 
     @RequestMapping("/redirect")
-    public void redirectEndpoint(@RequestParam(value = "code") String spotifyCode, HttpServletResponse httpServletResponse) {
-        log.info("****Code***" + spotifyCode);
+    public void redirectEndpoint(@RequestParam(value = "code") String spotifyCode, @RequestParam(value = "state") String state) {
+        log.info("Code {}, state {}", spotifyCode, state);
         spotifyAgent.updateAuthToken(spotifyCode);
-        String authorization = slackAgent.requestAuthorization();
-        log.info("****Redirect***" + authorization);
-        httpServletResponse.setHeader("Location", authorization);
-        httpServletResponse.setStatus(302);
+        slackAgent.updateStatus();
     }
 
 

@@ -12,6 +12,7 @@ import com.wrapper.spotify.requests.authorization.authorization_code.Authorizati
 import com.wrapper.spotify.requests.data.player.GetUsersCurrentlyPlayingTrackRequest;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -25,19 +26,20 @@ public class SpotifyAgent {
     @Autowired
     private SpotifyApi spotifyApi;
 
+    public URI requestAuthorization() {
+        AuthorizationCodeUriRequest authCodeUriRequest = spotifyApi.authorizationCodeUri()
+                                                                   .scope(USER_CURRENTLY_PLAYING.scope() + " " + USER_TOP_READ.scope())
+                                                                   .state(UUID.randomUUID().toString())
+                                                                   .build();
+        return authCodeUriRequest.execute();
+    }
+
     @SneakyThrows
     public void updateAuthToken(String code) {
         AuthorizationCodeRequest authorCodeRequest = spotifyApi.authorizationCode(code).build();
         AuthorizationCodeCredentials codeCredentials = authorCodeRequest.execute();
         spotifyApi.setAccessToken(codeCredentials.getAccessToken());
         spotifyApi.setRefreshToken(codeCredentials.getRefreshToken());
-    }
-
-    public URI requestAuthorization() {
-        AuthorizationCodeUriRequest authCodeUriRequest = spotifyApi.authorizationCodeUri()
-                                                                   .scope(USER_CURRENTLY_PLAYING.scope() + " " + USER_TOP_READ.scope())
-                                                                   .build();
-        return authCodeUriRequest.execute();
     }
 
 

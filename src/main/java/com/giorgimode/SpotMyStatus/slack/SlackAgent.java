@@ -43,8 +43,14 @@ public class SlackAgent {
                                           .withQueryParam("code", spotifyCode)
                                           .get(restTemplate, SlackToken.class)
                                           .getBody();
-        this.slackToken = slackToken;
+        // email
+        // slack access code
+        // state
+        // spotify access token
+        // spotify refresh token
+        // status
 
+        this.slackToken = slackToken;  //persist to db
     }
 
     public String updateStatus() {
