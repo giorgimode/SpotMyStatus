@@ -6,12 +6,13 @@ secret:
     client_id: ${SLACK_CLIENT_ID}
     client_secret: ${SLACK_CLIENT_SECRET}
 
+slack_polling_rate: ${SLACK_POLLING_RATE:10000}
+
 spring:
   liquibase:
     change-log: classpath:/db/changelog/liquibase-changelog-master.xml
   jpa:
     database: POSTGRESQL
-    show-sql: true
     open-in-view: false
   datasource:
     platform: postgres

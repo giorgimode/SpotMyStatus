@@ -37,6 +37,9 @@ public class User implements Serializable {
     @Column(name = "slack_status")
     private String slackStatus;
 
+    @Column(name = "disabled")
+    private Boolean disabled;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
