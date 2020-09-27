@@ -37,11 +37,11 @@ public class User implements Serializable {
     @Column(name = "slack_status")
     private String slackStatus;
 
-    @Column(name = "disabled")
-    private Boolean disabled;
+    @Column(name = "disabled", nullable = false)
+    private Boolean disabled = false;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;

@@ -1,7 +1,6 @@
 package com.giorgimode.SpotMyStatus.spotify;
 
 import com.giorgimode.SpotMyStatus.slack.SlackAgent;
-import java.net.URI;
 import java.util.UUID;
 import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -33,9 +32,9 @@ public class SpotifyController {
         log.info("****Slack Code: x" + slackCode);
         UUID state = slackAgent.updateAuthToken(slackCode);
 
-        URI authorization = spotifyAgent.requestAuthorization(state);
-        log.info("****Redirect2***" + authorization.toString());
-        httpServletResponse.setHeader("Location", authorization.toString());
+        String authorization = spotifyAgent.requestAuthorization(state);
+        log.info("****Redirect2***" + authorization);
+        httpServletResponse.setHeader("Location", authorization);
         httpServletResponse.setStatus(302);
     }
 
@@ -44,10 +43,4 @@ public class SpotifyController {
         log.info("Code {}, state {}", spotifyCode, state);
         spotifyAgent.updateAuthToken(spotifyCode, state);
     }
-
-    @RequestMapping("/test")
-    public String currentTrack() {
-        return slackAgent.updateStatus();
-    }
-
 }

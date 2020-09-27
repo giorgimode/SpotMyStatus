@@ -109,6 +109,10 @@ public final class RestHelper {
         return restTemplate.exchange(createUri(), HttpMethod.GET, new HttpEntity<>(createHeaders()), responseType);
     }
 
+    public <T> T getBody(RestTemplate restTemplate, Class<T> responseType) {
+        return restTemplate.exchange(createUri(), HttpMethod.GET, new HttpEntity<>(createHeaders()), responseType).getBody();
+    }
+
     public ResponseEntity<Void> delete(RestTemplate restTemplate) {
         return restTemplate.exchange(createUri(), HttpMethod.DELETE, new HttpEntity<>(createHeaders()), Void.class);
     }

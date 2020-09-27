@@ -1,4 +1,4 @@
-package com.giorgimode.SpotMyStatus.slack;
+package com.giorgimode.SpotMyStatus.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Optional;
