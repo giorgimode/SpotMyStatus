@@ -2,6 +2,7 @@ package com.giorgimode.SpotMyStatus.spotify;
 
 import com.giorgimode.SpotMyStatus.slack.SlackAgent;
 import java.net.URI;
+import java.util.UUID;
 import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,21 +22,32 @@ public class SpotifyController {
 
     @RequestMapping("/start")
     public void triggerApiCall(HttpServletResponse httpServletResponse) {
-        URI authorization = spotifyAgent.requestAuthorization();
-        log.info("****Redirect***" + authorization.toString());
+        String authorization = slackAgent.requestAuthorization();
+        log.info("****Redirect1***" + authorization);
+        httpServletResponse.setHeader("Location", authorization);
+        httpServletResponse.setStatus(302);
+    }
+
+    @RequestMapping("/redirect2")
+    public void redirectEndpoint2(@RequestParam(value = "code") String slackCode, HttpServletResponse httpServletResponse) {
+        log.info("****Slack Code: x" + slackCode);
+        UUID state = slackAgent.updateAuthToken(slackCode);
+
+        URI authorization = spotifyAgent.requestAuthorization(state);
+        log.info("****Redirect2***" + authorization.toString());
         httpServletResponse.setHeader("Location", authorization.toString());
         httpServletResponse.setStatus(302);
     }
 
     @RequestMapping("/redirect")
-    public void redirectEndpoint(@RequestParam(value = "code") String spotifyCode, HttpServletResponse httpServletResponse) {
-        log.info("****Code***" + spotifyCode);
-        spotifyAgent.updateAuthToken(spotifyCode);
-        String authorization = slackAgent.requestAuthorization();
-        log.info("****Redirect***" + authorization);
-        httpServletResponse.setHeader("Location", authorization);
-        httpServletResponse.setStatus(302);
+    public void redirectEndpoint(@RequestParam(value = "code") String spotifyCode, @RequestParam(value = "state") UUID state) {
+        log.info("Code {}, state {}", spotifyCode, state);
+        spotifyAgent.updateAuthToken(spotifyCode, state);
     }
 
+    @RequestMapping("/test")
+    public String currentTrack() {
+        return slackAgent.updateStatus();
+    }
 
 }
