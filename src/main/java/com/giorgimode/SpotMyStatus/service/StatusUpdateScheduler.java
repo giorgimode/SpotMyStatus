@@ -1,6 +1,8 @@
 package com.giorgimode.SpotMyStatus.service;
 
 import static java.util.function.Predicate.not;
+import com.giorgimode.SpotMyStatus.model.SpotifyCurrentTrackResponse;
+import com.giorgimode.SpotMyStatus.persistence.User;
 import com.giorgimode.SpotMyStatus.persistence.UserRepository;
 import com.giorgimode.SpotMyStatus.slack.SlackAgent;
 import com.giorgimode.SpotMyStatus.spotify.SpotifyAgent;
@@ -20,7 +22,7 @@ public class StatusUpdateScheduler {
     @Autowired
     private SpotifyAgent spotifyAgent;
 
-    @Scheduled(fixedDelayString = "${slack_polling_rate}")
+    @Scheduled(fixedDelayString = "${slack.polling_rate}")
     public void scheduleFixedDelayTask() {
         userRepository.findAll()
                       .stream()
@@ -29,8 +31,13 @@ public class StatusUpdateScheduler {
 
     }
 
-    private void updateSlackStatus(com.giorgimode.SpotMyStatus.persistence.User user) {
-        String usersCurrentTrack = spotifyAgent.getCurrentTrack(user.getSpotifyAccessToken());
-        slackAgent.updateStatus(user, usersCurrentTrack);
+    private void updateSlackStatus(User user) {
+        SpotifyCurrentTrackResponse usersCurrentTrack = spotifyAgent.getCurrentTrack(user.getSpotifyAccessToken());
+        if (usersCurrentTrack.isPlaying()) {
+            long expiringIn = usersCurrentTrack.getDurationMs() - usersCurrentTrack.getProgressMs();
+            slackAgent.updateAndPersistStatus(user, usersCurrentTrack, expiringIn);
+        } else {
+            slackAgent.cleanStatus(user);
+        }
     }
 }
