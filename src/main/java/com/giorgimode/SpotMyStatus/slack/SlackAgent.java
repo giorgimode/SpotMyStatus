@@ -59,6 +59,10 @@ public class SlackAgent {
     public String updateStatus() {
         User user = userRepository.findAll().get(0);
 
+        return updateStatus(user);
+    }
+
+    public String updateStatus(User user) {
         String currentTrack = spotifyAgent.getCurrentTrack(user.getSpotifyAccessToken());
         SlackStatusPayload statusPayload = new SlackStatusPayload(currentTrack, ":headphones:");
         String response = RestHelper.builder()
