@@ -5,3 +5,17 @@ secret:
   slack:
     client_id: ${SLACK_CLIENT_ID}
     client_secret: ${SLACK_CLIENT_SECRET}
+
+spring:
+  liquibase:
+    change-log: classpath:/db/changelog/liquibase-changelog-master.xml
+  jpa:
+    database: POSTGRESQL
+    show-sql: true
+    open-in-view: false
+  datasource:
+    platform: postgres
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driverClassName: org.postgresql.Driver
