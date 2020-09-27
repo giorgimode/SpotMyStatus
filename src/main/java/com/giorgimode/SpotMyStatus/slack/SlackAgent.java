@@ -1,7 +1,10 @@
 package com.giorgimode.SpotMyStatus.slack;
 
+import com.giorgimode.SpotMyStatus.persistence.User;
+import com.giorgimode.SpotMyStatus.persistence.UserRepository;
 import com.giorgimode.SpotMyStatus.spotify.SpotifyAgent;
 import com.giorgimode.SpotMyStatus.util.RestHelper;
+import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -19,8 +22,8 @@ public class SlackAgent {
     @Value("${secret.slack.client_secret}")
     private String slackClientSecret;
 
-    //todo remove this monstrosity
-    private SlackToken slackToken;
+    @Autowired
+    private UserRepository userRepository;
 
     @Autowired
     private SpotifyAgent spotifyAgent;
@@ -35,7 +38,7 @@ public class SlackAgent {
 
     }
 
-    public void updateAuthToken(String spotifyCode) {
+    public UUID updateAuthToken(String spotifyCode) {
         SlackToken slackToken = RestHelper.builder()
                                           .withBaseUrl("https://slack.com/api/oauth.v2.access")
                                           .withQueryParam("client_id", slackClientId)
@@ -43,26 +46,30 @@ public class SlackAgent {
                                           .withQueryParam("code", spotifyCode)
                                           .get(restTemplate, SlackToken.class)
                                           .getBody();
-        // email
-        // slack access code
-        // state
-        // spotify access token
-        // spotify refresh token
-        // status
 
-        this.slackToken = slackToken;  //persist to db
+        User user = new User();
+        user.setId(slackToken.getId());
+        user.setSlackAccessToken(slackToken.getAccessToken());
+        UUID state = UUID.randomUUID();
+        user.setState(state);
+        userRepository.save(user);
+        return state;
     }
 
     public String updateStatus() {
-        SlackStatusPayload statusPayload = new SlackStatusPayload(spotifyAgent.getCurrentTrack(), ":headphones:");
+        User user = userRepository.findAll().get(0);
+
+        String currentTrack = spotifyAgent.getCurrentTrack(user.getSpotifyAccessToken());
+        SlackStatusPayload statusPayload = new SlackStatusPayload(currentTrack, ":headphones:");
         String response = RestHelper.builder()
                                     .withBaseUrl("https://slack.com/api/users.profile.set")
-                                    .withBearer(slackToken.getAccessToken())
+                                    .withBearer(user.getSlackAccessToken())
                                     .withContentType("application/json; charset=utf-8")
                                     .withBody(statusPayload)
                                     .post(restTemplate, String.class)
                                     .getBody();
 
+        user.setSlackStatus(currentTrack);
         return response;
     }
 }

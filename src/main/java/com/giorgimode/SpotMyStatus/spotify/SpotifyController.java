@@ -2,6 +2,7 @@ package com.giorgimode.SpotMyStatus.spotify;
 
 import com.giorgimode.SpotMyStatus.slack.SlackAgent;
 import java.net.URI;
+import java.util.UUID;
 import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,20 +31,23 @@ public class SpotifyController {
     @RequestMapping("/redirect2")
     public void redirectEndpoint2(@RequestParam(value = "code") String slackCode, HttpServletResponse httpServletResponse) {
         log.info("****Slack Code: x" + slackCode);
-        slackAgent.updateAuthToken(slackCode);
+        UUID state = slackAgent.updateAuthToken(slackCode);
 
-        URI authorization = spotifyAgent.requestAuthorization();
+        URI authorization = spotifyAgent.requestAuthorization(state);
         log.info("****Redirect2***" + authorization.toString());
         httpServletResponse.setHeader("Location", authorization.toString());
         httpServletResponse.setStatus(302);
     }
 
     @RequestMapping("/redirect")
-    public void redirectEndpoint(@RequestParam(value = "code") String spotifyCode, @RequestParam(value = "state") String state) {
+    public void redirectEndpoint(@RequestParam(value = "code") String spotifyCode, @RequestParam(value = "state") UUID state) {
         log.info("Code {}, state {}", spotifyCode, state);
-        spotifyAgent.updateAuthToken(spotifyCode);
-        slackAgent.updateStatus();
+        spotifyAgent.updateAuthToken(spotifyCode, state);
     }
 
+    @RequestMapping("/test")
+    public String currentTrack() {
+        return slackAgent.updateStatus();
+    }
 
 }

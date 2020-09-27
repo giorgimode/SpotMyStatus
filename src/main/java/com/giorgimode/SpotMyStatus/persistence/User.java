@@ -1,4 +1,4 @@
-package com.giorgimode.SpotMyStatus.entity;
+package com.giorgimode.SpotMyStatus.persistence;
 
 
 import com.google.common.base.MoreObjects;
@@ -7,8 +7,6 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import lombok.Data;
@@ -21,12 +19,8 @@ public class User implements Serializable {
     private static final long serialVersionUID = -2343243243242432341L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private Long id;
-
-    @Column(name = "email", unique = true, nullable = false)
-    private String email;
+    private String id;
 
     @Column(name = "slack_access_token", unique = true, nullable = false)
     private String slackAccessToken;
@@ -43,7 +37,7 @@ public class User implements Serializable {
     @Column(name = "slack_status")
     private String slackStatus;
 
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
@@ -54,7 +48,6 @@ public class User implements Serializable {
         return MoreObjects
             .toStringHelper(this)
             .add("userId", id)
-            .add("email", email)
             .add("slackAccessToken", slackAccessToken)
             .add("spotifyRefreshToken", spotifyRefreshToken)
             .add("spotifyAccessToken", spotifyAccessToken)
