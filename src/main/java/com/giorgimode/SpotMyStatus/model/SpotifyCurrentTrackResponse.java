@@ -15,7 +15,9 @@ public class SpotifyCurrentTrackResponse {
     @JsonProperty("currently_playing_type")
     private String currentlyPlayingType;
 
-    @JsonProperty("duration_ms")
+    @JsonProperty("progress_ms")
+    private Long progressMs = 0L;
+
     private Long durationMs;
 
     @JsonProperty("name")

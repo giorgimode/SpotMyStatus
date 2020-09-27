@@ -10,7 +10,6 @@ import com.giorgimode.SpotMyStatus.persistence.User;
 import com.giorgimode.SpotMyStatus.persistence.UserRepository;
 import com.giorgimode.SpotMyStatus.util.RestHelper;
 import java.util.UUID;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -44,7 +43,6 @@ public class SpotifyAgent {
                          .createUri();
     }
 
-    @SneakyThrows
     public void updateAuthToken(String code, UUID state) {
         OauthProperties spotifyProps = propertyVault.getSpotify();
         MultiValueMap<String, String> spotifyTokenRequest = new LinkedMultiValueMap<>();
@@ -66,15 +64,10 @@ public class SpotifyAgent {
         userRepository.save(user);
     }
 
-    @SneakyThrows
-    public String getCurrentTrack(String accessToken) {
-        SpotifyCurrentTrackResponse currentTrackResponse = RestHelper.builder()
-                                                                     .withBaseUrl("https://api.spotify.com/v1/me/player/currently-playing")
-                                                                     .withBearer(accessToken)
-                                                                     .getBody(restTemplate, SpotifyCurrentTrackResponse.class);
-
-        String currentTrackAndArtist = currentTrackResponse.getArtists() + " - " + currentTrackResponse.getSongTitle();
-        log.info("*********Track: {}", currentTrackAndArtist);
-        return currentTrackAndArtist;
+    public SpotifyCurrentTrackResponse getCurrentTrack(String accessToken) {
+        return RestHelper.builder()
+                         .withBaseUrl("https://api.spotify.com/v1/me/player/currently-playing")
+                         .withBearer(accessToken)
+                         .getBody(restTemplate, SpotifyCurrentTrackResponse.class);
     }
 }

@@ -1,11 +1,13 @@
 package com.giorgimode.SpotMyStatus.slack;
 
 import com.giorgimode.SpotMyStatus.model.SlackToken;
+import com.giorgimode.SpotMyStatus.model.SpotifyCurrentTrackResponse;
 import com.giorgimode.SpotMyStatus.persistence.User;
 import com.giorgimode.SpotMyStatus.persistence.UserRepository;
 import com.giorgimode.SpotMyStatus.util.RestHelper;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 @Component
+@Slf4j
 public class SlackAgent {
 
     @Autowired
@@ -55,17 +58,30 @@ public class SlackAgent {
         return state;
     }
 
-    public void updateStatus(User user, String currentTrack) {
-        SlackStatusPayload statusPayload = new SlackStatusPayload(currentTrack, ":headphones:");
+    public void updateAndPersistStatus(User user, SpotifyCurrentTrackResponse currentTrack, Long expiringIn) {
+        String slackStatus = currentTrack.getArtists() + " - " + currentTrack.getSongTitle();
+        log.info("Track: {} expiring in {}", slackStatus, expiringIn);
+        SlackStatusPayload statusPayload = new SlackStatusPayload(slackStatus, ":headphones:", expiringIn);
+        updateStatus(user, statusPayload);
+
+        user.setSlackStatus(slackStatus);
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+    }
+
+    private void updateStatus(User user, SlackStatusPayload statusPayload) {
         ResponseEntity<String> responseEntity = RestHelper.builder()
                                                           .withBaseUrl("https://slack.com/api/users.profile.set")
                                                           .withBearer(user.getSlackAccessToken())
                                                           .withContentType("application/json; charset=utf-8")
                                                           .withBody(statusPayload)
                                                           .post(restTemplate, String.class);
-
-        user.setSlackStatus(currentTrack);
-        user.setUpdatedAt(LocalDateTime.now());
-        userRepository.save(user);
     }
+
+    public void cleanStatus(User user) {
+        log.info("Cleaning status for user {} ", user.getId());
+        SlackStatusPayload statusPayload = new SlackStatusPayload("", "");
+        updateStatus(user, statusPayload);
+    }
+
 }
