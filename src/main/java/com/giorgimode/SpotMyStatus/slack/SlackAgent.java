@@ -1,12 +1,14 @@
 package com.giorgimode.SpotMyStatus.slack;
 
+import com.giorgimode.SpotMyStatus.model.SlackToken;
 import com.giorgimode.SpotMyStatus.persistence.User;
 import com.giorgimode.SpotMyStatus.persistence.UserRepository;
-import com.giorgimode.SpotMyStatus.spotify.SpotifyAgent;
 import com.giorgimode.SpotMyStatus.util.RestHelper;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
@@ -24,9 +26,6 @@ public class SlackAgent {
 
     @Autowired
     private UserRepository userRepository;
-
-    @Autowired
-    private SpotifyAgent spotifyAgent;
 
     public String requestAuthorization() {
         return RestHelper.builder()
@@ -56,24 +55,17 @@ public class SlackAgent {
         return state;
     }
 
-    public String updateStatus() {
-        User user = userRepository.findAll().get(0);
-
-        return updateStatus(user);
-    }
-
-    public String updateStatus(User user) {
-        String currentTrack = spotifyAgent.getCurrentTrack(user.getSpotifyAccessToken());
+    public void updateStatus(User user, String currentTrack) {
         SlackStatusPayload statusPayload = new SlackStatusPayload(currentTrack, ":headphones:");
-        String response = RestHelper.builder()
-                                    .withBaseUrl("https://slack.com/api/users.profile.set")
-                                    .withBearer(user.getSlackAccessToken())
-                                    .withContentType("application/json; charset=utf-8")
-                                    .withBody(statusPayload)
-                                    .post(restTemplate, String.class)
-                                    .getBody();
+        ResponseEntity<String> responseEntity = RestHelper.builder()
+                                                          .withBaseUrl("https://slack.com/api/users.profile.set")
+                                                          .withBearer(user.getSlackAccessToken())
+                                                          .withContentType("application/json; charset=utf-8")
+                                                          .withBody(statusPayload)
+                                                          .post(restTemplate, String.class);
 
         user.setSlackStatus(currentTrack);
-        return response;
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
     }
 }

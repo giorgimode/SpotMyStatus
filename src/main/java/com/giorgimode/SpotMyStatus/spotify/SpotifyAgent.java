@@ -2,70 +2,78 @@ package com.giorgimode.SpotMyStatus.spotify;
 
 import static com.giorgimode.SpotMyStatus.spotify.SpotifyScopes.USER_CURRENTLY_PLAYING;
 import static com.giorgimode.SpotMyStatus.spotify.SpotifyScopes.USER_TOP_READ;
+import com.giorgimode.SpotMyStatus.beans.OauthProperties;
+import com.giorgimode.SpotMyStatus.beans.PropertyVault;
+import com.giorgimode.SpotMyStatus.model.SpotifyCurrentTrackResponse;
+import com.giorgimode.SpotMyStatus.model.SpotifyTokenResponse;
 import com.giorgimode.SpotMyStatus.persistence.User;
 import com.giorgimode.SpotMyStatus.persistence.UserRepository;
-import com.wrapper.spotify.SpotifyApi;
-import com.wrapper.spotify.model_objects.credentials.AuthorizationCodeCredentials;
-import com.wrapper.spotify.model_objects.miscellaneous.CurrentlyPlaying;
-import com.wrapper.spotify.model_objects.specification.ArtistSimplified;
-import com.wrapper.spotify.model_objects.specification.Track;
-import com.wrapper.spotify.requests.authorization.authorization_code.AuthorizationCodeRequest;
-import com.wrapper.spotify.requests.authorization.authorization_code.AuthorizationCodeUriRequest;
-import com.wrapper.spotify.requests.data.player.GetUsersCurrentlyPlayingTrackRequest;
-import java.net.URI;
-import java.util.Arrays;
+import com.giorgimode.SpotMyStatus.util.RestHelper;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
 @Component
 @Slf4j
 public class SpotifyAgent {
 
     @Autowired
-    private SpotifyApi spotifyApi;
-
-    @Autowired
     private UserRepository userRepository;
 
-    public URI requestAuthorization(UUID state) {
-        AuthorizationCodeUriRequest authCodeUriRequest = spotifyApi.authorizationCodeUri()
-                                                                   .scope(USER_CURRENTLY_PLAYING.scope() + " " + USER_TOP_READ.scope())
-                                                                   .state(state.toString())
-                                                                   .build();
-        return authCodeUriRequest.execute();
+    @Autowired
+    private PropertyVault propertyVault;
+
+    @Autowired
+    private RestTemplate restTemplate;
+
+    public String requestAuthorization(UUID state) {
+        return RestHelper.builder()
+                         .withBaseUrl("https://accounts.spotify.com/authorize")
+                         .withQueryParam("client_id", propertyVault.getSpotify().getClientId())
+                         .withQueryParam("response_type", "code")
+                         .withQueryParam("redirect_uri", propertyVault.getSpotify().getRedirectUri())
+                         .withQueryParam("scope", USER_CURRENTLY_PLAYING.scope() + " " + USER_TOP_READ.scope())
+                         .withQueryParam("state", state)
+                         .createUri();
     }
 
     @SneakyThrows
     public void updateAuthToken(String code, UUID state) {
-        AuthorizationCodeRequest authorCodeRequest = spotifyApi.authorizationCode(code).build();
-        AuthorizationCodeCredentials codeCredentials = authorCodeRequest.execute();
-        spotifyApi.setAccessToken(codeCredentials.getAccessToken());
-        spotifyApi.setRefreshToken(codeCredentials.getRefreshToken());
+        OauthProperties spotifyProps = propertyVault.getSpotify();
+        MultiValueMap<String, String> spotifyTokenRequest = new LinkedMultiValueMap<>();
+        spotifyTokenRequest.add("grant_type", "authorization_code");
+        spotifyTokenRequest.add("code", code);
+        spotifyTokenRequest.add("redirect_uri", spotifyProps.getRedirectUri().toString());
 
+        ResponseEntity<SpotifyTokenResponse> tokenResponse = RestHelper.builder()
+                                                                       .withBaseUrl("https://accounts.spotify.com/api/token")
+                                                                       .withBasicAuth(spotifyProps.getClientId(), spotifyProps.getClientSecret())
+                                                                       .withContentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+                                                                       .withBody(spotifyTokenRequest)
+                                                                       .post(restTemplate, SpotifyTokenResponse.class);
+        //todo check tokenResponse is not null
+        SpotifyTokenResponse spotifyTokens = tokenResponse.getBody();
         User user = userRepository.findByState(state);
-        user.setSpotifyRefreshToken(codeCredentials.getRefreshToken());
-        user.setSpotifyAccessToken(codeCredentials.getAccessToken());
+        user.setSpotifyRefreshToken(spotifyTokens.getRefreshToken());
+        user.setSpotifyAccessToken(spotifyTokens.getAccessToken());
         userRepository.save(user);
     }
 
     @SneakyThrows
     public String getCurrentTrack(String accessToken) {
-        spotifyApi.setAccessToken(accessToken);
-        return getCurrentTrack();
-    }
+        SpotifyCurrentTrackResponse currentTrackResponse = RestHelper.builder()
+                                                                     .withBaseUrl("https://api.spotify.com/v1/me/player/currently-playing")
+                                                                     .withBearer(accessToken)
+                                                                     .getBody(restTemplate, SpotifyCurrentTrackResponse.class);
 
-    @SneakyThrows
-    public String getCurrentTrack() {
-        GetUsersCurrentlyPlayingTrackRequest playingTrackRequest = spotifyApi.getUsersCurrentlyPlayingTrack().build();
-        CurrentlyPlaying currentlyPlaying = playingTrackRequest.execute();
-        log.info("*********Track is currently playing: {}", currentlyPlaying.getIs_playing());
-        Track track = (Track) currentlyPlaying.getItem();
-        String artists = Arrays.stream(track.getArtists()).map(ArtistSimplified::getName).collect(Collectors.joining(", "));
-        String currentTrackAndArtist = artists + " - " + track.getName();
+        String currentTrackAndArtist = currentTrackResponse.getArtists() + " - " + currentTrackResponse.getSongTitle();
         log.info("*********Track: {}", currentTrackAndArtist);
         return currentTrackAndArtist;
     }
