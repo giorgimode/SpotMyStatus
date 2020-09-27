@@ -14,10 +14,12 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
+@Slf4j
 public class SpotifyAgent {
 
     @Autowired
@@ -43,11 +45,11 @@ public class SpotifyAgent {
     public String getCurrentTrack() {
         GetUsersCurrentlyPlayingTrackRequest playingTrackRequest = spotifyApi.getUsersCurrentlyPlayingTrack().build();
         CurrentlyPlaying currentlyPlaying = playingTrackRequest.execute();
-        System.out.println("*********Track is currently playing: " + currentlyPlaying.getIs_playing());
+        log.info("*********Track is currently playing: {}", currentlyPlaying.getIs_playing());
         Track track = (Track) currentlyPlaying.getItem();
         String artists = Arrays.stream(track.getArtists()).map(ArtistSimplified::getName).collect(Collectors.joining(", "));
         String currentTrackAndArtist = artists + " - " + track.getName();
-        System.out.println("*********Track: " + currentTrackAndArtist);
+        log.info("*********Track: {}", currentTrackAndArtist);
         return currentTrackAndArtist;
     }
 }
