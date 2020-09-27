@@ -1,6 +1,6 @@
 package com.giorgimode.SpotMyStatus.spotify;
 
-import com.wrapper.spotify.SpotifyApi;
+import com.giorgimode.SpotMyStatus.slack.SlackAgent;
 import java.net.URI;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,12 +14,8 @@ public class SpotifyController {
 	@Autowired
 	public SpotifyAgent spotifyAgent;
 
-	@RequestMapping("/test")
-	public String index() {
-		spotifyAgent.test();
-		return "Say hello to my little friend!";
-	}
-
+	@Autowired
+	public SlackAgent slackAgent;
 
 	@RequestMapping("/start")
 	public void triggerApiCall(HttpServletResponse httpServletResponse) {
@@ -30,10 +26,13 @@ public class SpotifyController {
 	}
 
 	@RequestMapping("/redirect")
-	public String redirectEndpoint(@RequestParam(value = "code") String spotifyCode) {
+	public void redirectEndpoint(@RequestParam(value = "code") String spotifyCode, HttpServletResponse httpServletResponse) {
 		System.out.println("****Code***" + spotifyCode);
 		spotifyAgent.updateAuthToken(spotifyCode);
-		return "Say hello to my little friend!";
+		String authorization = slackAgent.requestAuthorization();
+		System.out.println("****Redirect***" + authorization);
+		httpServletResponse.setHeader("Location", authorization);
+		httpServletResponse.setStatus(302);
 	}
 
 

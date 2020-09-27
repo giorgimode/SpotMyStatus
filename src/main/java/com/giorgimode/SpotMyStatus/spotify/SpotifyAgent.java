@@ -3,7 +3,6 @@ package com.giorgimode.SpotMyStatus.spotify;
 import static com.giorgimode.SpotMyStatus.spotify.SpotifyScopes.USER_CURRENTLY_PLAYING;
 import static com.giorgimode.SpotMyStatus.spotify.SpotifyScopes.USER_TOP_READ;
 import com.wrapper.spotify.SpotifyApi;
-import com.wrapper.spotify.enums.ModelObjectType;
 import com.wrapper.spotify.model_objects.credentials.AuthorizationCodeCredentials;
 import com.wrapper.spotify.model_objects.miscellaneous.CurrentlyPlaying;
 import com.wrapper.spotify.model_objects.specification.ArtistSimplified;
@@ -34,21 +33,21 @@ public class SpotifyAgent {
 
     public URI requestAuthorization() {
         AuthorizationCodeUriRequest authCodeUriRequest = spotifyApi.authorizationCodeUri()
-                                                                   .scope(USER_CURRENTLY_PLAYING + " " + USER_TOP_READ)
+                                                                   .scope(USER_CURRENTLY_PLAYING.scope() + " " + USER_TOP_READ.scope())
                                                                    .build();
         return authCodeUriRequest.execute();
     }
 
 
     @SneakyThrows
-    public void test() {
+    public String getCurrentTrack() {
         GetUsersCurrentlyPlayingTrackRequest playingTrackRequest = spotifyApi.getUsersCurrentlyPlayingTrack().build();
         CurrentlyPlaying currentlyPlaying = playingTrackRequest.execute();
         System.out.println("*********Track is currently playing: " + currentlyPlaying.getIs_playing());
-        if (currentlyPlaying.getItem().getType() == ModelObjectType.TRACK) {
-            Track track = (Track) currentlyPlaying.getItem();
-            String artists = Arrays.stream(track.getArtists()).map(ArtistSimplified::getName).collect(Collectors.joining(", "));
-            System.out.println("*********Track: " + artists + " - " + track.getName());
-        }
+        Track track = (Track) currentlyPlaying.getItem();
+        String artists = Arrays.stream(track.getArtists()).map(ArtistSimplified::getName).collect(Collectors.joining(", "));
+        String currentTrackAndArtist = artists + " - " + track.getName();
+        System.out.println("*********Track: " + currentTrackAndArtist);
+        return currentTrackAndArtist;
     }
 }
