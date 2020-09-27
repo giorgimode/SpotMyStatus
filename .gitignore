@@ -33,3 +33,4 @@ out/
 ### VS Code ###
 .vscode/
 credentials.*
+logs
