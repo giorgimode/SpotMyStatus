@@ -5,11 +5,8 @@
 
     <changeSet author="gio" id="1439225004329-1">
         <createTable tableName="users">
-            <column name="id" type="BIGINT">
+            <column name="id" type="VARCHAR(255)">
                 <constraints primaryKey="true"/>
-            </column>
-            <column name="email" type="VARCHAR(255)">
-                <constraints unique="true" nullable="false"/>
             </column>
             <column name="slack_access_token" type="text">
                 <constraints unique="true" nullable="false"/>
