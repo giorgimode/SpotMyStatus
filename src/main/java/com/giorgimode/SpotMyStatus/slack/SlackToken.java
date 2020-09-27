@@ -20,9 +20,15 @@ public class SlackToken {
         return Optional.ofNullable(authUser).map(SlackTokenPayload::getAccessToken).orElse(null);
     }
 
+    public String getId() {
+        return Optional.ofNullable(authUser).map(SlackTokenPayload::getId).orElse(null);
+    }
+
     @Getter
     @Setter
-    public class SlackTokenPayload {
+    public static class SlackTokenPayload {
+
+        private String id;
 
         private String scope;
 
