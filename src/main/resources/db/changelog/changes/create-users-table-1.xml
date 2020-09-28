@@ -17,6 +17,9 @@
             <column name="spotify_access_token" type="text">
                 <constraints unique="true"/>
             </column>
+            <column name="tz_offset_sec" type="int">
+                <constraints nullable="false"/>
+            </column>
             <column name="state" type="uuid">
                 <constraints unique="true"/>
             </column>
