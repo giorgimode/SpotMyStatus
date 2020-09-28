@@ -8,8 +8,12 @@ secret:
     client_secret: ${SLACK_CLIENT_SECRET}
     redirect_uri: ${SLACK_REDIRECT_URI}
 
-slack:
+spotmystatus:
   polling_rate: ${SLACK_POLLING_RATE:10000}
+  passive_polling_probability: ${PASSIVE_POLLING_PROBABILITY:30}
+  passivate_after_min: ${PASSIVATE_AFTER:60}
+  passivate_start_hr: ${PASSIVATE_START:21}
+  passivate_end_hr: ${PASSIVATE_END:6}
 
 spring:
   liquibase:

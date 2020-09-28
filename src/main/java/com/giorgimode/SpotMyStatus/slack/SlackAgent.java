@@ -5,11 +5,13 @@ import com.giorgimode.SpotMyStatus.model.SpotifyCurrentTrackResponse;
 import com.giorgimode.SpotMyStatus.persistence.User;
 import com.giorgimode.SpotMyStatus.persistence.UserRepository;
 import com.giorgimode.SpotMyStatus.util.RestHelper;
+import com.jayway.jsonpath.JsonPath;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -49,16 +51,29 @@ public class SlackAgent {
                                           .get(restTemplate, SlackToken.class)
                                           .getBody();
 
+        String userString = RestHelper.builder()
+                                 .withBaseUrl("https://slack.com/api/users.info")
+                                 .withBearer(slackToken.getAccessToken())
+                                 .withContentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+                                 .withQueryParam("user", slackToken.getId())
+                                 .post(restTemplate, String.class)
+                                 .getBody();
+
+        log.debug(userString);
+        Integer timezoneOffsetInSeconds = JsonPath.read(userString, "$.user.tz_offset");
+
         User user = new User();
         user.setId(slackToken.getId());
         user.setSlackAccessToken(slackToken.getAccessToken());
         UUID state = UUID.randomUUID();
+        user.setTimezoneOffsetSeconds(timezoneOffsetInSeconds);
         user.setState(state);
         userRepository.save(user);
         return state;
     }
 
-    public void updateAndPersistStatus(User user, SpotifyCurrentTrackResponse currentTrack, Long expiringIn) {
+    public void updateAndPersistStatus(User user, SpotifyCurrentTrackResponse currentTrack) {
+        long expiringIn = currentTrack.getDurationMs() - currentTrack.getProgressMs();
         String slackStatus = currentTrack.getArtists() + " - " + currentTrack.getSongTitle();
         log.info("Track: {} expiring in {}", slackStatus, expiringIn);
         SlackStatusPayload statusPayload = new SlackStatusPayload(slackStatus, ":headphones:", expiringIn);
