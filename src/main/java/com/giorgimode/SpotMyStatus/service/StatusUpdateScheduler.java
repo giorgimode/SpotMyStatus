@@ -32,15 +32,14 @@ public class StatusUpdateScheduler {
     private PollingProperties pollingProperties;
 
     //todo
-    //  1. get presence - online 2. get slack status - not same as current one, set new one
     //todo threshhold if too many failures, remove the user tokens, send message to the user in slack
     @Scheduled(fixedDelayString = "${spotmystatus.polling_rate}")
     public void scheduleFixedDelayTask() {
         userRepository.findAll()
                       .stream()
                       .filter(this::slowDownIfOutsideWorkHours)
-                      //    .filter(this::isOnlineOnSlack) - get presence
-                      // filter
+                      .filter(user -> slackAgent.isUserOnline(user))
+                      .filter(user -> slackAgent.statusHasNotBeenManuallyChanged(user))
                       .filter(not(user -> Boolean.TRUE.equals(user.getDisabled())))
                       .forEach(this::updateSlackStatus);
 
