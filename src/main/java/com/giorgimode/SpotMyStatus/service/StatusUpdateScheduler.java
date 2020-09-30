@@ -1,12 +1,12 @@
 package com.giorgimode.SpotMyStatus.service;
 
 import static java.util.function.Predicate.not;
-import com.giorgimode.SpotMyStatus.beans.PollingProperties;
+import com.giorgimode.SpotMyStatus.common.PollingProperties;
 import com.giorgimode.SpotMyStatus.model.SpotifyCurrentTrackResponse;
 import com.giorgimode.SpotMyStatus.persistence.User;
 import com.giorgimode.SpotMyStatus.persistence.UserRepository;
-import com.giorgimode.SpotMyStatus.slack.SlackAgent;
-import com.giorgimode.SpotMyStatus.spotify.SpotifyAgent;
+import com.giorgimode.SpotMyStatus.slack.SlackClient;
+import com.giorgimode.SpotMyStatus.spotify.SpotifyClient;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -23,23 +23,21 @@ public class StatusUpdateScheduler {
     private UserRepository userRepository;
 
     @Autowired
-    private SlackAgent slackAgent;
+    private SlackClient slackClient;
 
     @Autowired
-    private SpotifyAgent spotifyAgent;
+    private SpotifyClient spotifyClient;
 
     @Autowired
     private PollingProperties pollingProperties;
 
-    //todo
-    //todo threshhold if too many failures, remove the user tokens, send message to the user in slack
     @Scheduled(fixedDelayString = "${spotmystatus.polling_rate}")
     public void scheduleFixedDelayTask() {
         userRepository.findAll()
                       .stream()
                       .filter(this::slowDownIfOutsideWorkHours)
-                      .filter(user -> slackAgent.isUserOnline(user))
-                      .filter(user -> slackAgent.statusHasNotBeenManuallyChanged(user))
+                      .filter(user -> slackClient.isUserOnline(user))
+                      .filter(user -> slackClient.statusHasNotBeenManuallyChanged(user))
                       .filter(not(user -> Boolean.TRUE.equals(user.getDisabled())))
                       .forEach(this::updateSlackStatus);
 
@@ -63,11 +61,11 @@ public class StatusUpdateScheduler {
     }
 
     private void updateSlackStatus(User user) {
-        SpotifyCurrentTrackResponse usersCurrentTrack = spotifyAgent.getCurrentTrack(user.getSpotifyAccessToken());
-        if (usersCurrentTrack.isPlaying()) {
-            slackAgent.updateAndPersistStatus(user, usersCurrentTrack);
+        SpotifyCurrentTrackResponse usersCurrentTrack = spotifyClient.getCurrentTrack(user.getSpotifyAccessToken());
+        if (usersCurrentTrack != null && usersCurrentTrack.isPlaying()) {
+            slackClient.updateAndPersistStatus(user, usersCurrentTrack);
         } else {
-            slackAgent.cleanStatus(user);
+            slackClient.cleanStatus(user);
         }
     }
 }
