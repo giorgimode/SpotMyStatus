@@ -17,13 +17,16 @@
             <column name="spotify_access_token" type="text">
                 <constraints unique="true"/>
             </column>
+            <column name="tz_offset_sec" type="int">
+                <constraints nullable="false"/>
+            </column>
             <column name="state" type="uuid">
                 <constraints unique="true"/>
             </column>
             <column name="slack_status" type="text"/>
-            <column name="disabled" type="boolean" defaultValue="false"/>
+            <column name="disabled" type="boolean"/>
             <column name="updated_at" type="TIMESTAMP"/>
-            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_at" type="TIMESTAMP"/>
         </createTable>
     </changeSet>
 </databaseChangeLog>
