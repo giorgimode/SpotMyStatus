@@ -31,17 +31,20 @@ public class User implements Serializable {
     @Column(name = "spotify_access_token", unique = true)
     private String spotifyAccessToken;
 
+    @Column(name = ("tz_offset_sec"))
+    private Integer timezoneOffsetSeconds;
+
     @Column(name = "state", unique = true)
     private UUID state;
 
     @Column(name = "slack_status")
     private String slackStatus;
 
-    @Column(name = "disabled")
-    private Boolean disabled;
+    @Column(name = "disabled", nullable = false)
+    private Boolean disabled = false;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
@@ -54,6 +57,7 @@ public class User implements Serializable {
             .add("slackAccessToken", slackAccessToken)
             .add("spotifyRefreshToken", spotifyRefreshToken)
             .add("spotifyAccessToken", spotifyAccessToken)
+            .add("timezoneOffsetSeconds", timezoneOffsetSeconds)
             .add("state", state)
             .add("slackStatus", slackStatus)
             .add("createdAt", createdAt)

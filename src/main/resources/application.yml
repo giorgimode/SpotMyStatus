@@ -1,3 +1,7 @@
+slack_uri: https://slack.com
+spotify_account_uri: https://accounts.spotify.com
+spotify_api_uri: https://api.spotify.com
+
 secret:
   spotify:
     client_id: ${SPOTIFY_CLIENT_ID}
@@ -6,7 +10,12 @@ secret:
     client_id: ${SLACK_CLIENT_ID}
     client_secret: ${SLACK_CLIENT_SECRET}
 
-slack_polling_rate: ${SLACK_POLLING_RATE:10000}
+spotmystatus:
+  polling_rate: ${SLACK_POLLING_RATE:10000}
+  passive_polling_probability: ${PASSIVE_POLLING_PROBABILITY:30}
+  passivate_after_min: ${PASSIVATE_AFTER:60}
+  passivate_start_hr: ${PASSIVATE_START:21}
+  passivate_end_hr: ${PASSIVATE_END:6}
 
 spring:
   liquibase:
