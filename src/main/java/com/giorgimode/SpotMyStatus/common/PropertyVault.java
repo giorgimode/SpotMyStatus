@@ -1,4 +1,4 @@
-package com.giorgimode.SpotMyStatus.beans;
+package com.giorgimode.SpotMyStatus.common;
 
 import lombok.Getter;
 import lombok.Setter;

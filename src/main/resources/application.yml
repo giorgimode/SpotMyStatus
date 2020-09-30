@@ -1,12 +1,14 @@
+slack_uri: https://slack.com
+spotify_account_uri: https://accounts.spotify.com
+spotify_api_uri: https://api.spotify.com
+
 secret:
   spotify:
     client_id: ${SPOTIFY_CLIENT_ID}
     client_secret: ${SPOTIFY_CLIENT_SECRET}
-    redirect_uri: ${SPOTIFY_REDIRECT_URI}
   slack:
     client_id: ${SLACK_CLIENT_ID}
     client_secret: ${SLACK_CLIENT_SECRET}
-    redirect_uri: ${SLACK_REDIRECT_URI}
 
 spotmystatus:
   polling_rate: ${SLACK_POLLING_RATE:10000}

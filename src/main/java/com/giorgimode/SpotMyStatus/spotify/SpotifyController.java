@@ -1,6 +1,7 @@
 package com.giorgimode.SpotMyStatus.spotify;
 
-import com.giorgimode.SpotMyStatus.slack.SlackAgent;
+import static com.giorgimode.SpotMyStatus.common.SpotConstants.SLACK_REDIRECT_PATH;
+import com.giorgimode.SpotMyStatus.slack.SlackClient;
 import java.util.UUID;
 import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -8,39 +9,41 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
 @Slf4j
 public class SpotifyController {
 
     @Autowired
-    public SpotifyAgent spotifyAgent;
+    public SpotifyClient spotifyClient;
 
     @Autowired
-    public SlackAgent slackAgent;
+    public SlackClient slackClient;
 
     @RequestMapping("/start")
     public void triggerApiCall(HttpServletResponse httpServletResponse) {
-        String authorization = slackAgent.requestAuthorization();
-        log.info("****Redirect1***" + authorization);
+        log.info("Starting authorization for a new user...");
+        String authorization = slackClient.requestAuthorization();
         httpServletResponse.setHeader("Location", authorization);
         httpServletResponse.setStatus(302);
     }
 
-    @RequestMapping("/redirect2")
+    @RequestMapping(SLACK_REDIRECT_PATH)
     public void redirectEndpoint2(@RequestParam(value = "code") String slackCode, HttpServletResponse httpServletResponse) {
-        log.info("****Slack Code: x" + slackCode);
-        UUID state = slackAgent.updateAuthToken(slackCode);
+        log.info("User has granted permission on Slack. Received code {}", slackCode);
+        UUID state = slackClient.updateAuthToken(slackCode);
 
-        String authorization = spotifyAgent.requestAuthorization(state);
-        log.info("****Redirect2***" + authorization);
+        log.info("Slack authorization successful using code {} and state {}. Requesting authorization on spotify", slackCode, state);
+        String authorization = spotifyClient.requestAuthorization(state);
         httpServletResponse.setHeader("Location", authorization);
         httpServletResponse.setStatus(302);
     }
 
-    @RequestMapping("/redirect")
+    @RequestMapping("/spotify/redirect")
     public void redirectEndpoint(@RequestParam(value = "code") String spotifyCode, @RequestParam(value = "state") UUID state) {
-        log.info("Code {}, state {}", spotifyCode, state);
-        spotifyAgent.updateAuthToken(spotifyCode, state);
+        log.info("User has granted permission on Spotify. Received code {} for state {}", spotifyCode, state);
+        spotifyClient.updateAuthToken(spotifyCode, state);
+        //todo add a welcome page here
     }
 }

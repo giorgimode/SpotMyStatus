@@ -1,6 +1,5 @@
-package com.giorgimode.SpotMyStatus.beans;
+package com.giorgimode.SpotMyStatus.common;
 
-import java.net.URI;
 import lombok.Data;
 
 @Data
@@ -8,5 +7,4 @@ public class OauthProperties {
 
     private String clientId;
     private String clientSecret;
-    private URI redirectUri;
 }

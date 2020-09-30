@@ -1,7 +1,11 @@
 package com.giorgimode.SpotMyStatus.slack;
 
+import static com.giorgimode.SpotMyStatus.common.SpotConstants.SLACK_PROFILE_READ_SCOPE;
+import static com.giorgimode.SpotMyStatus.common.SpotConstants.SLACK_PROFILE_WRITE_SCOPE;
+import static com.giorgimode.SpotMyStatus.common.SpotConstants.SLACK_REDIRECT_PATH;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 import com.giorgimode.SpotMyStatus.model.SlackToken;
 import com.giorgimode.SpotMyStatus.model.SpotifyCurrentTrackResponse;
 import com.giorgimode.SpotMyStatus.persistence.User;
@@ -10,6 +14,7 @@ import com.giorgimode.SpotMyStatus.util.RestHelper;
 import com.jayway.jsonpath.JsonPath;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,10 +22,11 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
 
 @Component
 @Slf4j
-public class SlackAgent {
+public class SlackClient {
 
     @Autowired
     private RestTemplate restTemplate;
@@ -31,46 +37,66 @@ public class SlackAgent {
     @Value("${secret.slack.client_secret}")
     private String slackClientSecret;
 
+    @Value("${slack_uri}")
+    private String slackUri;
+
     @Autowired
     private UserRepository userRepository;
 
     public String requestAuthorization() {
         return RestHelper.builder()
-                         .withBaseUrl("https://slack.com/oauth/v2/authorize")
+                         .withBaseUrl(slackUri + "/oauth/v2/authorize")
                          .withQueryParam("client_id", slackClientId)
-                         .withQueryParam("user_scope", "users.profile:read,users.profile:write")
-                         .withQueryParam("redirect_uri", "http://localhost:8080/redirect2")
+                         .withQueryParam("user_scope", SLACK_PROFILE_READ_SCOPE + "," + SLACK_PROFILE_WRITE_SCOPE)
+                         .withQueryParam("redirect_uri", "http://localhost:8080" + SLACK_REDIRECT_PATH)
                          .createUri();
 
     }
 
     public UUID updateAuthToken(String spotifyCode) {
-        SlackToken slackToken = RestHelper.builder()
-                                          .withBaseUrl("https://slack.com/api/oauth.v2.access")
-                                          .withQueryParam("client_id", slackClientId)
-                                          .withQueryParam("client_secret", slackClientSecret)
-                                          .withQueryParam("code", spotifyCode)
-                                          .get(restTemplate, SlackToken.class)
-                                          .getBody();
+        SlackToken slackToken = tryCall(() -> RestHelper.builder()
+                                                        .withBaseUrl(slackUri + "/api/oauth.v2.access")
+                                                        .withQueryParam("client_id", slackClientId)
+                                                        .withQueryParam("client_secret", slackClientSecret)
+                                                        .withQueryParam("code", spotifyCode)
+                                                        .get(restTemplate, SlackToken.class));
 
-        String userString = RestHelper.builder()
-                                      .withBaseUrl("https://slack.com/api/users.info")
-                                      .withBearer(slackToken.getAccessToken())
-                                      .withContentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-                                      .withQueryParam("user", slackToken.getId())
-                                      .getBody(restTemplate, String.class);
+        UUID state = UUID.randomUUID();
+        persistNewUser(slackToken, state);
+        return state;
+    }
 
-        log.debug(userString);
-        Integer timezoneOffsetInSeconds = JsonPath.read(userString, "$.user.tz_offset");
-
+    private void persistNewUser(SlackToken slackToken, UUID state) {
         User user = new User();
         user.setId(slackToken.getId());
         user.setSlackAccessToken(slackToken.getAccessToken());
-        UUID state = UUID.randomUUID();
-        user.setTimezoneOffsetSeconds(timezoneOffsetInSeconds);
+        user.setTimezoneOffsetSeconds(getUserTimezone(slackToken));
         user.setState(state);
         userRepository.save(user);
-        return state;
+    }
+
+    private Integer getUserTimezone(SlackToken slackToken) {
+        String userString = tryCall(() -> RestHelper.builder()
+                                                    .withBaseUrl(slackUri + "/api/users.info")
+                                                    .withBearer(slackToken.getAccessToken())
+                                                    .withContentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+                                                    .withQueryParam("user", slackToken.getId())
+                                                    .get(restTemplate, String.class));
+
+        return JsonPath.read(userString, "$.user.tz_offset");
+    }
+
+    public <T> T tryCall(Supplier<ResponseEntity<T>> responseTypeSupplier) {
+        ResponseEntity<T> responseEntity;
+        try {
+            responseEntity = responseTypeSupplier.get();
+        } catch (Exception e) {
+            throw new ResponseStatusException(UNAUTHORIZED);
+        }
+        if (responseEntity.getBody() == null) {
+            throw new ResponseStatusException(UNAUTHORIZED);
+        }
+        return responseEntity.getBody();
     }
 
     public void updateAndPersistStatus(User user, SpotifyCurrentTrackResponse currentTrack) {
@@ -88,12 +114,12 @@ public class SlackAgent {
     }
 
     private void updateStatus(User user, SlackStatusPayload statusPayload) {
-        ResponseEntity<String> responseEntity = RestHelper.builder()
-                                                          .withBaseUrl("https://slack.com/api/users.profile.set")
-                                                          .withBearer(user.getSlackAccessToken())
-                                                          .withContentType("application/json; charset=utf-8")
-                                                          .withBody(statusPayload)
-                                                          .post(restTemplate, String.class);
+        RestHelper.builder()
+                  .withBaseUrl(slackUri + "/api/users.profile.set")
+                  .withBearer(user.getSlackAccessToken())
+                  .withContentType(MediaType.APPLICATION_JSON_VALUE)
+                  .withBody(statusPayload)
+                  .post(restTemplate, String.class);
     }
 
     public void cleanStatus(User user) {
@@ -104,7 +130,7 @@ public class SlackAgent {
 
     public boolean isUserOnline(User user) {
         String userPresenceResponse = RestHelper.builder()
-                                                .withBaseUrl("https://slack.com/api/users.getPresence")
+                                                .withBaseUrl(slackUri + "/api/users.getPresence")
                                                 .withBearer(user.getSlackAccessToken())
                                                 .getBody(restTemplate, String.class);
 
@@ -119,7 +145,7 @@ public class SlackAgent {
 
     public boolean statusHasNotBeenManuallyChanged(User user) {
         String userProfile = RestHelper.builder()
-                                       .withBaseUrl("https://slack.com/api/users.profile.get")
+                                       .withBaseUrl(slackUri + "/api/users.profile.get")
                                        .withBearer(user.getSlackAccessToken())
                                        .getBody(restTemplate, String.class);
 

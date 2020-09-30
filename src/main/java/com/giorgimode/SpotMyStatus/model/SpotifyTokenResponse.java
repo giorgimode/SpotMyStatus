@@ -1,9 +1,7 @@
 package com.giorgimode.SpotMyStatus.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.net.URI;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 
 @Data
 public class SpotifyTokenResponse {

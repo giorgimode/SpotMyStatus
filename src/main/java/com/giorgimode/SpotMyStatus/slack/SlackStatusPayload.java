@@ -10,7 +10,6 @@ public class SlackStatusPayload {
 
     private StatusPayload profile;
 
-
     public SlackStatusPayload(String statusText, String statusEmoji, Long statusExpiration) {
         StatusPayload payload = new StatusPayload();
         payload.setStatusText(statusText);
@@ -25,7 +24,7 @@ public class SlackStatusPayload {
 
     @Getter
     @Setter
-    public class StatusPayload {
+    public static class StatusPayload {
 
         @JsonProperty("status_text")
         private String statusText;
