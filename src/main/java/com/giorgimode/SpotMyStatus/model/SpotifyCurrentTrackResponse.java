@@ -9,18 +9,17 @@ import lombok.Data;
 @Data
 public class SpotifyCurrentTrackResponse {
 
-    @JsonProperty("is_playing")
-    private boolean isPlaying;
+    @JsonProperty(value = "is_playing", required = true)
+    private Boolean isPlaying;
 
-    @JsonProperty("currently_playing_type")
+    @JsonProperty(value = "currently_playing_type", required = true)
     private String currentlyPlayingType;
 
-    @JsonProperty("progress_ms")
+    @JsonProperty(value = "progress_ms", required = true)
     private Long progressMs = 0L;
 
     private Long durationMs;
 
-    @JsonProperty("name")
     private String songTitle;
 
     private String artists;

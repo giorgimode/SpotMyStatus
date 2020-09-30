@@ -11,11 +11,13 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Random;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
+@Slf4j
 public class StatusUpdateScheduler {
 
     private static final Random RANDOM = new Random();
@@ -33,18 +35,22 @@ public class StatusUpdateScheduler {
 
     @Scheduled(fixedDelayString = "${spotmystatus.polling_rate}")
     public void scheduleFixedDelayTask() {
-        userRepository.findAll()
-                      .stream()
-                      .filter(this::slowDownIfOutsideWorkHours)
-                      .filter(user -> slackClient.isUserOnline(user))
-                      .filter(user -> slackClient.statusHasNotBeenManuallyChanged(user))
-                      .filter(not(user -> Boolean.TRUE.equals(user.getDisabled())))
-                      .forEach(this::updateSlackStatus);
-
+        try {
+            userRepository.findAll()
+                          .stream()
+                          .filter(this::slowDownIfOutsideWorkHours)
+                          .filter(user -> slackClient.isUserOnline(user))
+                          .filter(user -> slackClient.statusHasNotBeenManuallyChanged(user))
+                          .filter(not(user -> Boolean.TRUE.equals(user.getDisabled())))
+                          .forEach(this::updateSlackStatus);
+        } catch (Exception e) {
+            log.error("Failed to poll users", e);
+        }
     }
 
     private boolean slowDownIfOutsideWorkHours(User user) {
         if (hasBeenPassiveRecently(user) && isNonWorkingHour(user)) {
+            log.debug("Slowing down polling outside nonworking hours");
             return RANDOM.nextInt(pollingProperties.getPassivePollingProbability() / 10) == 0;
         }
         return true;
@@ -61,11 +67,9 @@ public class StatusUpdateScheduler {
     }
 
     private void updateSlackStatus(User user) {
-        SpotifyCurrentTrackResponse usersCurrentTrack = spotifyClient.getCurrentTrack(user.getSpotifyAccessToken());
-        if (usersCurrentTrack != null && usersCurrentTrack.isPlaying()) {
-            slackClient.updateAndPersistStatus(user, usersCurrentTrack);
-        } else {
-            slackClient.cleanStatus(user);
-        }
+        spotifyClient.getCurrentTrack(user.getSpotifyAccessToken())
+                     .filter(SpotifyCurrentTrackResponse::getIsPlaying)
+                     .ifPresentOrElse(usersCurrentTrack -> slackClient.updateAndPersistStatus(user, usersCurrentTrack),
+                         () -> slackClient.cleanStatus(user));
     }
 }
