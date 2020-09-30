@@ -100,14 +100,24 @@ public class SlackClient {
     }
 
     public void updateAndPersistStatus(User user, SpotifyCurrentTrackResponse currentTrack) {
+        try {
+            tryUpdateAndPersistStatus(user, currentTrack);
+        } catch (Exception e) {
+            log.error("Failed to update and persist status for user {}", user, e);
+        }
+    }
+
+    private void tryUpdateAndPersistStatus(User user, SpotifyCurrentTrackResponse currentTrack) {
         long expiringIn = currentTrack.getDurationMs() - currentTrack.getProgressMs();
         String newSlackStatus = currentTrack.getArtists() + " - " + currentTrack.getSongTitle();
         SlackStatusPayload statusPayload = new SlackStatusPayload(newSlackStatus, ":headphones:", expiringIn);
         // todo fails to update if user manually changes the status and then cleans it
         if (!newSlackStatus.equalsIgnoreCase(user.getSlackStatus())) {
-            log.info("Track: {} expiring in {}", newSlackStatus, expiringIn);
+            log.info("Track: \"{}\" expiring in {}", newSlackStatus, expiringIn);
             user.setSlackStatus(newSlackStatus);
             updateStatus(user, statusPayload);
+        } else {
+            log.debug("Track \"{}\" has not changed for user {}", newSlackStatus, user.getId());
         }
         user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
@@ -124,26 +134,38 @@ public class SlackClient {
 
     public void cleanStatus(User user) {
         log.info("Cleaning status for user {} ", user.getId());
-        SlackStatusPayload statusPayload = new SlackStatusPayload("", "");
-        updateStatus(user, statusPayload);
+        try {
+            SlackStatusPayload statusPayload = new SlackStatusPayload("", "");
+            updateStatus(user, statusPayload);
+        } catch (Exception e) {
+            log.error("Failed to clean status for user {}", user, e);
+        }
     }
 
     public boolean isUserOnline(User user) {
+        return tryCheck(() -> checkUserOnline(user));
+    }
+
+    private boolean checkUserOnline(User user) {
         String userPresenceResponse = RestHelper.builder()
                                                 .withBaseUrl(slackUri + "/api/users.getPresence")
                                                 .withBearer(user.getSlackAccessToken())
                                                 .getBody(restTemplate, String.class);
 
         String usersPresence = JsonPath.read(userPresenceResponse, "$.presence");
-        boolean isUserActive = "active".equalsIgnoreCase(usersPresence);
+        return "active".equalsIgnoreCase(usersPresence);
 //        if (!isUserActive) { todo clean only once
 //            log.info("User {} is away.", user.getId());
 //            cleanStatus(user);
 //        }
-        return isUserActive;
+//        return isUserActive;
     }
 
     public boolean statusHasNotBeenManuallyChanged(User user) {
+        return tryCheck(() -> checkStatusHasNotBeenChanged(user));
+    }
+
+    public boolean checkStatusHasNotBeenChanged(User user) {
         String userProfile = RestHelper.builder()
                                        .withBaseUrl(slackUri + "/api/users.profile.get")
                                        .withBearer(user.getSlackAccessToken())
@@ -156,5 +178,14 @@ public class SlackClient {
             log.info("Status for user {} has been manually changed. Skipping the update.", user.getId());
         }
         return statusHasNotBeenManuallyChanged;
+    }
+
+    private boolean tryCheck(Supplier<Boolean> supplier) {
+        try {
+            return supplier.get();
+        } catch (Exception e) {
+            log.error("Caught", e);
+        }
+        return false;
     }
 }

@@ -11,6 +11,7 @@ import com.giorgimode.SpotMyStatus.model.SpotifyTokenResponse;
 import com.giorgimode.SpotMyStatus.persistence.User;
 import com.giorgimode.SpotMyStatus.persistence.UserRepository;
 import com.giorgimode.SpotMyStatus.util.RestHelper;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -93,10 +94,18 @@ public class SpotifyClient {
         return ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
     }
 
-    public SpotifyCurrentTrackResponse getCurrentTrack(String accessToken) {
-        return RestHelper.builder()
-                         .withBaseUrl(spotifyApiUri + "/v1/me/player/currently-playing")
-                         .withBearer(accessToken)
-                         .getBody(restTemplate, SpotifyCurrentTrackResponse.class);
+    public Optional<SpotifyCurrentTrackResponse> getCurrentTrack(String accessToken) {
+        try {
+            SpotifyCurrentTrackResponse currentTrackResponse = RestHelper.builder()
+                                                         .withBaseUrl(spotifyApiUri + "/v1/me/player/currently-playing")
+                                                         .withBearer(accessToken)
+                                                         .getBody(restTemplate, SpotifyCurrentTrackResponse.class);
+            if (currentTrackResponse.getSongTitle() == null || currentTrackResponse.getIsPlaying() == null) {
+                return Optional.empty();
+            }
+            return Optional.of(currentTrackResponse);
+        } catch (Exception e) {
+            return Optional.empty();
+        }
     }
 }
