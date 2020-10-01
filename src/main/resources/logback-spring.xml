@@ -39,7 +39,7 @@
         <appender-ref ref="Console" />
     </root>
 
-    <logger name="com.giorgimode" level="trace" additivity="false">
+    <logger name="com.giorgimode" level="debug" additivity="false">
         <appender-ref ref="RollingFile" />
         <appender-ref ref="Console" />
     </logger>

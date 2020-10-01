@@ -6,11 +6,14 @@ import static com.giorgimode.SpotMyStatus.spotify.SpotifyScopes.USER_TOP_READ;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 import com.giorgimode.SpotMyStatus.common.OauthProperties;
 import com.giorgimode.SpotMyStatus.common.PropertyVault;
+import com.giorgimode.SpotMyStatus.model.CachedUser;
 import com.giorgimode.SpotMyStatus.model.SpotifyCurrentTrackResponse;
 import com.giorgimode.SpotMyStatus.model.SpotifyTokenResponse;
 import com.giorgimode.SpotMyStatus.persistence.User;
 import com.giorgimode.SpotMyStatus.persistence.UserRepository;
 import com.giorgimode.SpotMyStatus.util.RestHelper;
+import com.giorgimode.SpotMyStatus.util.SpotUtil;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +46,9 @@ public class SpotifyClient {
 
     @Value("${spotify_api_uri}")
     private String spotifyApiUri;
+
+    @Autowired
+    private LoadingCache<String, CachedUser> userCache;
 
     public String requestAuthorization(UUID state) {
         return RestHelper.builder()
@@ -80,6 +86,7 @@ public class SpotifyClient {
         user.setSpotifyRefreshToken(spotifyTokens.getRefreshToken());
         user.setSpotifyAccessToken(spotifyTokens.getAccessToken());
         userRepository.save(user);
+        userCache.put(user.getId(), SpotUtil.toCachedUser(user));
     }
 
     private MultiValueMap<String, String> createAuthenticationProperties(String code, OauthProperties authProps) {
@@ -97,14 +104,15 @@ public class SpotifyClient {
     public Optional<SpotifyCurrentTrackResponse> getCurrentTrack(String accessToken) {
         try {
             SpotifyCurrentTrackResponse currentTrackResponse = RestHelper.builder()
-                                                         .withBaseUrl(spotifyApiUri + "/v1/me/player/currently-playing")
-                                                         .withBearer(accessToken)
-                                                         .getBody(restTemplate, SpotifyCurrentTrackResponse.class);
+                                                                         .withBaseUrl(spotifyApiUri + "/v1/me/player/currently-playing")
+                                                                         .withBearer(accessToken)
+                                                                         .getBody(restTemplate, SpotifyCurrentTrackResponse.class);
             if (currentTrackResponse.getSongTitle() == null || currentTrackResponse.getIsPlaying() == null) {
                 return Optional.empty();
             }
             return Optional.of(currentTrackResponse);
         } catch (Exception e) {
+            log.error("Failed to retrieve current track", e);
             return Optional.empty();
         }
     }
