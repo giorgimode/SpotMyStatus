@@ -2,11 +2,11 @@ package com.giorgimode.SpotMyStatus.service;
 
 import static java.util.function.Predicate.not;
 import com.giorgimode.SpotMyStatus.common.PollingProperties;
+import com.giorgimode.SpotMyStatus.model.CachedUser;
 import com.giorgimode.SpotMyStatus.model.SpotifyCurrentTrackResponse;
-import com.giorgimode.SpotMyStatus.persistence.User;
-import com.giorgimode.SpotMyStatus.persistence.UserRepository;
 import com.giorgimode.SpotMyStatus.slack.SlackClient;
 import com.giorgimode.SpotMyStatus.spotify.SpotifyClient;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -22,7 +22,7 @@ public class StatusUpdateScheduler {
 
     private static final Random RANDOM = new Random();
     @Autowired
-    private UserRepository userRepository;
+    private LoadingCache<String, CachedUser> userCache;
 
     @Autowired
     private SlackClient slackClient;
@@ -36,19 +36,19 @@ public class StatusUpdateScheduler {
     @Scheduled(fixedDelayString = "${spotmystatus.polling_rate}")
     public void scheduleFixedDelayTask() {
         try {
-            userRepository.findAll()
+            userCache.asMap().values()
                           .stream()
                           .filter(this::slowDownIfOutsideWorkHours)
                           .filter(user -> slackClient.isUserOnline(user))
                           .filter(user -> slackClient.statusHasNotBeenManuallyChanged(user))
-                          .filter(not(user -> Boolean.TRUE.equals(user.getDisabled())))
+                          .filter(not(CachedUser::isDisabled))
                           .forEach(this::updateSlackStatus);
         } catch (Exception e) {
             log.error("Failed to poll users", e);
         }
     }
 
-    private boolean slowDownIfOutsideWorkHours(User user) {
+    private boolean slowDownIfOutsideWorkHours(CachedUser user) {
         if (hasBeenPassiveRecently(user) && isNonWorkingHour(user)) {
             log.debug("Slowing down polling outside nonworking hours");
             return RANDOM.nextInt(pollingProperties.getPassivePollingProbability() / 10) == 0;
@@ -56,17 +56,17 @@ public class StatusUpdateScheduler {
         return true;
     }
 
-    private boolean isNonWorkingHour(User user) {
+    private boolean isNonWorkingHour(CachedUser user) {
         int currentHour = LocalDateTime.now(ZoneOffset.ofTotalSeconds(user.getTimezoneOffsetSeconds())).getHour();
         return !(currentHour > pollingProperties.getPassivateEndHr() && currentHour < pollingProperties.getPassivateStartHr());
     }
 
-    private boolean hasBeenPassiveRecently(User user) {
+    private boolean hasBeenPassiveRecently(CachedUser user) {
         return user.getUpdatedAt() != null
             && Duration.between(LocalDateTime.now(), user.getUpdatedAt()).toMinutes() > pollingProperties.getPassivateAfterMin();
     }
 
-    private void updateSlackStatus(User user) {
+    private void updateSlackStatus(CachedUser user) {
         spotifyClient.getCurrentTrack(user.getSpotifyAccessToken())
                      .filter(SpotifyCurrentTrackResponse::getIsPlaying)
                      .ifPresentOrElse(usersCurrentTrack -> slackClient.updateAndPersistStatus(user, usersCurrentTrack),

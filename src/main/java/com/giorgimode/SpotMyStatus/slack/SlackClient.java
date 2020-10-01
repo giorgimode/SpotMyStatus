@@ -4,8 +4,9 @@ import static com.giorgimode.SpotMyStatus.common.SpotConstants.SLACK_PROFILE_REA
 import static com.giorgimode.SpotMyStatus.common.SpotConstants.SLACK_PROFILE_WRITE_SCOPE;
 import static com.giorgimode.SpotMyStatus.common.SpotConstants.SLACK_REDIRECT_PATH;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
+import com.giorgimode.SpotMyStatus.common.PollingProperties;
+import com.giorgimode.SpotMyStatus.model.CachedUser;
 import com.giorgimode.SpotMyStatus.model.SlackToken;
 import com.giorgimode.SpotMyStatus.model.SpotifyCurrentTrackResponse;
 import com.giorgimode.SpotMyStatus.persistence.User;
@@ -13,6 +14,7 @@ import com.giorgimode.SpotMyStatus.persistence.UserRepository;
 import com.giorgimode.SpotMyStatus.util.RestHelper;
 import com.jayway.jsonpath.JsonPath;
 import java.time.LocalDateTime;
+import java.util.Random;
 import java.util.UUID;
 import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +44,11 @@ public class SlackClient {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private PollingProperties pollingProperties;
+
+    private static final Random RANDOM = new Random();
 
     public String requestAuthorization() {
         return RestHelper.builder()
@@ -99,7 +106,7 @@ public class SlackClient {
         return responseEntity.getBody();
     }
 
-    public void updateAndPersistStatus(User user, SpotifyCurrentTrackResponse currentTrack) {
+    public void updateAndPersistStatus(CachedUser user, SpotifyCurrentTrackResponse currentTrack) {
         try {
             tryUpdateAndPersistStatus(user, currentTrack);
         } catch (Exception e) {
@@ -107,73 +114,85 @@ public class SlackClient {
         }
     }
 
-    private void tryUpdateAndPersistStatus(User user, SpotifyCurrentTrackResponse currentTrack) {
-        long expiringIn = currentTrack.getDurationMs() - currentTrack.getProgressMs();
-        String newSlackStatus = currentTrack.getArtists() + " - " + currentTrack.getSongTitle();
-        SlackStatusPayload statusPayload = new SlackStatusPayload(newSlackStatus, ":headphones:", expiringIn);
-        // todo fails to update if user manually changes the status and then cleans it
-        if (!newSlackStatus.equalsIgnoreCase(user.getSlackStatus())) {
-            log.info("Track: \"{}\" expiring in {}", newSlackStatus, expiringIn);
-            user.setSlackStatus(newSlackStatus);
+    private void tryUpdateAndPersistStatus(CachedUser user, SpotifyCurrentTrackResponse currentTrack) {
+        long expiringInMs = currentTrack.getDurationMs() - currentTrack.getProgressMs();
+        long expiringOnUnixTime = (System.currentTimeMillis() + expiringInMs) / 1000;
+        String newStatus = currentTrack.getArtists() + " - " + currentTrack.getSongTitle();
+        SlackStatusPayload statusPayload = new SlackStatusPayload(newStatus, ":headphones:", expiringOnUnixTime);
+        if (!newStatus.equalsIgnoreCase(user.getSlackStatus()) || slowDownStatusUpdates()) {
+            log.info("Track: \"{}\" expiring in {} seconds", newStatus, expiringInMs / 1000);
+            user.setSlackStatus(newStatus);
             updateStatus(user, statusPayload);
         } else {
-            log.debug("Track \"{}\" has not changed for user {}", newSlackStatus, user.getId());
+            log.debug("Track \"{}\" has not changed for user {}", newStatus, user.getId());
         }
         user.setUpdatedAt(LocalDateTime.now());
-        userRepository.save(user);
     }
 
-    private void updateStatus(User user, SlackStatusPayload statusPayload) {
-        RestHelper.builder()
-                  .withBaseUrl(slackUri + "/api/users.profile.set")
-                  .withBearer(user.getSlackAccessToken())
-                  .withContentType(MediaType.APPLICATION_JSON_VALUE)
-                  .withBody(statusPayload)
-                  .post(restTemplate, String.class);
+    /**
+     * if status hasn't changed, there should not be a need to update it again
+     * <p>
+     * However, Slack sometimes has a hiccup and status is not updated, even though it returns success
+     */
+    private boolean slowDownStatusUpdates() {
+        return RANDOM.nextInt(pollingProperties.getPassivePollingProbability() / 10) == 0;
     }
 
-    public void cleanStatus(User user) {
+    private void updateStatus(CachedUser user, SlackStatusPayload statusPayload) {
+        ResponseEntity<String> responseEntity = RestHelper.builder()
+                                                          .withBaseUrl(slackUri + "/api/users.profile.set")
+                                                          .withBearer(user.getSlackAccessToken())
+                                                          .withContentType(MediaType.APPLICATION_JSON_VALUE)
+                                                          .withBody(statusPayload)
+                                                          .post(restTemplate, String.class);
+        log.trace("Slack response to status update {}", responseEntity.getBody());
+    }
+
+    public void cleanStatus(CachedUser user) {
         log.info("Cleaning status for user {} ", user.getId());
         try {
             SlackStatusPayload statusPayload = new SlackStatusPayload("", "");
+            user.setSlackStatus("");
             updateStatus(user, statusPayload);
         } catch (Exception e) {
             log.error("Failed to clean status for user {}", user, e);
         }
     }
 
-    public boolean isUserOnline(User user) {
+    public boolean isUserOnline(CachedUser user) {
         return tryCheck(() -> checkUserOnline(user));
     }
 
-    private boolean checkUserOnline(User user) {
+    private boolean checkUserOnline(CachedUser user) {
         String userPresenceResponse = RestHelper.builder()
                                                 .withBaseUrl(slackUri + "/api/users.getPresence")
                                                 .withBearer(user.getSlackAccessToken())
                                                 .getBody(restTemplate, String.class);
 
         String usersPresence = JsonPath.read(userPresenceResponse, "$.presence");
-        return "active".equalsIgnoreCase(usersPresence);
-//        if (!isUserActive) { todo clean only once
-//            log.info("User {} is away.", user.getId());
-//            cleanStatus(user);
-//        }
-//        return isUserActive;
+        boolean isUserActive = "active".equalsIgnoreCase(usersPresence);
+        if (!isUserActive && !user.isCleaned()) {
+            log.info("User {} is away.", user.getId());
+            cleanStatus(user);
+            user.setCleaned(true);
+        } else if (isUserActive) {
+            user.setCleaned(false);
+        }
+        return isUserActive;
     }
 
-    public boolean statusHasNotBeenManuallyChanged(User user) {
+    public boolean statusHasNotBeenManuallyChanged(CachedUser user) {
         return tryCheck(() -> checkStatusHasNotBeenChanged(user));
     }
 
-    public boolean checkStatusHasNotBeenChanged(User user) {
+    public boolean checkStatusHasNotBeenChanged(CachedUser user) {
         String userProfile = RestHelper.builder()
                                        .withBaseUrl(slackUri + "/api/users.profile.get")
                                        .withBearer(user.getSlackAccessToken())
                                        .getBody(restTemplate, String.class);
 
         String statusText = JsonPath.read(userProfile, "$.profile.status_text");
-        boolean statusHasNotBeenManuallyChanged = isBlank(statusText) || isNotBlank(user.getSlackStatus()) &&
-            user.getSlackStatus().equalsIgnoreCase(statusText);
+        boolean statusHasNotBeenManuallyChanged = isBlank(statusText) || statusText.equalsIgnoreCase(user.getSlackStatus());
         if (!statusHasNotBeenManuallyChanged) {
             log.info("Status for user {} has been manually changed. Skipping the update.", user.getId());
         }
