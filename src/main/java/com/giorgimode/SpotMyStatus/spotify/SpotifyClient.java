@@ -86,7 +86,7 @@ public class SpotifyClient {
         user.setSpotifyRefreshToken(spotifyTokens.getRefreshToken());
         user.setSpotifyAccessToken(spotifyTokens.getAccessToken());
         userRepository.save(user);
-        userCache.get(user.getId(), key -> SpotUtil.toCachedUser(user));
+        userCache.put(user.getId(), SpotUtil.toCachedUser(user));
     }
 
     private MultiValueMap<String, String> createAuthenticationProperties(String code, OauthProperties authProps) {

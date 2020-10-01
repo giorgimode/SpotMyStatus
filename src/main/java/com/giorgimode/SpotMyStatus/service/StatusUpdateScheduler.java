@@ -4,8 +4,6 @@ import static java.util.function.Predicate.not;
 import com.giorgimode.SpotMyStatus.common.PollingProperties;
 import com.giorgimode.SpotMyStatus.model.CachedUser;
 import com.giorgimode.SpotMyStatus.model.SpotifyCurrentTrackResponse;
-import com.giorgimode.SpotMyStatus.persistence.User;
-import com.giorgimode.SpotMyStatus.persistence.UserRepository;
 import com.giorgimode.SpotMyStatus.slack.SlackClient;
 import com.giorgimode.SpotMyStatus.spotify.SpotifyClient;
 import com.github.benmanes.caffeine.cache.LoadingCache;
