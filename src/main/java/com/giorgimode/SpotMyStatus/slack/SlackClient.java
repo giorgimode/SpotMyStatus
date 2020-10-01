@@ -169,6 +169,7 @@ public class SlackClient {
                                                 .withBearer(user.getSlackAccessToken())
                                                 .getBody(restTemplate, String.class);
 
+        //todo {"ok":false,"error":"invalid_auth"}
         String usersPresence = JsonPath.read(userPresenceResponse, "$.presence");
         boolean isUserActive = "active".equalsIgnoreCase(usersPresence);
         if (!isUserActive && !user.isCleaned()) {
