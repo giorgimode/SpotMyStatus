@@ -116,14 +116,14 @@ public class SlackClient {
 
     private void tryUpdateAndPersistStatus(CachedUser user, SpotifyCurrentTrackResponse currentTrack) {
         long expiringIn = currentTrack.getDurationMs() - currentTrack.getProgressMs();
-        String newSlackStatus = currentTrack.getArtists() + " - " + currentTrack.getSongTitle();
-        SlackStatusPayload statusPayload = new SlackStatusPayload(newSlackStatus, ":headphones:", expiringIn);
-        if (!newSlackStatus.equalsIgnoreCase(user.getSlackStatus()) || slowDownStatusUpdates()) {
-            log.info("Track: \"{}\" expiring in {}", newSlackStatus, expiringIn);
-            user.setSlackStatus(newSlackStatus);
+        String newStatus = currentTrack.getArtists() + " - " + currentTrack.getSongTitle();
+        SlackStatusPayload statusPayload = new SlackStatusPayload(newStatus, ":headphones:", expiringIn);
+        if (!newStatus.equalsIgnoreCase(user.getSlackStatus()) || slowDownStatusUpdates()) {
+            log.info("Track: \"{}\" expiring in {}", newStatus, expiringIn);
+            user.setSlackStatus(newStatus);
             updateStatus(user, statusPayload);
         } else {
-            log.debug("Track \"{}\" has not changed for user {}", newSlackStatus, user.getId());
+            log.debug("Track \"{}\" has not changed for user {}", newStatus, user.getId());
         }
         user.setUpdatedAt(LocalDateTime.now());
     }
