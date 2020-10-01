@@ -38,7 +38,7 @@ public class User implements Serializable {
     private UUID state;
 
     @Column(name = "disabled", nullable = false)
-    private Boolean disabled = false;
+    private boolean disabled = false;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();

@@ -115,11 +115,12 @@ public class SlackClient {
     }
 
     private void tryUpdateAndPersistStatus(CachedUser user, SpotifyCurrentTrackResponse currentTrack) {
-        long expiringIn = currentTrack.getDurationMs() - currentTrack.getProgressMs();
+        long expiringInMs = currentTrack.getDurationMs() - currentTrack.getProgressMs();
+        long expiringOnUnixTime = (System.currentTimeMillis() + expiringInMs) / 1000;
         String newStatus = currentTrack.getArtists() + " - " + currentTrack.getSongTitle();
-        SlackStatusPayload statusPayload = new SlackStatusPayload(newStatus, ":headphones:", expiringIn);
+        SlackStatusPayload statusPayload = new SlackStatusPayload(newStatus, ":headphones:", expiringOnUnixTime);
         if (!newStatus.equalsIgnoreCase(user.getSlackStatus()) || slowDownStatusUpdates()) {
-            log.info("Track: \"{}\" expiring in {}", newStatus, expiringIn);
+            log.info("Track: \"{}\" expiring in {} seconds", newStatus, expiringInMs / 1000);
             user.setSlackStatus(newStatus);
             updateStatus(user, statusPayload);
         } else {
@@ -173,6 +174,7 @@ public class SlackClient {
         if (!isUserActive && !user.isCleaned()) {
             log.info("User {} is away.", user.getId());
             cleanStatus(user);
+            user.setCleaned(true);
         } else if (isUserActive) {
             user.setCleaned(false);
         }
