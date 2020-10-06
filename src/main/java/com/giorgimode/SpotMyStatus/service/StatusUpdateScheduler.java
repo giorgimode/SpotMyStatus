@@ -1,6 +1,5 @@
 package com.giorgimode.SpotMyStatus.service;
 
-import static java.util.function.Predicate.not;
 import com.giorgimode.SpotMyStatus.common.PollingProperties;
 import com.giorgimode.SpotMyStatus.model.CachedUser;
 import com.giorgimode.SpotMyStatus.model.SpotifyCurrentTrackResponse;
@@ -11,8 +10,14 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Random;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -33,18 +38,48 @@ public class StatusUpdateScheduler {
     @Autowired
     private PollingProperties pollingProperties;
 
+    //todo convert to bean
+    private final ExecutorService service = Executors.newCachedThreadPool();
+//    private final ExecutorService service = Executors.newScheduledThreadPool();
+
     @Scheduled(fixedDelayString = "${spotmystatus.polling_rate}")
     public void scheduleFixedDelayTask() {
         try {
-            userCache.asMap().values()
-                          .stream()
-                          .filter(this::slowDownIfOutsideWorkHours)
-                          .filter(user -> slackClient.isUserOnline(user))
-                          .filter(user -> slackClient.statusHasNotBeenManuallyChanged(user))
-                          .filter(not(CachedUser::isDisabled))
-                          .forEach(this::updateSlackStatus);
+            // https://www.baeldung.com/java-9-reactive-streams
+            // https://www.youtube.com/watch?v=_stAxdjx8qk&ab_channel=Devoxx
+            // https://www.baeldung.com/rxjava-vs-java-flow-api
+
+            userCache.asMap().values().forEach(cachedUser -> {
+                try {
+                    service.submit(() -> pollUser(cachedUser)).get(pollingProperties.getTimeout(), TimeUnit.MILLISECONDS);
+                } catch (InterruptedException | TimeoutException | ExecutionException e) {
+                    log.error("Polling user {} timed out", cachedUser.getId());
+                }
+            });
         } catch (Exception e) {
             log.error("Failed to poll users", e);
+        }
+    }
+
+    private void pollUser(CachedUser cachedUser) {
+        try {
+            //todo refactor
+            if (!slowDownIfOutsideWorkHours(cachedUser)) {
+                log.trace("Skipping the polling for {} outside working hours", cachedUser.getId());
+                return;
+            }
+            if (!slackClient.isUserOnline(cachedUser)) {
+                return;
+            }
+            if (!slackClient.statusHasNotBeenManuallyChanged(cachedUser)) {
+                return;
+            }
+            if (cachedUser.isDisabled()) {
+                return;
+            }
+            updateSlackStatus(cachedUser);
+        } catch (Exception e) {
+            log.error("Failed to poll user {}", cachedUser.getId(), e);
         }
     }
 
