@@ -4,6 +4,7 @@ import static com.giorgimode.SpotMyStatus.common.SpotConstants.SLACK_PROFILE_REA
 import static com.giorgimode.SpotMyStatus.common.SpotConstants.SLACK_PROFILE_WRITE_SCOPE;
 import static com.giorgimode.SpotMyStatus.common.SpotConstants.SLACK_REDIRECT_PATH;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 import com.giorgimode.SpotMyStatus.common.PollingProperties;
 import com.giorgimode.SpotMyStatus.model.CachedUser;
@@ -12,6 +13,7 @@ import com.giorgimode.SpotMyStatus.model.SpotifyCurrentTrackResponse;
 import com.giorgimode.SpotMyStatus.persistence.User;
 import com.giorgimode.SpotMyStatus.persistence.UserRepository;
 import com.giorgimode.SpotMyStatus.util.RestHelper;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.jayway.jsonpath.JsonPath;
 import java.time.LocalDateTime;
 import java.util.Random;
@@ -23,6 +25,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -47,6 +50,9 @@ public class SlackClient {
 
     @Autowired
     private PollingProperties pollingProperties;
+
+    @Autowired
+    private LoadingCache<String, CachedUser> userCache;
 
     private static final Random RANDOM = new Random();
 
@@ -162,7 +168,16 @@ public class SlackClient {
     }
 
     public boolean isUserOnline(CachedUser user) {
-        return tryCheck(() -> checkUserOnline(user));
+        try {
+            return checkUserOnline(user);
+        } catch (HttpClientErrorException e) {
+            if (e.getStatusCode() == UNAUTHORIZED || e.getStatusCode() == FORBIDDEN) {
+                removeInvalidatedUser(user);
+            }
+        } catch (Exception e) {
+            log.error("Caught", e);
+        }
+        return false;
     }
 
     private boolean checkUserOnline(CachedUser user) {
@@ -171,7 +186,9 @@ public class SlackClient {
                                                 .withBearer(user.getSlackAccessToken())
                                                 .getBody(restTemplate, String.class);
 
-        //todo {"ok":false,"error":"invalid_auth"}
+        if (userPresenceResponse.contains("invalid_auth")) {
+            removeInvalidatedUser(user);
+        }
         String usersPresence = JsonPath.read(userPresenceResponse, "$.presence");
         boolean isUserActive = "active".equalsIgnoreCase(usersPresence);
         if (!isUserActive && !user.isCleaned()) {
@@ -179,6 +196,12 @@ public class SlackClient {
             cleanStatus(user);
         }
         return isUserActive;
+    }
+
+    private void removeInvalidatedUser(CachedUser user) {
+        log.error("User's Slack token has been invalidated. Cleaning up user {}", user.getId());
+        userCache.invalidate(user.getId());
+        userRepository.deleteById(user.getId());
     }
 
     public boolean statusHasNotBeenManuallyChanged(CachedUser user) {
