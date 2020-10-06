@@ -70,6 +70,12 @@ public class StatusUpdateScheduler {
         spotifyClient.getCurrentTrack(user)
                      .filter(SpotifyCurrentTrackResponse::getIsPlaying)
                      .ifPresentOrElse(usersCurrentTrack -> slackClient.updateAndPersistStatus(user, usersCurrentTrack),
-                         () -> slackClient.cleanStatus(user));
+                         () -> cleanStatus(user));
+    }
+
+    private void cleanStatus(CachedUser user) {
+        if (!user.isCleaned()) {
+            slackClient.cleanStatus(user);
+        }
     }
 }
