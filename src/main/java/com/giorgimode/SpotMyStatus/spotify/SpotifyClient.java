@@ -5,6 +5,7 @@ import com.giorgimode.SpotMyStatus.model.SpotifyCurrentTrackResponse;
 import com.giorgimode.SpotMyStatus.model.SpotifyTokenResponse;
 import com.giorgimode.SpotMyStatus.persistence.User;
 import com.giorgimode.SpotMyStatus.persistence.UserRepository;
+import com.giorgimode.SpotMyStatus.service.NotificationService;
 import com.giorgimode.SpotMyStatus.util.RestHelper;
 import com.giorgimode.SpotMyStatus.util.SpotUtil;
 import com.github.benmanes.caffeine.cache.LoadingCache;
@@ -37,6 +38,9 @@ public class SpotifyClient {
     @Autowired
     private SpotifyAuthClient spotifyAuthClient;
 
+    @Autowired
+    private NotificationService cleanupService;
+
     public String requestAuthorization(UUID state) {
         return spotifyAuthClient.requestAuthorization(state);
     }
@@ -62,9 +66,8 @@ public class SpotifyClient {
             if (ex.getStatusCode() == HttpStatus.UNAUTHORIZED) {
                 return refreshSpotifyAccessToken(user);
             } else if (ex.getStatusCode() == HttpStatus.BAD_REQUEST && ex.getResponseBodyAsString().contains("invalid_grant")) {
-                log.error("User token has been invalidated. Cleaning up user {}", user.getId());
-                userCache.invalidate(user.getId());
-                userRepository.deleteById(user.getId());
+                log.error("User's Spotify token has been invalidated. Cleaning up user {}", user.getId());
+                cleanupService.invalidateAndNotifyUser(user.getId());
             } else {
                 log.error("Failed to retrieve current track for user {}", user.getId(), ex);
             }

@@ -4,6 +4,7 @@ import com.giorgimode.SpotMyStatus.model.CachedUser;
 import com.giorgimode.SpotMyStatus.model.SpotifyTokenResponse;
 import com.giorgimode.SpotMyStatus.persistence.User;
 import com.giorgimode.SpotMyStatus.persistence.UserRepository;
+import com.giorgimode.SpotMyStatus.service.NotificationService;
 import com.giorgimode.SpotMyStatus.spotify.SpotifyAuthClient;
 import com.giorgimode.SpotMyStatus.util.SpotUtil;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -27,6 +28,9 @@ public class SpotMyStatusConfiguration {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private NotificationService cleanupService;
 
     @Bean
     public RestTemplate restTemplate(RestTemplateBuilder restTemplateBuilder) {
@@ -70,8 +74,8 @@ public class SpotMyStatusConfiguration {
             return SpotUtil.toCachedUser(user, getAccessToken(spotifyAuthClient, user));
         } catch (HttpClientErrorException ex) {
             if (ex.getStatusCode() == HttpStatus.BAD_REQUEST && ex.getResponseBodyAsString().contains("invalid_grant")) {
-                log.error("User token has been invalidated. Removing the user");
-                userRepository.deleteById(user.getId());
+                log.error("User's spotify token has been invalidated. Removing the user");
+                cleanupService.invalidateAndNotifyUser(user.getId());
             } else {
                 log.error("Failed to cache user with id {}", user.getId(), ex);
             }
