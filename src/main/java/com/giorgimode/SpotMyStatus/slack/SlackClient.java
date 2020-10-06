@@ -12,6 +12,7 @@ import com.giorgimode.SpotMyStatus.model.SlackToken;
 import com.giorgimode.SpotMyStatus.model.SpotifyCurrentTrackResponse;
 import com.giorgimode.SpotMyStatus.persistence.User;
 import com.giorgimode.SpotMyStatus.persistence.UserRepository;
+import com.giorgimode.SpotMyStatus.service.NotificationService;
 import com.giorgimode.SpotMyStatus.util.RestHelper;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.jayway.jsonpath.JsonPath;
@@ -53,6 +54,9 @@ public class SlackClient {
 
     @Autowired
     private LoadingCache<String, CachedUser> userCache;
+
+    @Autowired
+    private NotificationService cleanupService;
 
     private static final Random RANDOM = new Random();
 
@@ -200,8 +204,7 @@ public class SlackClient {
 
     private void removeInvalidatedUser(CachedUser user) {
         log.error("User's Slack token has been invalidated. Cleaning up user {}", user.getId());
-        userCache.invalidate(user.getId());
-        userRepository.deleteById(user.getId());
+        cleanupService.invalidateAndNotifyUser(user.getId());
     }
 
     public boolean statusHasNotBeenManuallyChanged(CachedUser user) {

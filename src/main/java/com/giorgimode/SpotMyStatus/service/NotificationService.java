@@ -35,15 +35,19 @@ public class NotificationService {
     @Autowired
     private LoadingCache<String, CachedUser> userCache;
 
-    public void notifyUserOnInvalidation(String userId) {
-        userCache.invalidate(userId);
-        userRepository.deleteById(userId);
-        RestHelper.builder()
-                  .withBaseUrl(slackUri + "/api/chat.postMessage")
-                  .withBearer(propertyVault.getSlack().getBotToken())
-                  .withContentType(MediaType.APPLICATION_JSON_VALUE)
-                  .withBody(new SlackMessage(userId, createNotificationText()))
-                  .post(restTemplate, String.class);
+    public void invalidateAndNotifyUser(String userId) {
+        try {
+            userCache.invalidate(userId);
+            userRepository.deleteById(userId);
+            RestHelper.builder()
+                      .withBaseUrl(slackUri + "/api/chat.postMessage")
+                      .withBearer(propertyVault.getSlack().getBotToken())
+                      .withContentType(MediaType.APPLICATION_JSON_VALUE)
+                      .withBody(new SlackMessage(userId, createNotificationText()))
+                      .post(restTemplate, String.class);
+        } catch (Exception e) {
+            log.error("Failed to clean up user properly", e);
+        }
     }
 
     private String createNotificationText() {

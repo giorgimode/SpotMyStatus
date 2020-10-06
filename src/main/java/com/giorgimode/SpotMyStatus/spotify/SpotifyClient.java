@@ -67,7 +67,7 @@ public class SpotifyClient {
                 return refreshSpotifyAccessToken(user);
             } else if (ex.getStatusCode() == HttpStatus.BAD_REQUEST && ex.getResponseBodyAsString().contains("invalid_grant")) {
                 log.error("User's Spotify token has been invalidated. Cleaning up user {}", user.getId());
-                cleanupService.notifyUserOnInvalidation(user.getId());
+                cleanupService.invalidateAndNotifyUser(user.getId());
             } else {
                 log.error("Failed to retrieve current track for user {}", user.getId(), ex);
             }

@@ -75,7 +75,7 @@ public class SpotMyStatusConfiguration {
         } catch (HttpClientErrorException ex) {
             if (ex.getStatusCode() == HttpStatus.BAD_REQUEST && ex.getResponseBodyAsString().contains("invalid_grant")) {
                 log.error("User's spotify token has been invalidated. Removing the user");
-                cleanupService.notifyUserOnInvalidation(user.getId());
+                cleanupService.invalidateAndNotifyUser(user.getId());
             } else {
                 log.error("Failed to cache user with id {}", user.getId(), ex);
             }
