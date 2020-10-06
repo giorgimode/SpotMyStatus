@@ -126,6 +126,7 @@ public class SlackClient {
         } else {
             log.debug("Track \"{}\" has not changed for user {}", newStatus, user.getId());
         }
+        user.setCleaned(false);
         user.setUpdatedAt(LocalDateTime.now());
     }
 
@@ -154,6 +155,7 @@ public class SlackClient {
             SlackStatusPayload statusPayload = new SlackStatusPayload("", "");
             user.setSlackStatus("");
             updateStatus(user, statusPayload);
+            user.setCleaned(true);
         } catch (Exception e) {
             log.error("Failed to clean status for user {}", user, e);
         }
@@ -175,9 +177,6 @@ public class SlackClient {
         if (!isUserActive && !user.isCleaned()) {
             log.info("User {} is away.", user.getId());
             cleanStatus(user);
-            user.setCleaned(true);
-        } else if (isUserActive) {
-            user.setCleaned(false);
         }
         return isUserActive;
     }

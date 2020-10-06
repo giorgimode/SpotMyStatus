@@ -91,7 +91,7 @@ public class SpotifyClient {
                                                                      .withBaseUrl(spotifyApiUri + "/v1/me/player/currently-playing")
                                                                      .withBearer(user.getSpotifyAccessToken())
                                                                      .getBody(restTemplate, SpotifyCurrentTrackResponse.class);
-        if (currentTrackResponse.getSongTitle() == null || currentTrackResponse.getIsPlaying() == null) {
+        if (currentTrackResponse == null || currentTrackResponse.getSongTitle() == null || currentTrackResponse.getIsPlaying() == null) {
             return Optional.empty();
         }
         return Optional.of(currentTrackResponse);
