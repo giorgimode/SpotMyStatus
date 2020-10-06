@@ -15,4 +15,5 @@ public class PollingProperties {
     private Integer passivateAfterMin;
     private Integer passivateStartHr;
     private Integer passivateEndHr;
+    private Integer timeout;
 }
