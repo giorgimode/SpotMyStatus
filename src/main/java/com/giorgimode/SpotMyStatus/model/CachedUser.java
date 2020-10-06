@@ -16,6 +16,7 @@ public class CachedUser implements Serializable {
     private String slackStatus;
     private String slackAccessToken;
     private String spotifyAccessToken;
+    private String spotifyRefreshToken;
     private boolean disabled;
     private boolean cleaned;
     private LocalDateTime updatedAt;
@@ -27,6 +28,8 @@ public class CachedUser implements Serializable {
             .add("userId", id)
             .add("timezoneOffsetSeconds", timezoneOffsetSeconds)
             .add("slackStatus", slackStatus)
+            .add("spotifyAccessToken", spotifyAccessToken)
+            .add("spotifyRefreshToken", spotifyRefreshToken)
             .add("disabled", disabled)
             .add("cleaned", cleaned)
             .add("updatedAt", updatedAt)
@@ -43,6 +46,7 @@ public class CachedUser implements Serializable {
         private Integer timezoneOffsetSeconds;
         private String slackAccessToken;
         private String spotifyAccessToken;
+        private String spotifyRefreshToken;
         private boolean disabled;
 
         private CachedUserBuilder() {
@@ -63,6 +67,11 @@ public class CachedUser implements Serializable {
             return this;
         }
 
+        public CachedUserBuilder spotifyRefreshToken(String spotifyRefreshToken) {
+            this.spotifyRefreshToken = spotifyRefreshToken;
+            return this;
+        }
+
         public CachedUserBuilder spotifyAccessToken(String spotifyAccessToken) {
             this.spotifyAccessToken = spotifyAccessToken;
             return this;
@@ -78,6 +87,7 @@ public class CachedUser implements Serializable {
             cachedUser.setId(requireNonBlank(id));
             cachedUser.setTimezoneOffsetSeconds(requireNonNull(timezoneOffsetSeconds));
             cachedUser.setSlackAccessToken(requireNonBlank(slackAccessToken));
+            cachedUser.setSpotifyRefreshToken(requireNonBlank(spotifyRefreshToken));
             cachedUser.setSpotifyAccessToken(requireNonBlank(spotifyAccessToken));
             cachedUser.setDisabled(disabled);
             return cachedUser;

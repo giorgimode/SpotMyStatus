@@ -1,4 +1,4 @@
-package com.giorgimode.SpotMyStatus.spotify;
+package com.giorgimode.SpotMyStatus.model;
 
 public enum SpotifyScopes {
     USER_CURRENTLY_PLAYING("user-read-currently-playing"),
