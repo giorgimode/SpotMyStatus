@@ -1,6 +1,7 @@
 slack_uri: https://slack.com
 spotify_account_uri: https://accounts.spotify.com
 spotify_api_uri: https://api.spotify.com
+sign_up_uri: ${SIGN_UP_URI}
 
 secret:
   spotify:
@@ -9,6 +10,7 @@ secret:
   slack:
     client_id: ${SLACK_CLIENT_ID}
     client_secret: ${SLACK_CLIENT_SECRET}
+    bot_token: ${SLACK_BOT_TOKEN}
 
 spotmystatus:
   polling_rate: ${SLACK_POLLING_RATE:10000}

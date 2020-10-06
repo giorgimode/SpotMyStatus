@@ -7,4 +7,5 @@ public class OauthProperties {
 
     private String clientId;
     private String clientSecret;
+    private String botToken;
 }
