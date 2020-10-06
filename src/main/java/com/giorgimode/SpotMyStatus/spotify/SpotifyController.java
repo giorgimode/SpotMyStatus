@@ -21,7 +21,7 @@ public class SpotifyController {
     public SlackClient slackClient;
 
     @RequestMapping("/start")
-    public void triggerApiCall(HttpServletResponse httpServletResponse) {
+    public void startNewUser(HttpServletResponse httpServletResponse) {
         log.info("Starting authorization for a new user...");
         String authorization = slackClient.requestAuthorization();
         httpServletResponse.setHeader("Location", authorization);
@@ -29,7 +29,7 @@ public class SpotifyController {
     }
 
     @RequestMapping(SLACK_REDIRECT_PATH)
-    public void redirectEndpoint2(@RequestParam(value = "code") String slackCode, HttpServletResponse httpServletResponse) {
+    public void slackRedirect(@RequestParam(value = "code") String slackCode, HttpServletResponse httpServletResponse) {
         log.info("User has granted permission on Slack. Received code {}", slackCode);
         UUID state = slackClient.updateAuthToken(slackCode);
 
@@ -40,7 +40,7 @@ public class SpotifyController {
     }
 
     @RequestMapping("/spotify/redirect")
-    public void redirectEndpoint(@RequestParam(value = "code") String spotifyCode, @RequestParam(value = "state") UUID state) {
+    public void spotifyRedirect(@RequestParam(value = "code") String spotifyCode, @RequestParam(value = "state") UUID state) {
         log.info("User has granted permission on Spotify. Received code {} for state {}", spotifyCode, state);
         spotifyClient.updateAuthToken(spotifyCode, state);
         //todo add a welcome page here
