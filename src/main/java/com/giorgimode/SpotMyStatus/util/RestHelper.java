@@ -105,6 +105,10 @@ public final class RestHelper {
         }
     }
 
+    public <T> T postAndGetBody(RestTemplate restTemplate, Class<T> responseType) {
+        return post(restTemplate, responseType).getBody();
+    }
+
     public <T> ResponseEntity<T> get(RestTemplate restTemplate, Class<T> responseType) {
         return restTemplate.exchange(createUri(), HttpMethod.GET, new HttpEntity<>(createHeaders()), responseType);
     }

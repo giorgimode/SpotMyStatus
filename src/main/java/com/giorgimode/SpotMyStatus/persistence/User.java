@@ -28,9 +28,6 @@ public class User implements Serializable {
     @Column(name = "spotify_refresh_token", unique = true)
     private String spotifyRefreshToken;
 
-    @Column(name = "spotify_access_token", unique = true)
-    private String spotifyAccessToken;
-
     @Column(name = ("tz_offset_sec"))
     private Integer timezoneOffsetSeconds;
 
@@ -50,7 +47,6 @@ public class User implements Serializable {
             .add("userId", id)
             .add("slackAccessToken", slackAccessToken)
             .add("spotifyRefreshToken", spotifyRefreshToken)
-            .add("spotifyAccessToken", spotifyAccessToken)
             .add("timezoneOffsetSeconds", timezoneOffsetSeconds)
             .add("state", state)
             .add("disabled", disabled)

@@ -6,11 +6,12 @@ import com.giorgimode.SpotMyStatus.persistence.User;
 
 public class SpotUtil {
 
-    public static CachedUser toCachedUser(User user) {
+    public static CachedUser toCachedUser(User user, String spotifyAccessToken) {
         return CachedUser.builder()
                          .id(user.getId())
                          .slackAccessToken(user.getSlackAccessToken())
-                         .spotifyAccessToken(user.getSpotifyAccessToken())
+                         .spotifyRefreshToken(user.getSpotifyRefreshToken())
+                         .spotifyAccessToken(spotifyAccessToken)
                          .timezoneOffsetSeconds(user.getTimezoneOffsetSeconds())
                          .disabled(user.isDisabled())
                          .build();
