@@ -10,14 +10,12 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Random;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -38,21 +36,16 @@ public class StatusUpdateScheduler {
     @Autowired
     private PollingProperties pollingProperties;
 
-    //todo convert to bean
     private final ExecutorService service = Executors.newCachedThreadPool();
-//    private final ExecutorService service = Executors.newScheduledThreadPool();
 
     @Scheduled(fixedDelayString = "${spotmystatus.polling_rate}")
     public void scheduleFixedDelayTask() {
         try {
-            // https://www.baeldung.com/java-9-reactive-streams
-            // https://www.youtube.com/watch?v=_stAxdjx8qk&ab_channel=Devoxx
-            // https://www.baeldung.com/rxjava-vs-java-flow-api
-
             userCache.asMap().values().forEach(cachedUser -> {
                 try {
-                    service.submit(() -> pollUser(cachedUser)).get(pollingProperties.getTimeout(), TimeUnit.MILLISECONDS);
-                } catch (InterruptedException | TimeoutException | ExecutionException e) {
+                    CompletableFuture<Void> future = CompletableFuture.runAsync(() -> pollUser(cachedUser), service);
+                    future.completeOnTimeout(null, pollingProperties.getTimeout(), TimeUnit.MILLISECONDS);
+                } catch (Exception e) {
                     log.error("Polling user {} timed out", cachedUser.getId());
                 }
             });
@@ -63,18 +56,20 @@ public class StatusUpdateScheduler {
 
     private void pollUser(CachedUser cachedUser) {
         try {
-            //todo refactor
-            if (!slowDownIfOutsideWorkHours(cachedUser)) {
+            if (shouldSlowDownOutsideWorkHours(cachedUser)) {
                 log.trace("Skipping the polling for {} outside working hours", cachedUser.getId());
                 return;
             }
-            if (!slackClient.isUserOnline(cachedUser)) {
+            if (slackClient.isUserOffline(cachedUser)) {
+                log.trace("Skipping the polling for {} since user is offline", cachedUser.getId());
                 return;
             }
-            if (!slackClient.statusHasNotBeenManuallyChanged(cachedUser)) {
+            if (slackClient.statusHasBeenManuallyChanged(cachedUser)) {
+                log.trace("Skipping the polling for {} since status has been manually updated", cachedUser.getId());
                 return;
             }
             if (cachedUser.isDisabled()) {
+                log.trace("Skipping the polling for {} since user account is disabled", cachedUser.getId());
                 return;
             }
             updateSlackStatus(cachedUser);
@@ -83,12 +78,12 @@ public class StatusUpdateScheduler {
         }
     }
 
-    private boolean slowDownIfOutsideWorkHours(CachedUser user) {
+    private boolean shouldSlowDownOutsideWorkHours(CachedUser user) {
         if (hasBeenPassiveRecently(user) && isNonWorkingHour(user)) {
             log.debug("Slowing down polling outside nonworking hours");
-            return RANDOM.nextInt(pollingProperties.getPassivePollingProbability() / 10) == 0;
+            return RANDOM.nextInt(pollingProperties.getPassivePollingProbability() / 10) != 0;
         }
-        return true;
+        return false;
     }
 
     private boolean isNonWorkingHour(CachedUser user) {

@@ -3,7 +3,7 @@ package com.giorgimode.SpotMyStatus.slack;
 import static com.giorgimode.SpotMyStatus.common.SpotConstants.SLACK_PROFILE_READ_SCOPE;
 import static com.giorgimode.SpotMyStatus.common.SpotConstants.SLACK_PROFILE_WRITE_SCOPE;
 import static com.giorgimode.SpotMyStatus.common.SpotConstants.SLACK_REDIRECT_PATH;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 import com.giorgimode.SpotMyStatus.common.PollingProperties;
@@ -14,9 +14,9 @@ import com.giorgimode.SpotMyStatus.persistence.User;
 import com.giorgimode.SpotMyStatus.persistence.UserRepository;
 import com.giorgimode.SpotMyStatus.service.NotificationService;
 import com.giorgimode.SpotMyStatus.util.RestHelper;
-import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.jayway.jsonpath.JsonPath;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -51,9 +51,6 @@ public class SlackClient {
 
     @Autowired
     private PollingProperties pollingProperties;
-
-    @Autowired
-    private LoadingCache<String, CachedUser> userCache;
 
     @Autowired
     private NotificationService cleanupService;
@@ -162,7 +159,7 @@ public class SlackClient {
     public void cleanStatus(CachedUser user) {
         log.info("Cleaning status for user {} ", user.getId());
         try {
-            SlackStatusPayload statusPayload = new SlackStatusPayload("", "");
+            SlackStatusPayload statusPayload = new SlackStatusPayload();
             user.setSlackStatus("");
             updateStatus(user, statusPayload);
             user.setCleaned(true);
@@ -171,9 +168,9 @@ public class SlackClient {
         }
     }
 
-    public boolean isUserOnline(CachedUser user) {
+    public boolean isUserOffline(CachedUser user) {
         try {
-            return checkUserOnline(user);
+            return checkIsUserOffline(user);
         } catch (HttpClientErrorException e) {
             if (e.getStatusCode() == UNAUTHORIZED || e.getStatusCode() == FORBIDDEN) {
                 removeInvalidatedUser(user);
@@ -181,10 +178,10 @@ public class SlackClient {
         } catch (Exception e) {
             log.error("Caught", e);
         }
-        return false;
+        return true;
     }
 
-    private boolean checkUserOnline(CachedUser user) {
+    private boolean checkIsUserOffline(CachedUser user) {
         String userPresenceResponse = RestHelper.builder()
                                                 .withBaseUrl(slackUri + "/api/users.getPresence")
                                                 .withBearer(user.getSlackAccessToken())
@@ -192,6 +189,7 @@ public class SlackClient {
 
         if (userPresenceResponse.contains("invalid_auth")) {
             removeInvalidatedUser(user);
+            return true;
         }
         String usersPresence = JsonPath.read(userPresenceResponse, "$.presence");
         boolean isUserActive = "active".equalsIgnoreCase(usersPresence);
@@ -199,7 +197,7 @@ public class SlackClient {
             log.info("User {} is away.", user.getId());
             cleanStatus(user);
         }
-        return isUserActive;
+        return !isUserActive;
     }
 
     private void removeInvalidatedUser(CachedUser user) {
@@ -207,22 +205,22 @@ public class SlackClient {
         cleanupService.invalidateAndNotifyUser(user.getId());
     }
 
-    public boolean statusHasNotBeenManuallyChanged(CachedUser user) {
-        return tryCheck(() -> checkStatusHasNotBeenChanged(user));
+    public boolean statusHasBeenManuallyChanged(CachedUser user) {
+        return tryCheck(() -> checkStatusHasBeenChanged(user));
     }
 
-    public boolean checkStatusHasNotBeenChanged(CachedUser user) {
+    public boolean checkStatusHasBeenChanged(CachedUser user) {
         String userProfile = RestHelper.builder()
                                        .withBaseUrl(slackUri + "/api/users.profile.get")
                                        .withBearer(user.getSlackAccessToken())
                                        .getBody(restTemplate, String.class);
 
         String statusText = JsonPath.read(userProfile, "$.profile.status_text");
-        boolean statusHasNotBeenManuallyChanged = isBlank(statusText) || statusText.equalsIgnoreCase(user.getSlackStatus());
-        if (!statusHasNotBeenManuallyChanged) {
+        boolean statusHasBeenManuallyChanged = isNotBlank(statusText) && !statusText.equalsIgnoreCase(user.getSlackStatus());
+        if (statusHasBeenManuallyChanged) {
             log.info("Status for user {} has been manually changed. Skipping the update.", user.getId());
         }
-        return statusHasNotBeenManuallyChanged;
+        return statusHasBeenManuallyChanged;
     }
 
     private boolean tryCheck(Supplier<Boolean> supplier) {
