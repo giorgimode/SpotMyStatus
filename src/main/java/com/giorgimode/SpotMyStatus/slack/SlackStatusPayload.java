@@ -18,8 +18,8 @@ public class SlackStatusPayload {
         this.profile = payload;
     }
 
-    public SlackStatusPayload(String statusText, String statusEmoji) {
-        this(statusText, statusEmoji, null);
+    public SlackStatusPayload() {
+        this("", "", null);
     }
 
     @Getter

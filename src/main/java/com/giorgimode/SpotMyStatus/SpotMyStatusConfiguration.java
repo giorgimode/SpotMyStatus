@@ -11,8 +11,12 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import java.time.Duration;
 import java.util.Objects;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -37,6 +41,11 @@ public class SpotMyStatusConfiguration {
         restTemplateBuilder.setReadTimeout(Duration.ofSeconds(5));
         restTemplateBuilder.setConnectTimeout(Duration.ofSeconds(2));
         return restTemplateBuilder.build();
+    }
+
+    @Bean
+    public ThreadPoolExecutor cachedThreadPool(@Value("${core_pool_size}") Integer corePoolSize) {
+        return new ThreadPoolExecutor(corePoolSize, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS, new SynchronousQueue<>());
     }
 
     @Bean
