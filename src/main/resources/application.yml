@@ -2,6 +2,7 @@ slack_uri: https://slack.com
 spotify_account_uri: https://accounts.spotify.com
 spotify_api_uri: https://api.spotify.com
 sign_up_uri: ${SIGN_UP_URI}
+core_pool_size: ${CORE_POOL_SIZE:0}
 
 secret:
   spotify:
@@ -19,6 +20,11 @@ spotmystatus:
   passivate_start_hr: ${PASSIVATE_START:21}
   passivate_end_hr: ${PASSIVATE_END:6}
   timeout: ${POLLING_TIMEOUT:2000}
+  emojis:
+    - ":headphones:"
+    - ":musical_note:"
+    - ":notes:"
+
 
 spring:
   liquibase:

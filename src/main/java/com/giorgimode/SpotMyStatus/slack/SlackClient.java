@@ -125,7 +125,7 @@ public class SlackClient {
         long expiringInMs = currentTrack.getDurationMs() - currentTrack.getProgressMs();
         long expiringOnUnixTime = (System.currentTimeMillis() + expiringInMs) / 1000;
         String newStatus = currentTrack.getArtists() + " - " + currentTrack.getSongTitle();
-        SlackStatusPayload statusPayload = new SlackStatusPayload(newStatus, ":headphones:", expiringOnUnixTime);
+        SlackStatusPayload statusPayload = new SlackStatusPayload(newStatus, getEmoji(), expiringOnUnixTime);
         if (!newStatus.equalsIgnoreCase(user.getSlackStatus()) || slowDownStatusUpdates()) {
             log.info("Track: \"{}\" expiring in {} seconds", newStatus, expiringInMs / 1000);
             user.setSlackStatus(newStatus);
@@ -135,6 +135,11 @@ public class SlackClient {
         }
         user.setCleaned(false);
         user.setUpdatedAt(LocalDateTime.now());
+    }
+
+    private String getEmoji() {
+        List<String> emojis = pollingProperties.getEmojis();
+        return emojis.get(RANDOM.nextInt(emojis.size()));
     }
 
     /**
