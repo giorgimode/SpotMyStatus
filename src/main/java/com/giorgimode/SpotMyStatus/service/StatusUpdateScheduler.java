@@ -56,6 +56,10 @@ public class StatusUpdateScheduler {
 
     private void pollUser(CachedUser cachedUser) {
         try {
+            if (cachedUser.isDisabled()) {
+                log.trace("Skipping the polling for {} since user account is disabled", cachedUser.getId());
+                return;
+            }
             if (shouldSlowDownOutsideWorkHours(cachedUser)) {
                 log.trace("Skipping the polling for {} outside working hours", cachedUser.getId());
                 return;
@@ -66,10 +70,6 @@ public class StatusUpdateScheduler {
             }
             if (slackClient.statusHasBeenManuallyChanged(cachedUser)) {
                 log.trace("Skipping the polling for {} since status has been manually updated", cachedUser.getId());
-                return;
-            }
-            if (cachedUser.isDisabled()) {
-                log.trace("Skipping the polling for {} since user account is disabled", cachedUser.getId());
                 return;
             }
             updateSlackStatus(cachedUser);

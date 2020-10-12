@@ -3,10 +3,12 @@ package com.giorgimode.SpotMyStatus.slack;
 import static com.giorgimode.SpotMyStatus.common.SpotConstants.SLACK_PROFILE_READ_SCOPE;
 import static com.giorgimode.SpotMyStatus.common.SpotConstants.SLACK_PROFILE_WRITE_SCOPE;
 import static com.giorgimode.SpotMyStatus.common.SpotConstants.SLACK_REDIRECT_PATH;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 import com.giorgimode.SpotMyStatus.common.PollingProperties;
+import com.giorgimode.SpotMyStatus.common.PropertyVault;
 import com.giorgimode.SpotMyStatus.model.CachedUser;
 import com.giorgimode.SpotMyStatus.model.SlackToken;
 import com.giorgimode.SpotMyStatus.model.SpotifyCurrentTrackResponse;
@@ -14,15 +16,21 @@ import com.giorgimode.SpotMyStatus.persistence.User;
 import com.giorgimode.SpotMyStatus.persistence.UserRepository;
 import com.giorgimode.SpotMyStatus.service.NotificationService;
 import com.giorgimode.SpotMyStatus.util.RestHelper;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.jayway.jsonpath.JsonPath;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
 import java.util.function.Supplier;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import javax.xml.bind.DatatypeConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -33,6 +41,9 @@ import org.springframework.web.server.ResponseStatusException;
 @Component
 @Slf4j
 public class SlackClient {
+
+    private static final Random RANDOM = new Random();
+    private static final String SHA_256_ALGORITHM = "HmacSHA256";
 
     @Autowired
     private RestTemplate restTemplate;
@@ -55,7 +66,11 @@ public class SlackClient {
     @Autowired
     private NotificationService cleanupService;
 
-    private static final Random RANDOM = new Random();
+    @Autowired
+    private LoadingCache<String, CachedUser> userCache;
+
+    @Autowired
+    private PropertyVault propertyVault;
 
     public String requestAuthorization() {
         return RestHelper.builder()
@@ -226,6 +241,43 @@ public class SlackClient {
             log.info("Status for user {} has been manually changed. Skipping the update.", user.getId());
         }
         return statusHasBeenManuallyChanged;
+    }
+
+
+    public String pause(String userId) {
+        return Optional.ofNullable(userCache.getIfPresent(userId))
+                       .map(cachedUser -> {
+                           cleanStatus(cachedUser);
+                           cachedUser.setDisabled(true);
+                           return "Status updates have been paused";
+                       })
+                       .orElse("User not found");
+    }
+
+    public String resume(String userId) {
+        return Optional.ofNullable(userCache.getIfPresent(userId))
+                       .map(cachedUser -> {
+                           cachedUser.setDisabled(false);
+                           return "Status updates have been resumed";
+                       })
+                       .orElse("User not found");
+    }
+
+    public void validateSignature(Long timestamp, String signature, String bodyString) {
+        calculateSha256("v0:" + timestamp + ":" + bodyString)
+            .filter(hashedString -> ("v0=" + hashedString).equalsIgnoreCase(signature))
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN));
+    }
+
+    private Optional<String> calculateSha256(String message) {
+        try {
+            Mac mac = Mac.getInstance(SHA_256_ALGORITHM);
+            mac.init(new SecretKeySpec(propertyVault.getSlack().getSigningSecret().getBytes(UTF_8), SHA_256_ALGORITHM));
+            return Optional.of(DatatypeConverter.printHexBinary(mac.doFinal(message.getBytes(UTF_8))));
+        } catch (Exception e) {
+            log.error("Failed to calculate hmac-sha256", e);
+            return Optional.empty();
+        }
     }
 
     private boolean tryCheck(Supplier<Boolean> supplier) {
