@@ -3,6 +3,7 @@ package com.giorgimode.SpotMyStatus.util;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import com.giorgimode.SpotMyStatus.model.CachedUser;
 import com.giorgimode.SpotMyStatus.persistence.User;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 public class SpotUtil {
 
@@ -22,5 +23,9 @@ public class SpotUtil {
             throw new NullPointerException();
         }
         return string;
+    }
+
+    public static String baseUri() {
+        return ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
     }
 }
