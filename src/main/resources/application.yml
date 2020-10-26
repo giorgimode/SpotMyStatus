@@ -26,7 +26,6 @@ spotmystatus:
     - ":musical_note:"
     - ":notes:"
 
-
 spring:
   liquibase:
     change-log: classpath:/db/changelog/liquibase-changelog-master.xml
