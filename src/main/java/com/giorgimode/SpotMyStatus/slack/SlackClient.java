@@ -173,10 +173,11 @@ public class SlackClient {
     }
 
     private boolean updateStatus(CachedUser user, SlackStatusPayload statusPayload) {
+        //noinspection deprecation: Slack issues warning on missing charset
         String response = RestHelper.builder()
                                     .withBaseUrl(slackUri + "/api/users.profile.set")
                                     .withBearer(user.getSlackAccessToken())
-                                    .withContentType(MediaType.APPLICATION_JSON_VALUE)
+                                    .withContentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
                                     .withBody(statusPayload)
                                     .postAndGetBody(restTemplate, String.class);
 
@@ -244,15 +245,19 @@ public class SlackClient {
                                        .getBody(restTemplate, String.class);
 
         String statusText = JsonPath.read(userProfile, "$.profile.status_text");
-        boolean statusHasBeenManuallyChanged = isNotBlank(statusText) &&
-            (!statusText.equalsIgnoreCase(user.getSlackStatus()) || user.isManualStatus());
+        // Slack escapes reserved characters, see here https://api.slack.com/reference/surfaces/formatting#escaping
+        String sanitizedStatus = statusText.replaceAll("&amp;", "&")
+                                           .replaceAll("&lt;", "<")
+                                           .replaceAll("&gt;", ">");
+        boolean statusHasBeenManuallyChanged = isNotBlank(sanitizedStatus) &&
+            (!sanitizedStatus.equalsIgnoreCase(user.getSlackStatus()) || user.isManualStatus());
         if (statusHasBeenManuallyChanged) {
             log.info("Status for user {} has been manually changed. Skipping the update.", user.getId());
             user.setManualStatus(true);
         } else {
             user.setManualStatus(false);
         }
-        user.setSlackStatus(statusText);
+        user.setSlackStatus(sanitizedStatus);
         return statusHasBeenManuallyChanged;
     }
 
@@ -261,7 +266,7 @@ public class SlackClient {
         return Optional.ofNullable(userCache.getIfPresent(userId))
                        .map(cachedUser -> {
                            cleanStatus(cachedUser);
-                           cachedUser.setDisabled(true);
+                           cachedUser.setDisabled(true); //todo persist
                            return "Status updates have been paused";
                        })
                        .orElse("User not found");
