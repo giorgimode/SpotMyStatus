@@ -30,17 +30,20 @@ jobs:
         run: chmod +x gradlew
       - name: Build with Gradle
         run: ./gradlew build
+      - name: Echo build number
+        run: echo $GITHUB_RUN_NUMBER "and"  $GITHUB_RUN_ID
 
-      - name: Generate deployment package
-        run: zip -r deploy-3.zip * -x ./build/libs/spotmystatus-0.0.1-SNAPSHOT.jar
-      - name: Deploy to AWS Beanstalk
-        uses: einaregilsson/beanstalk-deploy@v13
-        with:
-          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          application_name: SpotMyStatus
-          environment_name: Spotmystatus-env-1
-          version_label: Ver-3
-          use_existing_version_if_available: true
-          region: eu-central-1
-          deployment_package: deploy-3.zip
+# todo cleanup git history
+#      - name: Generate deployment package
+#        run: zip -r deploy-3.zip * -x ./build/libs/spotmystatus-0.0.1-SNAPSHOT.jar
+#      - name: Deploy to AWS Beanstalk
+#        uses: einaregilsson/beanstalk-deploy@v13
+#        with:
+#          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#          application_name: SpotMyStatus
+#          environment_name: Spotmystatus-env-1
+#          version_label: Ver-3
+#          use_existing_version_if_available: true
+#          region: eu-central-1
+#          deployment_package: deploy-3.zip

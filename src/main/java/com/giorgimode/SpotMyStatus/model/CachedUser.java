@@ -14,6 +14,7 @@ public class CachedUser implements Serializable {
     private String id;
     private Integer timezoneOffsetSeconds;
     private String slackStatus;
+    private boolean manualStatus;
     private String slackAccessToken;
     private String spotifyAccessToken;
     private String spotifyRefreshToken;
@@ -28,6 +29,7 @@ public class CachedUser implements Serializable {
             .add("userId", id)
             .add("timezoneOffsetSeconds", timezoneOffsetSeconds)
             .add("slackStatus", slackStatus)
+            .add("manualStatus", manualStatus)
             .add("spotifyAccessToken", spotifyAccessToken)
             .add("spotifyRefreshToken", spotifyRefreshToken)
             .add("disabled", disabled)

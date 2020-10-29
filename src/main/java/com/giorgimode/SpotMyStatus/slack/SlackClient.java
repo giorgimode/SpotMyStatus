@@ -29,6 +29,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -140,12 +141,13 @@ public class SlackClient {
     private void tryUpdateAndPersistStatus(CachedUser user, SpotifyCurrentTrackResponse currentTrack) {
         long expiringInMs = currentTrack.getDurationMs() - currentTrack.getProgressMs();
         long expiringOnUnixTime = (System.currentTimeMillis() + expiringInMs) / 1000;
-        String newStatus = currentTrack.getArtists() + " - " + currentTrack.getSongTitle();
+        String newStatus = buildNewStatus(currentTrack);
         SlackStatusPayload statusPayload = new SlackStatusPayload(newStatus, getEmoji(), expiringOnUnixTime);
-        if (!newStatus.equalsIgnoreCase(user.getSlackStatus()) || slowDownStatusUpdates()) {
-            log.info("Track: \"{}\" expiring in {} seconds", newStatus, expiringInMs / 1000);
-            user.setSlackStatus(newStatus);
-            updateStatus(user, statusPayload);
+        if (!newStatus.equalsIgnoreCase(user.getSlackStatus())) {
+            if (updateStatus(user, statusPayload)) {
+                log.info("Track: \"{}\" expiring in {} seconds", newStatus, expiringInMs / 1000);
+                user.setSlackStatus(newStatus);
+            }
         } else {
             log.debug("Track \"{}\" has not changed for user {}", newStatus, user.getId());
         }
@@ -153,28 +155,33 @@ public class SlackClient {
         user.setUpdatedAt(LocalDateTime.now());
     }
 
+    /**
+     * Slack only allows max 100character as a status. In this case we first drop extra artists and also trim if necessary
+     */
+    private String buildNewStatus(SpotifyCurrentTrackResponse currentTrack) {
+        String newStatus = String.join(", ", currentTrack.getArtists()) + " - " + currentTrack.getSongTitle();
+        if (newStatus.length() > 100) {
+            String firstArtistOnly = currentTrack.getArtists().get(0);
+            newStatus = StringUtils.abbreviate(firstArtistOnly + " - " + currentTrack.getSongTitle(), 100);
+        }
+        return newStatus;
+    }
+
     private String getEmoji() {
         List<String> emojis = pollingProperties.getEmojis();
         return emojis.get(RANDOM.nextInt(emojis.size()));
     }
 
-    /**
-     * if status hasn't changed, there should not be a need to update it again
-     * <p>
-     * However, Slack sometimes has a hiccup and status is not updated, even though it returns success
-     */
-    private boolean slowDownStatusUpdates() {
-        return RANDOM.nextInt(pollingProperties.getPassivePollingProbability() / 10) == 0;
-    }
+    private boolean updateStatus(CachedUser user, SlackStatusPayload statusPayload) {
+        String response = RestHelper.builder()
+                                    .withBaseUrl(slackUri + "/api/users.profile.set")
+                                    .withBearer(user.getSlackAccessToken())
+                                    .withContentType(MediaType.APPLICATION_JSON_VALUE)
+                                    .withBody(statusPayload)
+                                    .postAndGetBody(restTemplate, String.class);
 
-    private void updateStatus(CachedUser user, SlackStatusPayload statusPayload) {
-        ResponseEntity<String> responseEntity = RestHelper.builder()
-                                                          .withBaseUrl(slackUri + "/api/users.profile.set")
-                                                          .withBearer(user.getSlackAccessToken())
-                                                          .withContentType(MediaType.APPLICATION_JSON_VALUE)
-                                                          .withBody(statusPayload)
-                                                          .post(restTemplate, String.class);
-        log.trace("Slack response to status update {}", responseEntity.getBody());
+        log.trace("Slack response to status update {}", response);
+        return JsonPath.read(response, "$.ok");
     }
 
     public void cleanStatus(CachedUser user) {
@@ -237,10 +244,15 @@ public class SlackClient {
                                        .getBody(restTemplate, String.class);
 
         String statusText = JsonPath.read(userProfile, "$.profile.status_text");
-        boolean statusHasBeenManuallyChanged = isNotBlank(statusText) && !statusText.equalsIgnoreCase(user.getSlackStatus());
+        boolean statusHasBeenManuallyChanged = isNotBlank(statusText) &&
+            (!statusText.equalsIgnoreCase(user.getSlackStatus()) || user.isManualStatus());
         if (statusHasBeenManuallyChanged) {
             log.info("Status for user {} has been manually changed. Skipping the update.", user.getId());
+            user.setManualStatus(true);
+        } else {
+            user.setManualStatus(false);
         }
+        user.setSlackStatus(statusText);
         return statusHasBeenManuallyChanged;
     }
 
