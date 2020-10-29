@@ -22,7 +22,7 @@ public class SpotifyCurrentTrackResponse {
 
     private String songTitle;
 
-    private String artists;
+    private List<String> artists;
 
     @SuppressWarnings("unchecked")
     @JsonProperty("item")
@@ -32,6 +32,6 @@ public class SpotifyCurrentTrackResponse {
         this.songTitle = (String) item.get("name");
         this.artists = artists.stream()
                               .map(artistProperties -> (String) artistProperties.get("name"))
-                              .collect(Collectors.joining(", "));
+                              .collect(Collectors.toList());
     }
 }
