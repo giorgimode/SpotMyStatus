@@ -266,7 +266,8 @@ public class SlackClient {
         return Optional.ofNullable(userCache.getIfPresent(userId))
                        .map(cachedUser -> {
                            cleanStatus(cachedUser);
-                           cachedUser.setDisabled(true); //todo persist
+                           cachedUser.setDisabled(true);
+                           persistState(userId, true);
                            return "Status updates have been paused";
                        })
                        .orElse("User not found");
@@ -275,8 +276,26 @@ public class SlackClient {
     public String resume(String userId) {
         return Optional.ofNullable(userCache.getIfPresent(userId))
                        .map(cachedUser -> {
+                           persistState(userId, false);
                            cachedUser.setDisabled(false);
                            return "Status updates have been resumed";
+                       })
+                       .orElse("User not found");
+    }
+
+    private void persistState(String userId, boolean isDisabled) {
+        userRepository.findById(userId).ifPresent(user -> {
+            user.setDisabled(isDisabled);
+            userRepository.save(user);
+        });
+    }
+
+    public String purge(String userId) {
+        return Optional.ofNullable(userCache.getIfPresent(userId))
+                       .map(cachedUser -> {
+                           userRepository.findById(userId).ifPresent(user -> userRepository.delete(user));
+                           userCache.invalidate(cachedUser);
+                           return "User data has been purged";
                        })
                        .orElse("User not found");
     }
