@@ -293,6 +293,7 @@ public class SlackClient {
     public String purge(String userId) {
         return Optional.ofNullable(userCache.getIfPresent(userId))
                        .map(cachedUser -> {
+                           cleanStatus(cachedUser);
                            userRepository.findById(userId).ifPresent(user -> userRepository.delete(user));
                            userCache.invalidate(cachedUser);
                            return "User data has been purged";
