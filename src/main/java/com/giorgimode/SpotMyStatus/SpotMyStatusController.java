@@ -25,6 +25,7 @@ public class SpotMyStatusController {
 
     private static final List<String> PAUSE_COMMANDS = List.of("pause", "stop");
     private static final List<String> RESUME_COMMANDS = List.of("unpause", "play", "resume");
+    private static final List<String> REMOVE_COMMANDS = List.of("remove", "purge");
 
     @Autowired
     private SpotifyClient spotifyClient;
@@ -79,6 +80,10 @@ public class SpotMyStatusController {
         if (RESUME_COMMANDS.contains(command)) {
             log.debug("Resuming updates for user {}", userId);
             return slackClient.resume(userId);
+        }
+        if (REMOVE_COMMANDS.contains(command)) {
+            log.debug("Removing all data for user {}", userId);
+            return slackClient.purge(userId);
         }
 
         return "- `pause`/`stop` to temporarily pause status updates\n- `unpause`/`play`/`resume` to resume status updates";
