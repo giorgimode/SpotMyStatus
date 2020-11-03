@@ -1,10 +1,9 @@
-name: Java CI with Gradle
+name: Java CI with Gradle for master branch
 
 on:
   push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+    branches:
+      - master
 
 jobs:
   build:
