@@ -4,8 +4,7 @@ plugins {
     id 'java'
 }
 
-group = 'com.giorgimode'
-version = '0.0.1-SNAPSHOT'
+version = "${baseVersion}"
 sourceCompatibility = '11'
 
 configurations {
@@ -45,5 +44,6 @@ dependencies {
 }
 
 test {
+    environment "artifact.version", "$version"
     useJUnitPlatform()
 }
