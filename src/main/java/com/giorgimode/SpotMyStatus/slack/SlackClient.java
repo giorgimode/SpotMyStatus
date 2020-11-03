@@ -295,7 +295,7 @@ public class SlackClient {
                        .map(cachedUser -> {
                            cleanStatus(cachedUser);
                            userRepository.findById(userId).ifPresent(user -> userRepository.delete(user));
-                           userCache.invalidate(cachedUser);
+                           userCache.invalidate(userId);
                            return "User data has been purged";
                        })
                        .orElse("User not found");
