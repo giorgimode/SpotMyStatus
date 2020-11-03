@@ -86,6 +86,8 @@ public class SpotMyStatusController {
             return slackClient.purge(userId);
         }
 
-        return "- `pause`/`stop` to temporarily pause status updates\n- `unpause`/`play`/`resume` to resume status updates";
+        return "- `pause`/`stop` to temporarily pause status updates"
+            + "\n- `unpause`/`play`/`resume` to resume status updates"
+            + "\n- `purge`/`remove` to purge all user data. Fresh signup will be needed to use the app again";
     }
 }
