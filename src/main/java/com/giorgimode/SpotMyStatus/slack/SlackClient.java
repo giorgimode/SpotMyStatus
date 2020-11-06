@@ -5,6 +5,7 @@ import static com.giorgimode.SpotMyStatus.common.SpotConstants.SLACK_PROFILE_WRI
 import static com.giorgimode.SpotMyStatus.common.SpotConstants.SLACK_REDIRECT_PATH;
 import static com.giorgimode.SpotMyStatus.util.SpotUtil.baseUri;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
@@ -84,14 +85,18 @@ public class SlackClient {
 
     }
 
-    public UUID updateAuthToken(String spotifyCode) {
+    public UUID updateAuthToken(String slackCode) {
         SlackToken slackToken = tryCall(() -> RestHelper.builder()
                                                         .withBaseUrl(slackUri + "/api/oauth.v2.access")
                                                         .withQueryParam("client_id", slackClientId)
                                                         .withQueryParam("client_secret", slackClientSecret)
-                                                        .withQueryParam("code", spotifyCode)
+                                                        .withQueryParam("code", slackCode)
+                                                        .withQueryParam("redirect_uri", baseUri() + SLACK_REDIRECT_PATH)
                                                         .get(restTemplate, SlackToken.class));
-
+        if (isBlank(slackToken.getAccessToken())) {
+            log.error("Slack access token not returned");
+            throw new ResponseStatusException(UNAUTHORIZED);
+        }
         UUID state = UUID.randomUUID();
         persistNewUser(slackToken, state);
         return state;
