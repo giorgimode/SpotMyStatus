@@ -56,10 +56,6 @@ public class SpotMyStatusController {
     public void spotifyRedirect(@RequestParam(value = "code") String spotifyCode, @RequestParam(value = "state") UUID state) {
         log.info("User has granted permission on Spotify. Received code {} for state {}", spotifyCode, state);
         spotifyClient.updateAuthToken(spotifyCode, state);
-        //todo
-        // deploy the webapp to beanstalk and get an url
-        // add static page with a button that refers to that url(/start)
-        // redirect from here to static success page
     }
 
     @PostMapping(value = "/slack/command", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
