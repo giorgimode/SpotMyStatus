@@ -44,4 +44,4 @@ jobs:
           use_existing_version_if_available: false
           wait_for_environment_recovery: 180
           region: eu-central-1
-          deployment_package: ./build/libs/spotmystatus-${{ steps.read_artifact_version.outputs.value }}.jar
+          deployment_package: ./backend/build/libs/spotmystatus-${{ steps.read_artifact_version.outputs.value }}.jar
