@@ -54,6 +54,15 @@ dependencies {
     }
 }
 
+task copyTask(type: Copy) {
+    from '../frontend/.'
+    into 'build/resources/main/static'
+}
+
+bootJar {
+    dependsOn copyTask
+}
+
 jar.baseName = 'spotmystatus';
 jar {
     baseName = 'spotmystatus'
