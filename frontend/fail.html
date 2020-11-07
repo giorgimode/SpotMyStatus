@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<div id="header-placeholder"></div>
+
+<body>
+
+<div id="nav-placeholder"></div>
+
+<!-- Masthead -->
+<header class="masthead-fail text-white text-center">
+  <div class="overlay"></div>
+  <div class="container">
+    <div class="row">
+      <div class="col-12 mb-auto">
+        <img src="img/spotify-slack-broken.png" alt="" class="spotify-slack">
+      </div>
+      <div class="col-12">
+        <h1>Well, that did not go as expected</h1>
+        <h2>Try again or submit a bug ticket above if the issue persists</h2>
+      </div>
+      <div class="col-12 my-auto">
+        <div id="connect-button-placeholder">
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Bootstrap core JavaScript -->
+<script src="vendor/jquery/jquery.min.js"></script>
+<script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script>
+  $.get("html/nav.html", function (data) {
+    $("#nav-placeholder").replaceWith(data);
+  });
+</script>
+<script>
+  $.get("html/head.html", function (data) {
+    $("#header-placeholder").replaceWith(data);
+  });
+</script>
+<script>
+  $.get("html/connect-button.html", function (data) {
+    $("#connect-button-placeholder").replaceWith(data);
+  });
+</script>
+</body>
+
+</html>

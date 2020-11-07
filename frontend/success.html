@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<div id="header-placeholder"></div>
+
+<body>
+
+<div id="nav-placeholder"></div>
+
+<!-- Masthead -->
+<header class="masthead text-white text-center">
+  <div class="overlay"></div>
+  <div class="container">
+    <div class="row">
+      <div class="col-12 mb-auto">
+        <img src="img/spotify-slack-success.png" alt="" class="spotify-slack">
+      </div>
+      <div class="col-12">
+        <h1>Successfully Connected</h1>
+        <h2>JAM ON!</h2>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Bootstrap core JavaScript -->
+<script src="vendor/jquery/jquery.min.js"></script>
+<script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script>
+  $.get("html/nav.html", function (data) {
+    $("#nav-placeholder").replaceWith(data);
+  });
+</script>
+<script>
+  $.get("html/head.html", function (data) {
+    $("#header-placeholder").replaceWith(data);
+  });
+</script>
+<script>
+  $.get("html/connect-button.html", function (data) {
+    $("#connect-button-placeholder").replaceWith(data);
+  });
+</script>
+</body>
+
+</html>
