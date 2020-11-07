@@ -1,1 +1,3 @@
 rootProject.name = 'spotmystatus'
+include 'backend'
+project(":backend").name = "spotmystatus"
