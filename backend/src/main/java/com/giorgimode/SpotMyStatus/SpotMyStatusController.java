@@ -2,9 +2,11 @@ package com.giorgimode.SpotMyStatus;
 
 import static com.giorgimode.SpotMyStatus.common.SpotConstants.SLACK_REDIRECT_PATH;
 import static com.giorgimode.SpotMyStatus.common.SpotConstants.SPOTIFY_REDIRECT_PATH;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 import com.giorgimode.SpotMyStatus.slack.SlackClient;
 import com.giorgimode.SpotMyStatus.spotify.SpotifyClient;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -42,7 +44,16 @@ public class SpotMyStatusController {
     }
 
     @RequestMapping(SLACK_REDIRECT_PATH)
-    public void slackRedirect(@RequestParam(value = "code") String slackCode, HttpServletResponse httpServletResponse) {
+    public void slackRedirect(@RequestParam(value = "code", required = false) String slackCode,
+        @RequestParam(value = "error", required = false) String error,
+        HttpServletResponse httpServletResponse) throws IOException {
+
+        if (slackCode == null) {
+            log.info("User failed to grant permission on Slack. Received code {} with error {}", slackCode, error);
+            httpServletResponse.sendRedirect("/error.html");
+            return;
+        }
+
         log.info("User has granted permission on Slack. Received code {}", slackCode);
         UUID state = slackClient.updateAuthToken(slackCode);
 
@@ -53,9 +64,20 @@ public class SpotMyStatusController {
     }
 
     @RequestMapping(SPOTIFY_REDIRECT_PATH)
-    public void spotifyRedirect(@RequestParam(value = "code") String spotifyCode, @RequestParam(value = "state") UUID state) {
+    public void spotifyRedirect(@RequestParam(value = "code", required = false) String spotifyCode,
+        @RequestParam(value = "state", required = false) UUID state,
+        @RequestParam(value = "error", required = false) String error,
+        HttpServletResponse httpServletResponse) throws IOException {
+
+        if (state == null || isBlank(spotifyCode)) {
+            log.info("User failed to grant permission on Spotify. Received code {}, state {} with error {}", spotifyCode, state, error);
+            httpServletResponse.sendRedirect("/error.html");
+            return;
+        }
+
         log.info("User has granted permission on Spotify. Received code {} for state {}", spotifyCode, state);
         spotifyClient.updateAuthToken(spotifyCode, state);
+        httpServletResponse.sendRedirect("/success.html");
     }
 
     @PostMapping(value = "/slack/command", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
