@@ -1,3 +1,4 @@
+redirect_uri_scheme: ${REDIRECT_URI_SCHEME:https}
 slack_uri: https://slack.com
 spotify_account_uri: https://accounts.spotify.com
 spotify_api_uri: https://api.spotify.com

@@ -1,6 +1,6 @@
 package com.giorgimode.SpotMyStatus.service;
 
-import com.giorgimode.SpotMyStatus.common.PollingProperties;
+import com.giorgimode.SpotMyStatus.common.SpotMyStatusProperties;
 import com.giorgimode.SpotMyStatus.model.CachedUser;
 import com.giorgimode.SpotMyStatus.model.SpotifyCurrentTrackResponse;
 import com.giorgimode.SpotMyStatus.slack.SlackClient;
@@ -34,7 +34,7 @@ public class StatusUpdateScheduler {
     private SpotifyClient spotifyClient;
 
     @Autowired
-    private PollingProperties pollingProperties;
+    private SpotMyStatusProperties spotMyStatusProperties;
 
     private final ExecutorService service = Executors.newCachedThreadPool();
 
@@ -44,7 +44,7 @@ public class StatusUpdateScheduler {
             userCache.asMap().values().forEach(cachedUser -> {
                 try {
                     CompletableFuture<Void> future = CompletableFuture.runAsync(() -> pollUser(cachedUser), service);
-                    future.completeOnTimeout(null, pollingProperties.getTimeout(), TimeUnit.MILLISECONDS);
+                    future.completeOnTimeout(null, spotMyStatusProperties.getTimeout(), TimeUnit.MILLISECONDS);
                 } catch (Exception e) {
                     log.error("Polling user {} timed out", cachedUser.getId());
                 }
@@ -81,19 +81,19 @@ public class StatusUpdateScheduler {
     private boolean shouldSlowDownOutsideWorkHours(CachedUser user) {
         if (hasBeenPassiveRecently(user) && isNonWorkingHour(user)) {
             log.debug("Slowing down polling outside nonworking hours");
-            return RANDOM.nextInt(pollingProperties.getPassivePollingProbability() / 10) != 0;
+            return RANDOM.nextInt(spotMyStatusProperties.getPassivePollingProbability() / 10) != 0;
         }
         return false;
     }
 
     private boolean isNonWorkingHour(CachedUser user) {
         int currentHour = LocalDateTime.now(ZoneOffset.ofTotalSeconds(user.getTimezoneOffsetSeconds())).getHour();
-        return !(currentHour > pollingProperties.getPassivateEndHr() && currentHour < pollingProperties.getPassivateStartHr());
+        return !(currentHour > spotMyStatusProperties.getPassivateEndHr() && currentHour < spotMyStatusProperties.getPassivateStartHr());
     }
 
     private boolean hasBeenPassiveRecently(CachedUser user) {
         return user.getUpdatedAt() != null
-            && Duration.between(LocalDateTime.now(), user.getUpdatedAt()).toMinutes() > pollingProperties.getPassivateAfterMin();
+            && Duration.between(LocalDateTime.now(), user.getUpdatedAt()).toMinutes() > spotMyStatusProperties.getPassivateAfterMin();
     }
 
     private void updateSlackStatus(CachedUser user) {
