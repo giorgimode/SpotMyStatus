@@ -1,7 +1,6 @@
 package com.giorgimode.SpotMyStatus.slack;
 
-import static com.giorgimode.SpotMyStatus.common.SpotConstants.SLACK_PROFILE_READ_SCOPE;
-import static com.giorgimode.SpotMyStatus.common.SpotConstants.SLACK_PROFILE_WRITE_SCOPE;
+import static com.giorgimode.SpotMyStatus.common.SpotConstants.SLACK_PROFILE_SCOPES;
 import static com.giorgimode.SpotMyStatus.common.SpotConstants.SLACK_REDIRECT_PATH;
 import static com.giorgimode.SpotMyStatus.util.SpotUtil.baseUri;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -79,7 +78,7 @@ public class SlackClient {
         return RestHelper.builder()
                          .withBaseUrl(slackUri + "/oauth/v2/authorize")
                          .withQueryParam("client_id", slackClientId)
-                         .withQueryParam("user_scope", SLACK_PROFILE_READ_SCOPE + "," + SLACK_PROFILE_WRITE_SCOPE)
+                         .withQueryParam("user_scope", String.join(",", SLACK_PROFILE_SCOPES))
                          .withQueryParam("redirect_uri", baseUri()  + SLACK_REDIRECT_PATH)
                          .createUri();
 
@@ -119,6 +118,7 @@ public class SlackClient {
                                                     .withQueryParam("user", slackToken.getId())
                                                     .get(restTemplate, String.class));
 
+        log.trace("Received response {}", userString);
         return JsonPath.read(userString, "$.user.tz_offset");
     }
 
@@ -221,7 +221,8 @@ public class SlackClient {
                                                 .withBearer(user.getSlackAccessToken())
                                                 .getBody(restTemplate, String.class);
 
-        if (userPresenceResponse.contains("invalid_auth")) {
+        if (userPresenceResponse.contains("invalid_auth") || userPresenceResponse.contains("token_revoked")) {
+            log.trace(userPresenceResponse);
             removeInvalidatedUser(user);
             return true;
         }
