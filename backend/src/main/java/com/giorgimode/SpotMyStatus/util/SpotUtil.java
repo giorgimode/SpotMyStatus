@@ -25,7 +25,7 @@ public class SpotUtil {
         return string;
     }
 
-    public static String baseUri() {
-        return ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
+    public static String baseUri(String scheme) {
+        return ServletUriComponentsBuilder.fromCurrentContextPath().scheme(scheme).build().toUriString();
     }
 }

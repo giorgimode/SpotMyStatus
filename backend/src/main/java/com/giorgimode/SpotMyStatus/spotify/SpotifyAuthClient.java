@@ -20,7 +20,6 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @Component
 @Slf4j
@@ -35,6 +34,9 @@ public class SpotifyAuthClient {
     @Value("${spotify_account_uri}")
     private String spotifyAccountUri;
 
+
+    @Value("${redirect_uri_scheme}")
+    private String uriScheme;
 
     public SpotifyTokenResponse getSpotifyTokens(String code) {
         OauthProperties authProps = propertyVault.getSpotify();
@@ -63,7 +65,7 @@ public class SpotifyAuthClient {
         MultiValueMap<String, String> authMap = new LinkedMultiValueMap<>();
         authMap.add("grant_type", "authorization_code");
         authMap.add("code", code);
-        authMap.add("redirect_uri", baseUri() + SPOTIFY_REDIRECT_PATH);
+        authMap.add("redirect_uri", baseUri(uriScheme) + SPOTIFY_REDIRECT_PATH);
         return authMap;
     }
 
@@ -72,7 +74,7 @@ public class SpotifyAuthClient {
                          .withBaseUrl(spotifyAccountUri + "/authorize")
                          .withQueryParam("client_id", propertyVault.getSpotify().getClientId())
                          .withQueryParam("response_type", "code")
-                         .withQueryParam("redirect_uri", baseUri() + SPOTIFY_REDIRECT_PATH)
+                         .withQueryParam("redirect_uri", baseUri(uriScheme) + SPOTIFY_REDIRECT_PATH)
                          .withQueryParam("scope", USER_CURRENTLY_PLAYING.scope() + " " + USER_TOP_READ.scope())
                          .withQueryParam("state", state)
                          .createUri();
