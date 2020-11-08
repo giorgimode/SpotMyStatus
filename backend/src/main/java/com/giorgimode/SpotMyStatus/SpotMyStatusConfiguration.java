@@ -68,7 +68,7 @@ public class SpotMyStatusConfiguration {
 
     private String getAccessToken(SpotifyAuthClient spotifyAuthClient, User user) {
         SpotifyTokenResponse newAccessToken = spotifyAuthClient.getNewAccessToken(user.getSpotifyRefreshToken());
-        log.info("Retrieved spotify access token {} expiring in {} seconds", newAccessToken.getAccessToken(), newAccessToken.getExpiresIn());
+        log.info("Retrieved spotify access token expiring in {} seconds", newAccessToken.getExpiresIn());
         return newAccessToken.getAccessToken();
     }
 
