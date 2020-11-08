@@ -1,5 +1,6 @@
 package com.giorgimode.SpotMyStatus.slack;
 
+import static com.giorgimode.SpotMyStatus.common.SpotConstants.SLACK_BOT_SCOPES;
 import static com.giorgimode.SpotMyStatus.common.SpotConstants.SLACK_PROFILE_SCOPES;
 import static com.giorgimode.SpotMyStatus.common.SpotConstants.SLACK_REDIRECT_PATH;
 import static com.giorgimode.SpotMyStatus.util.SpotUtil.baseUri;
@@ -82,6 +83,7 @@ public class SlackClient {
                          .withBaseUrl(slackUri + "/oauth/v2/authorize")
                          .withQueryParam("client_id", slackClientId)
                          .withQueryParam("user_scope", String.join(",", SLACK_PROFILE_SCOPES))
+                         .withQueryParam("scope", String.join(",", SLACK_BOT_SCOPES))
                          .withQueryParam("redirect_uri", baseUri(uriScheme) + SLACK_REDIRECT_PATH)
                          .createUri();
 
