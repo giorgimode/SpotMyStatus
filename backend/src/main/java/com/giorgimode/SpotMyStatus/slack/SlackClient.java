@@ -1,7 +1,6 @@
 package com.giorgimode.SpotMyStatus.slack;
 
-import static com.giorgimode.SpotMyStatus.common.SpotConstants.SLACK_PROFILE_READ_SCOPE;
-import static com.giorgimode.SpotMyStatus.common.SpotConstants.SLACK_PROFILE_WRITE_SCOPE;
+import static com.giorgimode.SpotMyStatus.common.SpotConstants.SLACK_PROFILE_SCOPES;
 import static com.giorgimode.SpotMyStatus.common.SpotConstants.SLACK_REDIRECT_PATH;
 import static com.giorgimode.SpotMyStatus.util.SpotUtil.baseUri;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -79,7 +78,7 @@ public class SlackClient {
         return RestHelper.builder()
                          .withBaseUrl(slackUri + "/oauth/v2/authorize")
                          .withQueryParam("client_id", slackClientId)
-                         .withQueryParam("user_scope", SLACK_PROFILE_READ_SCOPE + "," + SLACK_PROFILE_WRITE_SCOPE)
+                         .withQueryParam("user_scope", String.join(",", SLACK_PROFILE_SCOPES))
                          .withQueryParam("redirect_uri", baseUri()  + SLACK_REDIRECT_PATH)
                          .createUri();
 
