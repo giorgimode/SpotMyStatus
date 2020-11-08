@@ -51,7 +51,7 @@ public class SpotMyStatusController {
         HttpServletResponse httpServletResponse) throws IOException {
 
         if (slackCode == null) {
-            log.info("User failed to grant permission on Slack. Received code {} with error {}", slackCode, error);
+            log.info("User failed to grant permission on Slack. Received error {}", error);
             httpServletResponse.sendRedirect("/error.html");
             return;
         }

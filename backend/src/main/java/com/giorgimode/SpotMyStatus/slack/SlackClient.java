@@ -119,6 +119,7 @@ public class SlackClient {
                                                     .withQueryParam("user", slackToken.getId())
                                                     .get(restTemplate, String.class));
 
+        log.trace("Received response {}", userString);
         return JsonPath.read(userString, "$.user.tz_offset");
     }
 
@@ -221,7 +222,8 @@ public class SlackClient {
                                                 .withBearer(user.getSlackAccessToken())
                                                 .getBody(restTemplate, String.class);
 
-        if (userPresenceResponse.contains("invalid_auth")) {
+        if (userPresenceResponse.contains("invalid_auth") || userPresenceResponse.contains("token_revoked")) {
+            log.trace(userPresenceResponse);
             removeInvalidatedUser(user);
             return true;
         }
