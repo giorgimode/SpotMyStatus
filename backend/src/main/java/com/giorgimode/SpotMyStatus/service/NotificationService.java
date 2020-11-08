@@ -26,7 +26,7 @@ public class NotificationService {
     @Value("${slack_uri}")
     private String slackUri;
 
-    @Value("${sign_up_uri}")  //todo
+    @Value("${sign_up_uri}")
     private String signupUri;
 
     @Autowired
