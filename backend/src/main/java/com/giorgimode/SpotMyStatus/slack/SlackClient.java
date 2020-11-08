@@ -8,8 +8,8 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
-import com.giorgimode.SpotMyStatus.common.PollingProperties;
 import com.giorgimode.SpotMyStatus.common.PropertyVault;
+import com.giorgimode.SpotMyStatus.common.SpotMyStatusProperties;
 import com.giorgimode.SpotMyStatus.model.CachedUser;
 import com.giorgimode.SpotMyStatus.model.SlackToken;
 import com.giorgimode.SpotMyStatus.model.SpotifyCurrentTrackResponse;
@@ -59,11 +59,14 @@ public class SlackClient {
     @Value("${slack_uri}")
     private String slackUri;
 
+    @Value("${redirect_uri_scheme}")
+    private String uriScheme;
+
     @Autowired
     private UserRepository userRepository;
 
     @Autowired
-    private PollingProperties pollingProperties;
+    private SpotMyStatusProperties spotMyStatusProperties;
 
     @Autowired
     private NotificationService cleanupService;
@@ -79,7 +82,7 @@ public class SlackClient {
                          .withBaseUrl(slackUri + "/oauth/v2/authorize")
                          .withQueryParam("client_id", slackClientId)
                          .withQueryParam("user_scope", String.join(",", SLACK_PROFILE_SCOPES))
-                         .withQueryParam("redirect_uri", baseUri()  + SLACK_REDIRECT_PATH)
+                         .withQueryParam("redirect_uri", baseUri(uriScheme) + SLACK_REDIRECT_PATH)
                          .createUri();
 
     }
@@ -90,7 +93,7 @@ public class SlackClient {
                                                         .withQueryParam("client_id", slackClientId)
                                                         .withQueryParam("client_secret", slackClientSecret)
                                                         .withQueryParam("code", slackCode)
-                                                        .withQueryParam("redirect_uri", baseUri() + SLACK_REDIRECT_PATH)
+                                                        .withQueryParam("redirect_uri", baseUri(uriScheme) + SLACK_REDIRECT_PATH)
                                                         .get(restTemplate, SlackToken.class));
         if (isBlank(slackToken.getAccessToken())) {
             log.error("Slack access token not returned");
@@ -173,7 +176,7 @@ public class SlackClient {
     }
 
     private String getEmoji() {
-        List<String> emojis = pollingProperties.getEmojis();
+        List<String> emojis = spotMyStatusProperties.getEmojis();
         return emojis.get(RANDOM.nextInt(emojis.size()));
     }
 

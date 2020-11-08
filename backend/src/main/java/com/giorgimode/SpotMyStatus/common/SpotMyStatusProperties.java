@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 @Component
 @Getter
 @Setter
-public class PollingProperties {
+public class SpotMyStatusProperties {
 
     private Integer passivePollingProbability;
     private Integer passivateAfterMin;
