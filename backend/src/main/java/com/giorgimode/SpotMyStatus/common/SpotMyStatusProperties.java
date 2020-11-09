@@ -17,5 +17,6 @@ public class SpotMyStatusProperties {
     private Integer passivateStartHr;
     private Integer passivateEndHr;
     private Integer timeout;
+    private Integer expirationOverhead;
     private List<String> emojis;
 }
