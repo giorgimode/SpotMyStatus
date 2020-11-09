@@ -26,6 +26,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
 import java.util.function.Supplier;
+import javax.annotation.PreDestroy;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
@@ -318,6 +319,17 @@ public class SlackClient {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN));
     }
 
+    @PreDestroy
+    public void onDestroy() {
+        userCache.asMap().values().forEach(cachedUser -> {
+            try {
+                log.debug("Cleaning status of user {} before shutdown", cachedUser.getId());
+                updateStatus(cachedUser, new SlackStatusPayload());
+            } catch (Exception e) {
+                log.debug("Failed to clean status of user {}", cachedUser.getId());
+            }
+        });
+    }
     private Optional<String> calculateSha256(String message) {
         try {
             Mac mac = Mac.getInstance(SHA_256_ALGORITHM);
