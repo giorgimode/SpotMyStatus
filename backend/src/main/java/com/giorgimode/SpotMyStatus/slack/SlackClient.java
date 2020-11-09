@@ -26,6 +26,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
 import java.util.function.Supplier;
+import javax.annotation.PreDestroy;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
@@ -149,7 +150,7 @@ public class SlackClient {
     }
 
     private void tryUpdateAndPersistStatus(CachedUser user, SpotifyCurrentTrackResponse currentTrack) {
-        long expiringInMs = currentTrack.getDurationMs() - currentTrack.getProgressMs();
+        long expiringInMs = currentTrack.getDurationMs() - currentTrack.getProgressMs() + spotMyStatusProperties.getExpirationOverhead();
         long expiringOnUnixTime = (System.currentTimeMillis() + expiringInMs) / 1000;
         String newStatus = buildNewStatus(currentTrack);
         SlackStatusPayload statusPayload = new SlackStatusPayload(newStatus, getEmoji(), expiringOnUnixTime);
@@ -159,7 +160,7 @@ public class SlackClient {
                 user.setSlackStatus(newStatus);
             }
         } else {
-            log.debug("Track \"{}\" has not changed for user {}", newStatus, user.getId());
+            log.debug("Track \"{}\" has not changed for user {}, expiring in {} seconds", newStatus, user.getId(), expiringInMs / 1000);
         }
         user.setCleaned(false);
         user.setUpdatedAt(LocalDateTime.now());
@@ -318,6 +319,17 @@ public class SlackClient {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN));
     }
 
+    @PreDestroy
+    public void onDestroy() {
+        userCache.asMap().values().forEach(cachedUser -> {
+            try {
+                log.debug("Cleaning status of user {} before shutdown", cachedUser.getId());
+                updateStatus(cachedUser, new SlackStatusPayload());
+            } catch (Exception e) {
+                log.debug("Failed to clean status of user {}", cachedUser.getId());
+            }
+        });
+    }
     private Optional<String> calculateSha256(String message) {
         try {
             Mac mac = Mac.getInstance(SHA_256_ALGORITHM);
