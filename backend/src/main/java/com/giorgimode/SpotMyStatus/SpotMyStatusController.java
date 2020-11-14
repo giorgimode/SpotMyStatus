@@ -4,9 +4,13 @@ import static com.giorgimode.SpotMyStatus.common.SpotConstants.SLACK_REDIRECT_PA
 import static com.giorgimode.SpotMyStatus.common.SpotConstants.SPOTIFY_REDIRECT_PATH;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
+import com.giorgimode.SpotMyStatus.helpers.SlackModalConverter;
 import com.giorgimode.SpotMyStatus.model.SlackEvent;
+import com.giorgimode.SpotMyStatus.model.modals.SlackModalIn;
+import com.giorgimode.SpotMyStatus.model.modals.SlackModalOut;
 import com.giorgimode.SpotMyStatus.slack.SlackClient;
 import com.giorgimode.SpotMyStatus.spotify.SpotifyClient;
+import com.giorgimode.SpotMyStatus.util.RestHelper;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -15,12 +19,16 @@ import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 
 @RestController
 @Slf4j
@@ -35,6 +43,9 @@ public class SpotMyStatusController {
 
     @Autowired
     private SlackClient slackClient;
+
+    @Autowired
+    private RestTemplate restTemplate;
 
     @RequestMapping("/start")
     public void startNewUser(HttpServletResponse httpServletResponse) {
@@ -92,6 +103,7 @@ public class SpotMyStatusController {
         slackClient.validateSignature(timestamp, signature, bodyString);
         String command = trimToEmpty(fields.get("text")).toLowerCase();
         String userId = trimToEmpty(fields.get("user_id"));
+        //todo if no command, display modal, otherwise accept command
         if (PAUSE_COMMANDS.contains(command)) {
             log.debug("Pausing updates for user {}", userId);
             return slackClient.pause(userId);
@@ -121,5 +133,45 @@ public class SpotMyStatusController {
     @RequestMapping("/error")
     public void handleError(HttpServletResponse httpServletResponse) throws IOException {
         httpServletResponse.sendRedirect("/error.html");
+    }
+
+    @PostMapping(value = "/slack/modal", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+    public void handleModalTrigger(@RequestParam("trigger_id") String triggerId,
+        @RequestParam("user_id") String userId) {
+
+        SlackModalIn slackModalIn = new SlackModalIn();
+        slackModalIn.setTriggerId(triggerId);
+        String response = notifyUser(slackModalIn, "open").getBody();
+        log.trace("Received response: {}", response);
+    }
+
+    public ResponseEntity<String> notifyUser(Object body, final String viewAction) {
+        return RestHelper.builder()
+                         .withBaseUrl("https://slack.com/api/views." + viewAction)
+                         .withBearer("my_bearer")
+                         .withContentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
+                         .withBody(body)
+                         .post(restTemplate, String.class);
+    }
+
+    @PostMapping(value = "/slack/interaction", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+    public void handleInteraction(@RequestParam("payload") SlackModalIn payload) {
+        log.debug("Received interaction: {}", payload);
+
+        SlackModalOut slackModal = new SlackModalOut();
+        slackModal.setViewId(payload.getView().getId());
+        slackModal.setHash(payload.getView().getHash());
+        slackModal.setView(payload.getView());
+        slackModal.getView().setHash(null);
+        slackModal.getView().setId(null);
+        //todo perhaps start from scratch with template here
+        //todo add actions to the SlackModalIn
+        String response = notifyUser(slackModal, "update").getBody();
+        log.debug("Received modal update response: {}", response);
+    }
+
+    @InitBinder
+    public void initBinder(WebDataBinder binder) {
+        binder.registerCustomEditor(SlackModalOut.class, new SlackModalConverter());
     }
 }

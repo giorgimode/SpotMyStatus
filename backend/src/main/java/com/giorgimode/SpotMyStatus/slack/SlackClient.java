@@ -264,7 +264,7 @@ public class SlackClient {
         boolean statusHasBeenManuallyChanged = isNotBlank(sanitizedStatus) &&
             (!sanitizedStatus.equalsIgnoreCase(user.getSlackStatus()) || user.isManualStatus());
         if (statusHasBeenManuallyChanged) {
-            log.info("Status for user {} has been manually changed. Skipping the update.", user.getId());
+            log.debug("Status for user {} has been manually changed. Skipping the update.", user.getId());
             user.setManualStatus(true);
         } else {
             user.setManualStatus(false);
