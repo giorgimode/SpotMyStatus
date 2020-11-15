@@ -3,13 +3,14 @@ package com.giorgimode.SpotMyStatus.model.modals;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.giorgimode.SpotMyStatus.model.modals.state.State;
 import java.util.List;
 import lombok.Data;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Data
-public class View {
+public class SlackModalView {
 
     public String id;
     public String hash;
@@ -19,4 +20,5 @@ public class View {
     public Text title;
     public Text submit;
     public List<Block> blocks;
+    private State state;
 }

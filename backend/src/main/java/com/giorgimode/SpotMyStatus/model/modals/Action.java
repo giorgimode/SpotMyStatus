@@ -9,12 +9,10 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Data
-public class Element {
+public class Action {
 
-    public String type;
-    @JsonDeserialize(using = TextObjectDeserializer.class)
-    public Object text;
     @JsonProperty("action_id")
     public String actionId;
-    public Text placeholder;
+    @JsonDeserialize(using = TextObjectDeserializer.class)
+    public Object text;
 }

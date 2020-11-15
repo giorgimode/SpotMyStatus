@@ -16,7 +16,6 @@ import com.giorgimode.SpotMyStatus.model.SlackToken;
 import com.giorgimode.SpotMyStatus.model.SpotifyCurrentTrackResponse;
 import com.giorgimode.SpotMyStatus.persistence.User;
 import com.giorgimode.SpotMyStatus.persistence.UserRepository;
-import com.giorgimode.SpotMyStatus.service.NotificationService;
 import com.giorgimode.SpotMyStatus.util.RestHelper;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.jayway.jsonpath.JsonPath;
@@ -44,7 +43,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Component
 @Slf4j
-public class SlackClient {
+public class SlackPollingClient {
 
     private static final Random RANDOM = new Random();
     private static final String SHA_256_ALGORITHM = "HmacSHA256";
@@ -71,7 +70,7 @@ public class SlackClient {
     private SpotMyStatusProperties spotMyStatusProperties;
 
     @Autowired
-    private NotificationService cleanupService;
+    private SlackInteractionClient cleanupService;
 
     @Autowired
     private LoadingCache<String, CachedUser> userCache;

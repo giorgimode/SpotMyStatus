@@ -1,0 +1,157 @@
+{
+  "type": "modal",
+  "callback_id": "modal-identifier",
+  "title": {
+    "type": "plain_text",
+    "text": "Customize SpotMyStatus"
+  },
+  "submit": {
+    "type": "plain_text",
+    "text": "Submit"
+  },
+  "blocks": [
+    {
+      "type": "section",
+      "block_id": "sync_toggle_block",
+      "text": {
+        "type": "mrkdwn",
+        "text": " "
+      },
+      "accessory": {
+        "type": "checkboxes",
+        "options": [
+          {
+            "text": {
+              "type": "mrkdwn",
+              "text": "Toggle Status Syncing On/Off"
+            },
+            "value": "sync_on"
+          }
+        ],
+        "action_id": "checkboxes-action",
+        "initial_options": [
+          {
+            "value": "sync_on",
+            "text": {
+              "type": "mrkdwn",
+              "text": "Toggle Status Syncing On/Off"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "section",
+      "block_id": "spotify_items_block",
+      "text": {
+        "type": "mrkdwn",
+        "text": "Pick the type of item to sync from Spotify"
+      },
+      "accessory": {
+        "action_id": "spotify_items_select_action",
+        "type": "multi_static_select",
+        "placeholder": {
+          "type": "plain_text",
+          "text": "Select items"
+        },
+        "initial_options": [
+          {
+            "value": "option_music",
+            "text": {
+              "type": "plain_text",
+              "text": "Music"
+            }
+          },
+          {
+            "value": "option_podcast",
+            "text": {
+              "type": "plain_text",
+              "text": "Podcast"
+            }
+          }
+        ],
+        "options": [
+          {
+            "text": {
+              "type": "plain_text",
+              "text": "Music"
+            },
+            "value": "option_music"
+          },
+          {
+            "text": {
+              "type": "plain_text",
+              "text": "Podcast"
+            },
+            "value": "option_podcast"
+          }
+        ]
+      }
+    },
+    {
+      "type": "divider"
+    },
+    {
+      "type": "input",
+      "block_id": "emoji_input_block",
+      "optional": true,
+      "element": {
+        "type": "plain_text_input",
+        "action_id": "update_emoji-action",
+        "placeholder": {
+          "type": "plain_text",
+          "text": "my_new_awesome_emoji",
+          "emoji": true
+        }
+      },
+      "label": {
+        "type": "plain_text",
+        "text": "Update the list of emojis to rotate through",
+        "emoji": true
+      }
+    },
+    {
+      "type": "actions",
+      "elements": [
+        {
+          "type": "button",
+          "text": {
+            "type": "plain_text",
+            "text": "Add Emoji",
+            "emoji": true
+          },
+          "action_id": "action_add_emoji"
+        },
+        {
+          "type": "button",
+          "text": {
+            "type": "plain_text",
+            "text": "Remove Emoji",
+            "emoji": true
+          },
+          "action_id": "action_remove_emoji"
+        }
+      ]
+    },
+    {
+      "type": "context",
+      "block_id": "emoji_list_block",
+      "elements": [
+        {
+          "type": "mrkdwn",
+          "text": "Current list: :headphones:(`headphones`), :musical_note:(`musical_note`), :notes:(`notes`)"
+        }
+      ]
+    },
+    {
+      "type": "divider"
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "<http://spotmystatus.giomo.de/|_*SpotMyStatus Home*_>"
+      }
+    }
+  ]
+}

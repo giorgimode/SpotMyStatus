@@ -1,21 +1,25 @@
-package com.giorgimode.SpotMyStatus.service;
+package com.giorgimode.SpotMyStatus.slack;
 
+import static com.giorgimode.SpotMyStatus.util.SpotUtil.OBJECT_MAPPER;
 import com.giorgimode.SpotMyStatus.common.PropertyVault;
 import com.giorgimode.SpotMyStatus.model.CachedUser;
 import com.giorgimode.SpotMyStatus.model.SlackMessage;
+import com.giorgimode.SpotMyStatus.model.modals.SlackModalView;
 import com.giorgimode.SpotMyStatus.persistence.UserRepository;
 import com.giorgimode.SpotMyStatus.util.RestHelper;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 @Component
 @Slf4j
-public class NotificationService {
+public class SlackInteractionClient {
 
     @Autowired
     private UserRepository userRepository;
@@ -35,6 +39,10 @@ public class NotificationService {
     @Autowired
     private LoadingCache<String, CachedUser> userCache;
 
+
+    @Value("classpath:templates/slack_modal_view_template.json")
+    private Resource resourceFile;
+
     public void invalidateAndNotifyUser(String userId) {
         try {
             userCache.invalidate(userId);
@@ -52,5 +60,9 @@ public class NotificationService {
 
     private String createNotificationText() {
         return "Spotify token has been invalidated. Please authorize again <" + signupUri + "|here>";
+    }
+
+    public SlackModalView getModalViewTemplate() throws IOException {
+        return OBJECT_MAPPER.readValue(resourceFile.getInputStream(), SlackModalView.class);
     }
 }

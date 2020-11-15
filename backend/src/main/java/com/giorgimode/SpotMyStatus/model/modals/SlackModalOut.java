@@ -14,5 +14,5 @@ public class SlackModalOut {
     @JsonProperty("view_id")
     public String viewId;
     public String hash;
-    public View view;
+    public SlackModalView view;
 }

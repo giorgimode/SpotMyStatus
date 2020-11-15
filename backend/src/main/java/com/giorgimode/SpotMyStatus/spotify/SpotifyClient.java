@@ -5,7 +5,7 @@ import com.giorgimode.SpotMyStatus.model.SpotifyCurrentTrackResponse;
 import com.giorgimode.SpotMyStatus.model.SpotifyTokenResponse;
 import com.giorgimode.SpotMyStatus.persistence.User;
 import com.giorgimode.SpotMyStatus.persistence.UserRepository;
-import com.giorgimode.SpotMyStatus.service.NotificationService;
+import com.giorgimode.SpotMyStatus.slack.SlackInteractionClient;
 import com.giorgimode.SpotMyStatus.util.RestHelper;
 import com.giorgimode.SpotMyStatus.util.SpotUtil;
 import com.github.benmanes.caffeine.cache.LoadingCache;
@@ -39,7 +39,7 @@ public class SpotifyClient {
     private SpotifyAuthClient spotifyAuthClient;
 
     @Autowired
-    private NotificationService cleanupService;
+    private SlackInteractionClient cleanupService;
 
     public String requestAuthorization(UUID state) {
         return spotifyAuthClient.requestAuthorization(state);
