@@ -6,8 +6,11 @@ import static com.giorgimode.SpotMyStatus.util.SpotConstants.ACTION_ID_EMOJI_ADD
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.ACTION_ID_EMOJI_REMOVE;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_EMOJI_INPUT;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_EMOJI_LIST;
+import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_SPOTIFY_ITEMS;
+import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_SYNC_TOGGLE;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.EMOJI_LIST_FORMAT;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.PAYLOAD_TYPE_BLOCK_ACTIONS;
+import static com.giorgimode.SpotMyStatus.util.SpotConstants.PAYLOAD_TYPE_SUBMISSION;
 import static java.util.function.Predicate.not;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
@@ -18,11 +21,13 @@ import com.giorgimode.SpotMyStatus.model.modals.Action;
 import com.giorgimode.SpotMyStatus.model.modals.Block;
 import com.giorgimode.SpotMyStatus.model.modals.SlackModalIn;
 import com.giorgimode.SpotMyStatus.model.modals.SlackModalOut;
+import com.giorgimode.SpotMyStatus.model.modals.state.StateValue;
 import com.giorgimode.SpotMyStatus.slack.SlackInteractionClient;
 import com.giorgimode.SpotMyStatus.slack.SlackPollingClient;
 import com.giorgimode.SpotMyStatus.spotify.SpotifyClient;
 import com.giorgimode.SpotMyStatus.util.RestHelper;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -184,15 +189,29 @@ public class SpotMyStatusController {
     @PostMapping(value = "/slack/interaction", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public void handleInteraction(@RequestParam("payload") SlackModalIn payload, @RequestParam("payload") String payloadRaw) {
         log.debug("Received interaction: {}", payloadRaw);
-        String userAction = getUserAction(payload);
-        log.debug("User {} triggered {}", getUserId(payload), userAction);
-        // handle submission
+        String userId = getUserId(payload);
+        //todo handle submission
         // persist user preferences
         if (PAYLOAD_TYPE_BLOCK_ACTIONS.equals(payload.getType())) {
+            String userAction = getUserAction(payload);
+            log.debug("User {} triggered {}", userId, userAction);
             if (payload.getActions() != null && ACTION_ID_EMOJI_ADD.equals(userAction)) {
                 handleEmojiAdd(payload);
             } else if (payload.getActions() != null && ACTION_ID_EMOJI_REMOVE.equals(userAction)) {
                 handleEmojiRemove(payload);
+            }
+        } else if (PAYLOAD_TYPE_SUBMISSION.equals(payload.getType())) {
+            log.debug("User {} submitted the form", userId);
+            boolean disableSync = getStateValue(payload, BLOCK_ID_SYNC_TOGGLE).getSelectedValues().isEmpty();
+            List<String> spotifyItems = getStateValue(payload, BLOCK_ID_SPOTIFY_ITEMS).getSelectedValues();
+            List<String> newEmojis = new ArrayList<>();
+            for (Block block : payload.getView().getBlocks()) {
+                if (BLOCK_ID_EMOJI_LIST.equals(block.getBlockId())) {
+                    String userEmojis = (String) block.getElements().get(0).getText();
+                    Arrays.stream(userEmojis.replace("Current list: ", "").split(", "))
+                          .map(emoji -> emoji.split(":\\(")[0].replace(":", ""))
+                          .forEach(newEmojis::add);
+                }
             }
         }
     }
@@ -209,12 +228,7 @@ public class SpotMyStatusController {
         for (Block block : payload.getView().getBlocks()) {
             if (BLOCK_ID_EMOJI_LIST.equals(block.getBlockId())) {
                 String currentEmojis = (String) block.getElements().get(0).getText();
-                String newEmojiInput = payload.getView()
-                                              .getState()
-                                              .getStateValues()
-                                              .get(BLOCK_ID_EMOJI_INPUT)
-                                              .getValue();
-
+                String newEmojiInput = getStateValue(payload, BLOCK_ID_EMOJI_INPUT).getValue();
                 if (isBlank(newEmojiInput)) {
                     return;
                 }
@@ -238,6 +252,13 @@ public class SpotMyStatusController {
         slackModal.getView().setState(null);
         String response = notifyUser(slackModal, "update").getBody();//todo
         log.trace("Received modal update response: {}", response);
+    }
+
+    private StateValue getStateValue(SlackModalIn payload, String blockId) {
+        return payload.getView()
+                      .getState()
+                      .getStateValues()
+                      .get(blockId);
     }
 
     private String addEmojis(String currentEmojis, List<String> newEmojis) {
