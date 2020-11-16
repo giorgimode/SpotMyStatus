@@ -2,11 +2,19 @@ package com.giorgimode.SpotMyStatus;
 
 import static com.giorgimode.SpotMyStatus.common.SpotConstants.SLACK_REDIRECT_PATH;
 import static com.giorgimode.SpotMyStatus.common.SpotConstants.SPOTIFY_REDIRECT_PATH;
+import static com.giorgimode.SpotMyStatus.util.SpotConstants.ACTION_ID_EMOJI_ADD;
+import static com.giorgimode.SpotMyStatus.util.SpotConstants.ACTION_ID_EMOJI_REMOVE;
+import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_EMOJI_INPUT;
+import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_EMOJI_LIST;
+import static com.giorgimode.SpotMyStatus.util.SpotConstants.EMOJI_LIST_FORMAT;
+import static com.giorgimode.SpotMyStatus.util.SpotConstants.PAYLOAD_TYPE_BLOCK_ACTIONS;
+import static java.util.function.Predicate.not;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import com.giorgimode.SpotMyStatus.helpers.SlackModalConverter;
 import com.giorgimode.SpotMyStatus.model.SlackEvent;
+import com.giorgimode.SpotMyStatus.model.modals.Action;
 import com.giorgimode.SpotMyStatus.model.modals.Block;
 import com.giorgimode.SpotMyStatus.model.modals.SlackModalIn;
 import com.giorgimode.SpotMyStatus.model.modals.SlackModalOut;
@@ -18,7 +26,9 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +36,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -171,50 +182,92 @@ public class SpotMyStatusController {
     }
 
     @PostMapping(value = "/slack/interaction", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-    public void handleInteraction(@RequestParam("payload") SlackModalIn payload,
-        @RequestParam("payload") String payloadRaw) {
+    public void handleInteraction(@RequestParam("payload") SlackModalIn payload, @RequestParam("payload") String payloadRaw) {
         log.debug("Received interaction: {}", payloadRaw);
-
-        //todo clone view
-        // emoji remove
+        String userAction = getUserAction(payload);
+        log.debug("User {} triggered {}", getUserId(payload), userAction);
         // handle submission
-        //persist user preferences
+        // persist user preferences
+        if (PAYLOAD_TYPE_BLOCK_ACTIONS.equals(payload.getType())) {
+            if (payload.getActions() != null && ACTION_ID_EMOJI_ADD.equals(userAction)) {
+                handleEmojiAdd(payload);
+            } else if (payload.getActions() != null && ACTION_ID_EMOJI_REMOVE.equals(userAction)) {
+                handleEmojiRemove(payload);
+            }
+        }
+    }
+
+    private void handleEmojiAdd(SlackModalIn payload) {
+        handleEmojiUpdate(payload, this::addEmojis);
+    }
+
+    private void handleEmojiRemove(SlackModalIn payload) {
+        handleEmojiUpdate(payload, this::removeEmojis);
+    }
+
+    private void handleEmojiUpdate(SlackModalIn payload, BiFunction<String, List<String>, String> emojiUpdateFunction) {
+        for (Block block : payload.getView().getBlocks()) {
+            if (BLOCK_ID_EMOJI_LIST.equals(block.getBlockId())) {
+                String currentEmojis = (String) block.getElements().get(0).getText();
+                String newEmojiInput = payload.getView()
+                                              .getState()
+                                              .getStateValues()
+                                              .get(BLOCK_ID_EMOJI_INPUT)
+                                              .getValue();
+
+                if (isBlank(newEmojiInput)) {
+                    return;
+                }
+                List<String> newEmojis = Arrays.stream(newEmojiInput.split(","))
+                                               .filter(StringUtils::isNotBlank)
+                                               .map(emoji -> emoji.trim().replaceAll(":", ""))
+                                               .collect(Collectors.toList());
+
+                String updatedEmojiList = emojiUpdateFunction.apply(currentEmojis, newEmojis);
+                block.getElements().get(0).setText(updatedEmojiList);
+            } else if (BLOCK_ID_EMOJI_INPUT.equals(block.getBlockId())) {
+                block.getElement().setActionId(null);
+            }
+        }
         SlackModalOut slackModal = new SlackModalOut();
         slackModal.setViewId(payload.getView().getId());
         slackModal.setHash(payload.getView().getHash());
         slackModal.setView(payload.getView());
         slackModal.getView().setHash(null);
         slackModal.getView().setId(null);
-        if ("block_actions".equals(payload.getType())) {
-            if (payload.getActions() != null && "action_add_emoji".equals(payload.getActions().get(0).getActionId())) {
+        slackModal.getView().setState(null);
+        String response = notifyUser(slackModal, "update").getBody();//todo
+        log.trace("Received modal update response: {}", response);
+    }
 
-                for (Block block : slackModal.getView().getBlocks()) {
-                    if ("emoji_list_block".equals(block.getBlockId())) {
-                        String currentEmojis = (String) block.getElements().get(0).getText();
-                        String emojiListString = payload.getView()
-                                                        .getState()
-                                                        .getStateValues()
-                                                        .get("emoji_input_block")
-                                                        .getValue();
-                        String newEmojis = Arrays.stream(emojiListString.split(","))
-                                                 .filter(StringUtils::isNotBlank)
-                                                 .map(emoji -> emoji.trim().replaceAll(":", ""))
-                                                 .filter(emoji -> validate(emoji, currentEmojis))
-                                                 .map(emoji -> String.format(":%s:(`%s`)", emoji, emoji))
-                                                 .collect(Collectors.joining(", "));
-                        block.getElements()
-                             .get(0)
-                             .setText(trimToEmpty(currentEmojis).concat(", ").concat(newEmojis));
-                    } else if ("emoji_input_block".equals(block.getBlockId())) {
-                        block.getElement().setActionId("update_emoji-action_"+ System.currentTimeMillis());
-                    }
-                }
-            }
-            slackModal.getView().setState(null);
+    private String addEmojis(String currentEmojis, List<String> newEmojis) {
+        String newEmojisMerged = newEmojis
+            .stream()
+            .filter(emoji -> validate(emoji, currentEmojis))
+            .map(emoji -> String.format(EMOJI_LIST_FORMAT, emoji, emoji))
+            .collect(Collectors.joining(", "));
+        return trimToEmpty(currentEmojis).concat(", ").concat(newEmojisMerged);
+    }
+
+    private String removeEmojis(String currentEmojis, List<String> removedEmojis) {
+        String updatedEmojis = currentEmojis;
+        for (String removedEmoji : removedEmojis) {
+            updatedEmojis = updatedEmojis.replace(String.format(EMOJI_LIST_FORMAT, removedEmoji, removedEmoji), "");
         }
+        return trimToEmpty(updatedEmojis.replaceAll(" ,", ""));
+    }
 
-        String response = notifyUser(slackModal, "update").getBody();
-        log.debug("Received modal update response: {}", response);
+    private String getUserId(SlackModalIn payload) {
+        return payload.getUser() != null ? payload.getUser().getId() : null;
+    }
+
+    private String getUserAction(SlackModalIn payload) {
+        return Optional.ofNullable(payload)
+                       .map(SlackModalIn::getActions)
+                       .filter(not(CollectionUtils::isEmpty))
+                       .map(actions -> actions.get(0))
+                       .map(Action::getActionId)
+                       .orElse(null);
     }
 
     private boolean validate(String newEmoji, String currentEmojis) {

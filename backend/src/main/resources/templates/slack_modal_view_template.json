@@ -97,7 +97,6 @@
       "optional": true,
       "element": {
         "type": "plain_text_input",
-        "action_id": "update_emoji-action",
         "placeholder": {
           "type": "plain_text",
           "text": "my_new_awesome_emoji",

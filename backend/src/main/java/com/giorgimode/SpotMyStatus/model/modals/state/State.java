@@ -20,22 +20,22 @@ public class State {
 
     private Map<String, StateValue> stateValues;
 
-    @SuppressWarnings("unchecked")
     @JsonProperty("values")
     private void unpackNested(Map<String, Object> values) {
         if (values == null) {
             return;
         }
-        stateValues = values.entrySet().stream()
-                            .collect(toMap(Entry::getKey,
-                                // will fail if block contains more than 1 action
-                                e -> collectValues(((Map<String, Object>) e.getValue()).entrySet().iterator().next()))
-                            );
+        stateValues = values.entrySet()
+                            .stream()
+                            .collect(toMap(Entry::getKey, e -> collectValues(getFirstValue(e))));
     }
 
     @SuppressWarnings("unchecked")
-    private StateValue collectValues(Map.Entry<String, Object> stateValueEntry) {
-        Map<String, Object> valueMap = (Map<String, Object>) stateValueEntry.getValue();
+    private Map<String, Object> getFirstValue(Entry<String, Object> e) {
+        return (Map<String, Object>) ((Map<String, Object>) e.getValue()).values().stream().findFirst().orElse(Map.of());
+    }
+
+    private StateValue collectValues(Map<String, Object> valueMap) {
         StateValue stateValue = new StateValue();
         stateValue.setType(safeGet(valueMap, "type"));
         stateValue.setValue(safeGet(valueMap, "value"));
