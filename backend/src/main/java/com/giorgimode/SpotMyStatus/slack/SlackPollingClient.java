@@ -12,6 +12,7 @@ import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 import com.giorgimode.SpotMyStatus.common.PropertyVault;
 import com.giorgimode.SpotMyStatus.common.SpotMyStatusProperties;
 import com.giorgimode.SpotMyStatus.model.CachedUser;
+import com.giorgimode.SpotMyStatus.model.SlackMessage;
 import com.giorgimode.SpotMyStatus.model.SlackToken;
 import com.giorgimode.SpotMyStatus.model.SpotifyCurrentTrackResponse;
 import com.giorgimode.SpotMyStatus.persistence.User;
@@ -63,14 +64,14 @@ public class SlackPollingClient {
     @Value("${redirect_uri_scheme}")
     private String uriScheme;
 
+    @Value("${sign_up_uri}")
+    private String signupUri;
+
     @Autowired
     private UserRepository userRepository;
 
     @Autowired
     private SpotMyStatusProperties spotMyStatusProperties;
-
-    @Autowired
-    private SlackInteractionClient cleanupService;
 
     @Autowired
     private LoadingCache<String, CachedUser> userCache;
@@ -152,7 +153,7 @@ public class SlackPollingClient {
         long expiringInMs = currentTrack.getDurationMs() - currentTrack.getProgressMs() + spotMyStatusProperties.getExpirationOverhead();
         long expiringOnUnixTime = (System.currentTimeMillis() + expiringInMs) / 1000;
         String newStatus = buildNewStatus(currentTrack);
-        SlackStatusPayload statusPayload = new SlackStatusPayload(newStatus, getEmoji(), expiringOnUnixTime);
+        SlackStatusPayload statusPayload = new SlackStatusPayload(newStatus, getEmoji(user), expiringOnUnixTime);
         if (!newStatus.equalsIgnoreCase(user.getSlackStatus())) {
             if (updateStatus(user, statusPayload)) {
                 log.info("Track: \"{}\" expiring in {} seconds", newStatus, expiringInMs / 1000);
@@ -177,9 +178,14 @@ public class SlackPollingClient {
         return newStatus;
     }
 
-    private String getEmoji() {
-        List<String> emojis = spotMyStatusProperties.getEmojis();
-        return emojis.get(RANDOM.nextInt(emojis.size()));
+    private String getEmoji(CachedUser user) {
+        List<String> emojis = user.getEmojis();
+        if (emojis.isEmpty()) {
+            emojis = spotMyStatusProperties.getDefaultEmojis();
+        } else if (emojis.size() == 1) {
+            return ":" + emojis.get(0) + ":";
+        }
+        return ":" + emojis.get(RANDOM.nextInt(emojis.size())) + ":";
     }
 
     private boolean updateStatus(CachedUser user, SlackStatusPayload statusPayload) {
@@ -212,7 +218,7 @@ public class SlackPollingClient {
             return checkIsUserOffline(user);
         } catch (HttpClientErrorException e) {
             if (e.getStatusCode() == UNAUTHORIZED || e.getStatusCode() == FORBIDDEN) {
-                removeInvalidatedUser(user);
+                invalidateAndNotifyUser(user.getId());
             }
         } catch (Exception e) {
             log.error("Caught", e);
@@ -228,7 +234,7 @@ public class SlackPollingClient {
 
         if (userPresenceResponse.contains("invalid_auth") || userPresenceResponse.contains("token_revoked")) {
             log.trace(userPresenceResponse);
-            removeInvalidatedUser(user);
+            invalidateAndNotifyUser(user.getId());
             return true;
         }
         String usersPresence = JsonPath.read(userPresenceResponse, "$.presence");
@@ -240,9 +246,24 @@ public class SlackPollingClient {
         return !isUserActive;
     }
 
-    private void removeInvalidatedUser(CachedUser user) {
-        log.error("User's Slack token has been invalidated. Cleaning up user {}", user.getId());
-        cleanupService.invalidateAndNotifyUser(user.getId());
+    public void invalidateAndNotifyUser(String userId) {
+        try {
+            log.error("User's Slack token has been invalidated. Cleaning up user {}", userId);
+            userCache.invalidate(userId);
+            userRepository.deleteById(userId);
+            RestHelper.builder()
+                      .withBaseUrl(slackUri + "/api/chat.postMessage")
+                      .withBearer(propertyVault.getSlack().getBotToken())
+                      .withContentType(MediaType.APPLICATION_JSON_VALUE)
+                      .withBody(new SlackMessage(userId, createNotificationText()))
+                      .post(restTemplate, String.class);
+        } catch (Exception e) {
+            log.error("Failed to clean up user properly", e);
+        }
+    }
+
+    private String createNotificationText() {
+        return "Spotify token has been invalidated. Please authorize again <" + signupUri + "|here>";
     }
 
     public boolean statusHasBeenManuallyChanged(CachedUser user) {

@@ -1,6 +1,7 @@
 package com.giorgimode.SpotMyStatus.common;
 
 import java.util.List;
+import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -18,5 +19,6 @@ public class SpotMyStatusProperties {
     private Integer passivateEndHr;
     private Integer timeout;
     private Integer expirationOverhead;
-    private List<String> emojis;
+    private List<String> defaultEmojis;
+    private Map<String, String> defaultSpotifyItems;
 }

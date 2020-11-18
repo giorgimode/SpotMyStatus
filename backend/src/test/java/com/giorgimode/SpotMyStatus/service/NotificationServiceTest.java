@@ -36,7 +36,7 @@ class NotificationServiceTest {
     private LoadingCache<String, CachedUser> userCache;
 
     @InjectMocks
-    private NotificationService notificationService;
+    private UserInteractionService notificationService;
 
 
     @BeforeEach

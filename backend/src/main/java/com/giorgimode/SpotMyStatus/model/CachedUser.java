@@ -6,6 +6,9 @@ import static java.util.Objects.requireNonNull;
 import com.google.common.base.MoreObjects;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import lombok.Data;
 
 @Data
@@ -21,6 +24,8 @@ public class CachedUser implements Serializable {
     private boolean disabled;
     private boolean cleaned;
     private LocalDateTime updatedAt;
+    private List<String> emojis;
+    private List<String> spotifyItems;
 
     @Override
     public String toString() {
@@ -32,6 +37,8 @@ public class CachedUser implements Serializable {
             .add("manualStatus", manualStatus)
             .add("spotifyAccessToken", spotifyAccessToken)
             .add("spotifyRefreshToken", spotifyRefreshToken)
+            .add("emojis", emojis)
+            .add("spotifyItems", spotifyItems)
             .add("disabled", disabled)
             .add("cleaned", cleaned)
             .add("updatedAt", updatedAt)
@@ -50,6 +57,8 @@ public class CachedUser implements Serializable {
         private String spotifyAccessToken;
         private String spotifyRefreshToken;
         private boolean disabled;
+        private String emojis;
+        private String spotifyItems;
 
         private CachedUserBuilder() {
         }
@@ -84,6 +93,16 @@ public class CachedUser implements Serializable {
             return this;
         }
 
+        public CachedUserBuilder emojis(String emojis) {
+            this.emojis = emojis;
+            return this;
+        }
+
+        public CachedUserBuilder spotifyItems(String spotifyItems) {
+            this.spotifyItems = spotifyItems;
+            return this;
+        }
+
         public CachedUser build() {
             CachedUser cachedUser = new CachedUser();
             cachedUser.setId(requireNonBlank(id));
@@ -91,8 +110,17 @@ public class CachedUser implements Serializable {
             cachedUser.setSlackAccessToken(requireNonBlank(slackAccessToken));
             cachedUser.setSpotifyRefreshToken(requireNonBlank(spotifyRefreshToken));
             cachedUser.setSpotifyAccessToken(requireNonBlank(spotifyAccessToken));
+            cachedUser.setEmojis(split(emojis));
+            cachedUser.setSpotifyItems(split(spotifyItems));
             cachedUser.setDisabled(disabled);
             return cachedUser;
+        }
+
+        private List<String> split(String emojis) {
+            return Optional.ofNullable(emojis)
+                           .map(field -> field.split(","))
+                           .map(Arrays::asList)
+                           .orElse(List.of());
         }
     }
 }

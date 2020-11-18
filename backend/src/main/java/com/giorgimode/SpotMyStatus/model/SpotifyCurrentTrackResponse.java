@@ -27,6 +27,7 @@ public class SpotifyCurrentTrackResponse {
     @SuppressWarnings("unchecked")
     @JsonProperty("item")
     private void unpackNested(Map<String, Object> item) {
+        //todo check for episode
         List<Map<String, Object>> artists = (List<Map<String, Object>>) item.get("artists");
         this.durationMs = ((Number) item.get("duration_ms")).longValue();
         this.songTitle = (String) item.get("name");

@@ -21,6 +21,8 @@ public class SpotUtil {
                          .spotifyAccessToken(spotifyAccessToken)
                          .timezoneOffsetSeconds(user.getTimezoneOffsetSeconds())
                          .disabled(user.isDisabled())
+                         .emojis(user.getEmojis())
+                         .spotifyItems(user.getSpotifyItems())
                          .build();
     }
 

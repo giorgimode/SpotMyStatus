@@ -31,8 +31,14 @@ public class User implements Serializable {
     @Column(name = ("tz_offset_sec"))
     private Integer timezoneOffsetSeconds;
 
-    @Column(name = "state", unique = true)
+    @Column(name = "state")
     private UUID state;
+
+    @Column(name = "emojis")
+    private String emojis;
+
+    @Column(name = "spotify_items")
+    private String spotifyItems;
 
     @Column(name = "disabled", nullable = false)
     private boolean disabled = false;

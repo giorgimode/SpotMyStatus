@@ -23,10 +23,13 @@ spotmystatus:
   passivate_end_hr: ${PASSIVATE_END:6}
   timeout: ${POLLING_TIMEOUT:2000}
   expiration_overhead: ${EXPIRATION_OVERHEAD:120000}
-  emojis:
-    - ":headphones:"
-    - ":musical_note:"
-    - ":notes:"
+  default_emojis:
+    - "headphones"
+    - "musical_note"
+    - "notes"
+  default_spotify_items:
+    track: "Music"
+    episode: "Podcast"
 
 spring:
   liquibase:

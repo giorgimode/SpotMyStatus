@@ -56,14 +56,14 @@
         },
         "initial_options": [
           {
-            "value": "option_music",
+            "value": "track",
             "text": {
               "type": "plain_text",
               "text": "Music"
             }
           },
           {
-            "value": "option_podcast",
+            "value": "episode",
             "text": {
               "type": "plain_text",
               "text": "Podcast"
@@ -76,14 +76,14 @@
               "type": "plain_text",
               "text": "Music"
             },
-            "value": "option_music"
+            "value": "track"
           },
           {
             "text": {
               "type": "plain_text",
               "text": "Podcast"
             },
-            "value": "option_podcast"
+            "value": "episode"
           }
         ]
       }
