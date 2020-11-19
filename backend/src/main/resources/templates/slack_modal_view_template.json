@@ -45,29 +45,17 @@
       "block_id": "spotify_items_block",
       "text": {
         "type": "mrkdwn",
-        "text": "Pick the type of item to sync from Spotify"
+        "text": "Pick at least one of these Spotify items to sync"
       },
       "accessory": {
-        "action_id": "spotify_items_select_action",
-        "type": "multi_static_select",
-        "placeholder": {
-          "type": "plain_text",
-          "text": "Select items"
-        },
+        "type": "checkboxes",
         "initial_options": [
           {
-            "value": "track",
             "text": {
-              "type": "plain_text",
+              "type": "mrkdwn",
               "text": "Music"
-            }
-          },
-          {
-            "value": "episode",
-            "text": {
-              "type": "plain_text",
-              "text": "Podcast"
-            }
+            },
+            "value": "track"
           }
         ],
         "options": [
@@ -99,13 +87,13 @@
         "type": "plain_text_input",
         "placeholder": {
           "type": "plain_text",
-          "text": "my_new_awesome_emoji",
+          "text": "guitar, the_horns",
           "emoji": true
         }
       },
       "label": {
         "type": "plain_text",
-        "text": "Update the list of emojis to rotate through",
+        "text": "Add new emojis to rotate through",
         "emoji": true
       }
     },
@@ -116,31 +104,73 @@
           "type": "button",
           "text": {
             "type": "plain_text",
-            "text": "Add Emoji",
+            "text": "Add emojis to the current list",
             "emoji": true
           },
           "action_id": "action_add_emoji"
-        },
-        {
-          "type": "button",
-          "text": {
-            "type": "plain_text",
-            "text": "Remove Emoji",
-            "emoji": true
-          },
-          "action_id": "action_remove_emoji"
         }
       ]
     },
     {
-      "type": "context",
+      "type": "section",
       "block_id": "emoji_list_block",
-      "elements": [
-        {
-          "type": "mrkdwn",
-          "text": "Current list: :headphones:(`headphones`), :musical_note:(`musical_note`), :notes:(`notes`)"
-        }
-      ]
+      "text": {
+        "type": "mrkdwn",
+        "text": " "
+      },
+      "accessory": {
+        "type": "multi_static_select",
+        "placeholder": {
+          "type": "plain_text",
+          "text": "Your emojis"
+        },
+        "initial_options": [
+          {
+            "value": "musical_note",
+            "text": {
+              "type": "plain_text",
+              "text": ":musical_note:"
+            }
+          },
+          {
+            "value": "headphones",
+            "text": {
+              "type": "plain_text",
+              "text": ":headphones:"
+            }
+          },
+          {
+            "text": {
+              "type": "plain_text",
+              "text": ":notes:"
+            },
+            "value": "notes"
+          }
+        ],
+        "options": [
+          {
+            "text": {
+              "type": "plain_text",
+              "text": ":musical_note:"
+            },
+            "value": "musical_note"
+          },
+          {
+            "text": {
+              "type": "plain_text",
+              "text": ":headphones:"
+            },
+            "value": "headphones"
+          },
+          {
+            "text": {
+              "type": "plain_text",
+              "text": ":notes:"
+            },
+            "value": "notes"
+          }
+        ]
+      }
     },
     {
       "type": "divider"

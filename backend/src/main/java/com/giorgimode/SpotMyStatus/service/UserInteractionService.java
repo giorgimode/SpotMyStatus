@@ -1,20 +1,17 @@
 package com.giorgimode.SpotMyStatus.service;
 
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.ACTION_ID_EMOJI_ADD;
-import static com.giorgimode.SpotMyStatus.util.SpotConstants.ACTION_ID_EMOJI_REMOVE;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_EMOJI_INPUT;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_EMOJI_LIST;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_SPOTIFY_ITEMS;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_SYNC_TOGGLE;
-import static com.giorgimode.SpotMyStatus.util.SpotConstants.EMOJI_LIST_FORMAT;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.PAYLOAD_TYPE_BLOCK_ACTIONS;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.PAYLOAD_TYPE_SUBMISSION;
 import static com.giorgimode.SpotMyStatus.util.SpotUtil.OBJECT_MAPPER;
 import static java.util.function.Predicate.not;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
-import com.giorgimode.SpotMyStatus.common.PropertyVault;
 import com.giorgimode.SpotMyStatus.common.SpotMyStatusProperties;
 import com.giorgimode.SpotMyStatus.exceptions.UserNotFoundException;
 import com.giorgimode.SpotMyStatus.model.CachedUser;
@@ -35,8 +32,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.BiFunction;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,9 +61,6 @@ public class UserInteractionService {
     private RestTemplate restTemplate;
 
     @Autowired
-    private PropertyVault propertyVault;
-
-    @Autowired
     private SlackPollingClient slackClient;
 
 
@@ -94,12 +86,12 @@ public class UserInteractionService {
                                                                         .entrySet()
                                                                         .stream()
                                                                         .map(entry -> createOption(entry.getKey(), entry.getValue()))
-                                                                        .collect(Collectors.toList());
+                                                                        .collect(toList());
                 List<Option> selectedItemsOptions = cachedUser.getSpotifyItems()
                                                               .stream()
                                                               .map(spotifyItem -> createOption(spotifyItem,
                                                                   spotMyStatusProperties.getDefaultSpotifyItems().get(spotifyItem)))
-                                                              .collect(Collectors.toList());
+                                                              .collect(toList());
                 block.getAccessory().setOptions(defaultItemOptions);
                 if (selectedItemsOptions.isEmpty()) {
                     block.getAccessory().setInitialOptions(defaultItemOptions);
@@ -107,11 +99,12 @@ public class UserInteractionService {
                     block.getAccessory().setInitialOptions(selectedItemsOptions);
                 }
             } else if (BLOCK_ID_EMOJI_LIST.equals(block.getBlockId())) {
-                String userEmojis = getUserEmojis(cachedUser)
+                List<Option> emojiOptions = getUserEmojis(cachedUser)
                     .stream()
-                    .map(emoji -> String.format(EMOJI_LIST_FORMAT, emoji, emoji))
-                    .collect(Collectors.joining(", "));
-                block.getElements().get(0).setText("Current list: " + userEmojis);
+                    .map(emoji -> createOption(emoji, ":" + emoji + ":"))
+                    .collect(toList());
+                block.getAccessory().setOptions(emojiOptions);
+                block.getAccessory().setInitialOptions(emojiOptions);
             } else if (BLOCK_ID_SYNC_TOGGLE.equals(block.getBlockId())) {
                 if (getCachedUser(userId).isDisabled()) {
                     block.getAccessory().setInitialOptions(null);
@@ -165,8 +158,6 @@ public class UserInteractionService {
             log.debug("User {} triggered {}", userId, userAction);
             if (payload.getActions() != null && ACTION_ID_EMOJI_ADD.equals(userAction)) {
                 handleEmojiAdd(payload);
-            } else if (payload.getActions() != null && ACTION_ID_EMOJI_REMOVE.equals(userAction)) {
-                handleEmojiRemove(payload);
             }
         } else if (PAYLOAD_TYPE_SUBMISSION.equals(payload.getType())) {
             log.debug("User {} submitted the form", userId);
@@ -175,10 +166,7 @@ public class UserInteractionService {
             List<String> newEmojis = new ArrayList<>();
             for (Block block : payload.getView().getBlocks()) {
                 if (BLOCK_ID_EMOJI_LIST.equals(block.getBlockId())) {
-                    String userEmojis = (String) block.getElements().get(0).getText();
-                    Arrays.stream(userEmojis.replace("Current list: ", "").split(", "))
-                          .map(emoji -> emoji.split(":\\(")[0].replace(":", ""))
-                          .forEach(newEmojis::add);
+                    newEmojis = getStateValue(payload, BLOCK_ID_EMOJI_LIST).getSelectedValues();
                 }
             }
             updateEmojis(userId, newEmojis);
@@ -195,16 +183,13 @@ public class UserInteractionService {
         }
     }
 
-    public void updateEmojis(String userId, List<String> updatedEmojis) {
-        List<String> newEmojis;
-        if (!updatedEmojis.isEmpty()) {
-            newEmojis = updatedEmojis;
-        } else {
-            newEmojis = spotMyStatusProperties.getDefaultEmojis();
+    public void updateEmojis(String userId, List<String> newEmojis) {
+        if (newEmojis.isEmpty()) {
+            newEmojis.addAll(spotMyStatusProperties.getDefaultEmojis());
         }
 
         CachedUser cachedUser = getCachedUser(userId);
-        cachedUser.setEmojis(updatedEmojis);
+        cachedUser.setEmojis(newEmojis);
         userRepository.findById(userId).ifPresent(user -> {
             user.setEmojis(String.join(",", newEmojis));
             userRepository.save(user);
@@ -229,28 +214,32 @@ public class UserInteractionService {
     }
 
     private void handleEmojiAdd(SlackModalIn payload) {
-        handleEmojiUpdate(payload, this::addEmojis);
-    }
-
-    private void handleEmojiRemove(SlackModalIn payload) {
-        handleEmojiUpdate(payload, this::removeEmojis);
-    }
-
-    private void handleEmojiUpdate(SlackModalIn payload, BiFunction<String, List<String>, String> emojiUpdateFunction) {
         for (Block block : payload.getView().getBlocks()) {
             if (BLOCK_ID_EMOJI_LIST.equals(block.getBlockId())) {
-                String currentEmojis = (String) block.getElements().get(0).getText();
                 String newEmojiInput = getStateValue(payload, BLOCK_ID_EMOJI_INPUT).getValue();
+                List<Option> selectedOptions = getStateValue(payload, BLOCK_ID_EMOJI_LIST)
+                    .getSelectedValues()
+                    .stream()
+                    .map(selectedEmojis -> createOption(selectedEmojis, ":" + selectedEmojis + ":"))
+                    .collect(toList());
+                block.getAccessory().setInitialOptions(selectedOptions);
+                //todo validate(newEmojiInput)
                 if (isBlank(newEmojiInput)) {
                     return;
                 }
-                List<String> newEmojis = Arrays.stream(newEmojiInput.split(","))
-                                               .filter(StringUtils::isNotBlank)
-                                               .map(emoji -> emoji.trim().replaceAll(":", ""))
-                                               .collect(Collectors.toList());
-
-                String updatedEmojiList = emojiUpdateFunction.apply(currentEmojis, newEmojis);
-                block.getElements().get(0).setText(updatedEmojiList);
+                Arrays.stream(newEmojiInput.split(","))
+                      .filter(StringUtils::isNotBlank)
+                      .map(emoji -> emoji.trim().replaceAll(":", ""))
+                      .map(emoji -> createOption(emoji, ":" + emoji + ":"))
+                      .forEach(emojiOption -> {
+                          if (!block.getAccessory().getOptions().contains(emojiOption)) {
+                              block.getAccessory().getOptions().add(emojiOption);
+                          }
+                          if (!block.getAccessory().getInitialOptions().contains(emojiOption)) {
+                              block.getAccessory().getInitialOptions().add(emojiOption);
+                          }
+                      });
+                block.getAccessory().setActionId(String.valueOf(System.currentTimeMillis()));
             } else if (BLOCK_ID_EMOJI_INPUT.equals(block.getBlockId())) {
                 block.getElement().setActionId(null);
             }
@@ -263,7 +252,7 @@ public class UserInteractionService {
         slackModal.getView().setId(null);
         slackModal.getView().setState(null);
         String response = notifyUser(slackModal, "update").getBody();//todo
-        log.trace("Received modal update response: {}", response);
+//        log.trace("Received modal update response: {}", response);
     }
 
     private StateValue getStateValue(SlackModalIn payload, String blockId) {
@@ -271,23 +260,6 @@ public class UserInteractionService {
                       .getState()
                       .getStateValues()
                       .get(blockId);
-    }
-
-    private String addEmojis(String currentEmojis, List<String> newEmojis) {
-        String newEmojisMerged = newEmojis
-            .stream()
-            .filter(emoji -> validate(emoji, currentEmojis))
-            .map(emoji -> String.format(EMOJI_LIST_FORMAT, emoji, emoji))
-            .collect(Collectors.joining(", "));
-        return trimToEmpty(currentEmojis).concat(", ").concat(newEmojisMerged);
-    }
-
-    private String removeEmojis(String currentEmojis, List<String> removedEmojis) {
-        String updatedEmojis = currentEmojis;
-        for (String removedEmoji : removedEmojis) {
-            updatedEmojis = updatedEmojis.replace(String.format(EMOJI_LIST_FORMAT, removedEmoji, removedEmoji), "");
-        }
-        return trimToEmpty(updatedEmojis.replaceAll(" ,", ""));
     }
 
     private String getUserId(SlackModalIn payload) {
@@ -301,12 +273,5 @@ public class UserInteractionService {
                        .map(actions -> actions.get(0))
                        .map(Action::getActionId)
                        .orElse(null);
-    }
-
-    private boolean validate(String newEmoji, String currentEmojis) {
-        if (newEmoji.length() > 100) {
-            //todo return error
-        }
-        return !currentEmojis.contains("`" + newEmoji + "`");
     }
 }
