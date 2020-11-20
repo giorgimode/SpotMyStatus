@@ -217,11 +217,20 @@ public class UserInteractionService {
         for (Block block : payload.getView().getBlocks()) {
             if (BLOCK_ID_EMOJI_LIST.equals(block.getBlockId())) {
                 String newEmojiInput = getStateValue(payload, BLOCK_ID_EMOJI_INPUT).getValue();
-                List<Option> selectedOptions = getStateValue(payload, BLOCK_ID_EMOJI_LIST)
-                    .getSelectedValues()
-                    .stream()
-                    .map(selectedEmojis -> createOption(selectedEmojis, ":" + selectedEmojis + ":"))
-                    .collect(toList());
+                StateValue selectedEmojiBlock = getStateValue(payload, BLOCK_ID_EMOJI_LIST);
+                List<Option> selectedOptions;
+                if (isBlank(selectedEmojiBlock.getType())) {
+                    // sometimes slack delivers empty emoji_list_block due to network issues.
+                    // Type field should be present even if user removes all emojis.
+                    // That's how we can differentiate actual user input from a faulty one and set previously set initial options
+                    selectedOptions = block.getAccessory().getInitialOptions();
+                } else {
+                    selectedOptions = selectedEmojiBlock.getSelectedValues()
+                                                        .stream()
+                                                        .map(selectedEmojis -> createOption(selectedEmojis, ":" + selectedEmojis + ":"))
+                                                        .collect(toList());
+                }
+
                 block.getAccessory().setInitialOptions(selectedOptions);
                 //todo validate(newEmojiInput)
                 if (isBlank(newEmojiInput)) {
