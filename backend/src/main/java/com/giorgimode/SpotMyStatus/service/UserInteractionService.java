@@ -11,6 +11,7 @@ import static com.giorgimode.SpotMyStatus.util.SpotUtil.OBJECT_MAPPER;
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import com.giorgimode.SpotMyStatus.common.SpotMyStatusProperties;
 import com.giorgimode.SpotMyStatus.exceptions.UserNotFoundException;
@@ -28,7 +29,6 @@ import com.giorgimode.SpotMyStatus.slack.SlackPollingClient;
 import com.giorgimode.SpotMyStatus.util.RestHelper;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -62,11 +62,6 @@ public class UserInteractionService {
 
     @Autowired
     private SlackPollingClient slackClient;
-
-
-    @Value("${slack_uri}")
-    private String slackUri;
-
 
     @Value("classpath:templates/slack_modal_view_template.json")
     private Resource resourceFile;
@@ -161,15 +156,18 @@ public class UserInteractionService {
             }
         } else if (PAYLOAD_TYPE_SUBMISSION.equals(payload.getType())) {
             log.debug("User {} submitted the form", userId);
-            boolean disableSync = getStateValue(payload, BLOCK_ID_SYNC_TOGGLE).getSelectedValues().isEmpty();
-            List<String> spotifyItems = getStateValue(payload, BLOCK_ID_SPOTIFY_ITEMS).getSelectedValues();
-            List<String> newEmojis = new ArrayList<>();
+            boolean disableSync = getStateValue(payload, BLOCK_ID_SYNC_TOGGLE).getSelectedOptions().isEmpty();
+            List<Option> spotifyItems = getStateValue(payload, BLOCK_ID_SPOTIFY_ITEMS).getSelectedOptions();
             for (Block block : payload.getView().getBlocks()) {
                 if (BLOCK_ID_EMOJI_LIST.equals(block.getBlockId())) {
-                    newEmojis = getStateValue(payload, BLOCK_ID_EMOJI_LIST).getSelectedValues();
+                    StateValue emojiStateValue = getStateValue(payload, BLOCK_ID_EMOJI_LIST);
+                    if (isNotBlank(emojiStateValue.getType())) {
+                        updateEmojis(userId, emojiStateValue.getSelectedOptions());
+                    } else {
+                        updateEmojis(userId, block.getAccessory().getInitialOptions());
+                    }
                 }
             }
-            updateEmojis(userId, newEmojis);
             updateSpotifyItems(userId, spotifyItems);
             updateSync(userId, disableSync);
         }
@@ -183,15 +181,16 @@ public class UserInteractionService {
         }
     }
 
-    public void updateEmojis(String userId, List<String> newEmojis) {
-        if (newEmojis.isEmpty()) {
-            newEmojis.addAll(spotMyStatusProperties.getDefaultEmojis());
+    public void updateEmojis(String userId, List<Option> selectedEmojiOptions) {
+        List<String> selectedEmojis = getOptionValues(selectedEmojiOptions);
+        if (selectedEmojis.isEmpty()) {
+            selectedEmojis.addAll(spotMyStatusProperties.getDefaultEmojis());
         }
 
         CachedUser cachedUser = getCachedUser(userId);
-        cachedUser.setEmojis(newEmojis);
+        cachedUser.setEmojis(selectedEmojis);
         userRepository.findById(userId).ifPresent(user -> {
-            user.setEmojis(String.join(",", newEmojis));
+            user.setEmojis(String.join(",", selectedEmojis));
             userRepository.save(user);
         });
     }
@@ -204,13 +203,18 @@ public class UserInteractionService {
         return cachedUser;
     }
 
-    public void updateSpotifyItems(String userId, List<String> spotifyItems) {
+    public void updateSpotifyItems(String userId, List<Option> selectedSpotifyOptions) {
+        List<String> spotifyItems = getOptionValues(selectedSpotifyOptions);
         CachedUser cachedUser = getCachedUser(userId);
         cachedUser.setSpotifyItems(spotifyItems);
         userRepository.findById(userId).ifPresent(user -> {
             user.setSpotifyItems(String.join(",", spotifyItems));
             userRepository.save(user);
         });
+    }
+
+    private List<String> getOptionValues(List<Option> options) {
+        return options.stream().map(Option::getValue).collect(toList());
     }
 
     private void handleEmojiAdd(SlackModalIn payload) {
@@ -220,15 +224,12 @@ public class UserInteractionService {
                 StateValue selectedEmojiBlock = getStateValue(payload, BLOCK_ID_EMOJI_LIST);
                 List<Option> selectedOptions;
                 if (isBlank(selectedEmojiBlock.getType())) {
-                    // sometimes slack delivers empty emoji_list_block due to network issues.
-                    // Type field should be present even if user removes all emojis.
-                    // That's how we can differentiate actual user input from a faulty one and set previously set initial options
+                    // if state doesn't change in emoji list block, slack delivers empty block
+                    // 'type' field should be present even if user removes all emojis.
+                    // That's how we can differentiate actual user input from a no input and set previously set initial options
                     selectedOptions = block.getAccessory().getInitialOptions();
                 } else {
-                    selectedOptions = selectedEmojiBlock.getSelectedValues()
-                                                        .stream()
-                                                        .map(selectedEmojis -> createOption(selectedEmojis, ":" + selectedEmojis + ":"))
-                                                        .collect(toList());
+                    selectedOptions = selectedEmojiBlock.getSelectedOptions();
                 }
 
                 block.getAccessory().setInitialOptions(selectedOptions);

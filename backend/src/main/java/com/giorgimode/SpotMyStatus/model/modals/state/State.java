@@ -1,16 +1,18 @@
 
 package com.giorgimode.SpotMyStatus.model.modals.state;
 
+import static com.giorgimode.SpotMyStatus.util.SpotUtil.OBJECT_MAPPER;
 import static com.giorgimode.SpotMyStatus.util.SpotUtil.safeGet;
 import static java.util.stream.Collectors.toMap;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.giorgimode.SpotMyStatus.model.modals.Option;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.stream.Collectors;
 import lombok.Data;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -39,11 +41,11 @@ public class State {
         StateValue stateValue = new StateValue();
         stateValue.setType(safeGet(valueMap, "type"));
         stateValue.setValue(safeGet(valueMap, "value"));
-        List<Map<String, Object>> selectedOptions = safeGet(valueMap, "selected_options", List.of());
-        List<String> values = selectedOptions.stream()
-                                             .map(stringObjectMap -> (String) safeGet(stringObjectMap, "value"))
-                                             .collect(Collectors.toList());
-        stateValue.setSelectedValues(values);
+        List<Object> optionsList = safeGet(valueMap, "selected_options", List.of());
+        List<Option> selectedOptions = OBJECT_MAPPER.convertValue(optionsList, new TypeReference<>() {
+        });
+        stateValue.setSelectedOptions(selectedOptions);
+
         return stateValue;
     }
 
