@@ -22,7 +22,7 @@ public class CachedUser implements Serializable {
     private String spotifyAccessToken;
     private String spotifyRefreshToken;
     private boolean disabled;
-    private boolean cleaned;
+    private boolean cleaned = true;
     private LocalDateTime updatedAt;
     private List<String> emojis;
     private List<String> spotifyItems;
