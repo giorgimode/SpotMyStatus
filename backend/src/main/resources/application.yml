@@ -27,6 +27,7 @@ spotmystatus:
     - "headphones"
     - "musical_note"
     - "notes"
+  podcast_emoji: "headphones"
   default_spotify_items:
     track: "Music"
     episode: "Podcast"

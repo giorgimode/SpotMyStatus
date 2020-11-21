@@ -3,6 +3,7 @@ package com.giorgimode.SpotMyStatus.slack;
 import static com.giorgimode.SpotMyStatus.common.SpotConstants.SLACK_BOT_SCOPES;
 import static com.giorgimode.SpotMyStatus.common.SpotConstants.SLACK_PROFILE_SCOPES;
 import static com.giorgimode.SpotMyStatus.common.SpotConstants.SLACK_REDIRECT_PATH;
+import static com.giorgimode.SpotMyStatus.model.SpotifyItem.EPISODE;
 import static com.giorgimode.SpotMyStatus.util.SpotUtil.baseUri;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -14,7 +15,7 @@ import com.giorgimode.SpotMyStatus.common.SpotMyStatusProperties;
 import com.giorgimode.SpotMyStatus.model.CachedUser;
 import com.giorgimode.SpotMyStatus.model.SlackMessage;
 import com.giorgimode.SpotMyStatus.model.SlackToken;
-import com.giorgimode.SpotMyStatus.model.SpotifyCurrentTrackResponse;
+import com.giorgimode.SpotMyStatus.model.SpotifyCurrentItem;
 import com.giorgimode.SpotMyStatus.persistence.User;
 import com.giorgimode.SpotMyStatus.persistence.UserRepository;
 import com.giorgimode.SpotMyStatus.util.RestHelper;
@@ -141,7 +142,7 @@ public class SlackPollingClient {
         return responseEntity.getBody();
     }
 
-    public void updateAndPersistStatus(CachedUser user, SpotifyCurrentTrackResponse currentTrack) {
+    public void updateAndPersistStatus(CachedUser user, SpotifyCurrentItem currentTrack) {
         try {
             tryUpdateAndPersistStatus(user, currentTrack);
         } catch (Exception e) {
@@ -149,11 +150,11 @@ public class SlackPollingClient {
         }
     }
 
-    private void tryUpdateAndPersistStatus(CachedUser user, SpotifyCurrentTrackResponse currentTrack) {
+    private void tryUpdateAndPersistStatus(CachedUser user, SpotifyCurrentItem currentTrack) {
         long expiringInMs = currentTrack.getDurationMs() - currentTrack.getProgressMs() + spotMyStatusProperties.getExpirationOverhead();
         long expiringOnUnixTime = (System.currentTimeMillis() + expiringInMs) / 1000;
         String newStatus = buildNewStatus(currentTrack);
-        SlackStatusPayload statusPayload = new SlackStatusPayload(newStatus, getEmoji(user), expiringOnUnixTime);
+        SlackStatusPayload statusPayload = new SlackStatusPayload(newStatus, getEmoji(currentTrack, user), expiringOnUnixTime);
         if (!newStatus.equalsIgnoreCase(user.getSlackStatus())) {
             if (updateStatus(user, statusPayload)) {
                 log.info("Track: \"{}\" expiring in {} seconds", newStatus, expiringInMs / 1000);
@@ -169,16 +170,20 @@ public class SlackPollingClient {
     /**
      * Slack only allows max 100character as a status. In this case we first drop extra artists and also trim if necessary
      */
-    private String buildNewStatus(SpotifyCurrentTrackResponse currentTrack) {
-        String newStatus = String.join(", ", currentTrack.getArtists()) + " - " + currentTrack.getSongTitle();
+    private String buildNewStatus(SpotifyCurrentItem currentTrack) {
+        String newStatus = EPISODE.equals(currentTrack.getType()) ? "PODCAST: " : "";
+        newStatus += String.join(", ", currentTrack.getArtists()) + " - " + currentTrack.getTitle();
         if (newStatus.length() > 100) {
             String firstArtistOnly = currentTrack.getArtists().get(0);
-            newStatus = StringUtils.abbreviate(firstArtistOnly + " - " + currentTrack.getSongTitle(), 100);
+            newStatus = StringUtils.abbreviate(firstArtistOnly + " - " + currentTrack.getTitle(), 100);
         }
         return newStatus;
     }
 
-    private String getEmoji(CachedUser user) {
+    private String getEmoji(SpotifyCurrentItem currentTrack, CachedUser user) {
+        if (EPISODE.equals(currentTrack.getType())) {
+            return ":" + spotMyStatusProperties.getPodcastEmoji() + ":";
+        }
         List<String> emojis = user.getEmojis();
         if (emojis.isEmpty()) {
             emojis = spotMyStatusProperties.getDefaultEmojis();

@@ -2,7 +2,7 @@ package com.giorgimode.SpotMyStatus.service;
 
 import com.giorgimode.SpotMyStatus.common.SpotMyStatusProperties;
 import com.giorgimode.SpotMyStatus.model.CachedUser;
-import com.giorgimode.SpotMyStatus.model.SpotifyCurrentTrackResponse;
+import com.giorgimode.SpotMyStatus.model.SpotifyCurrentItem;
 import com.giorgimode.SpotMyStatus.slack.SlackPollingClient;
 import com.giorgimode.SpotMyStatus.spotify.SpotifyClient;
 import com.github.benmanes.caffeine.cache.LoadingCache;
@@ -98,7 +98,7 @@ public class StatusUpdateScheduler {
 
     private void updateSlackStatus(CachedUser user) {
         spotifyClient.getCurrentTrack(user)
-                     .filter(SpotifyCurrentTrackResponse::getIsPlaying)
+                     .filter(SpotifyCurrentItem::getIsPlaying)
                      .ifPresentOrElse(usersCurrentTrack -> slackClient.updateAndPersistStatus(user, usersCurrentTrack),
                          () -> cleanStatus(user));
     }

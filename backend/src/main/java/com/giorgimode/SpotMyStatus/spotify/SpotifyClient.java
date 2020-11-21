@@ -1,7 +1,7 @@
 package com.giorgimode.SpotMyStatus.spotify;
 
 import com.giorgimode.SpotMyStatus.model.CachedUser;
-import com.giorgimode.SpotMyStatus.model.SpotifyCurrentTrackResponse;
+import com.giorgimode.SpotMyStatus.model.SpotifyCurrentItem;
 import com.giorgimode.SpotMyStatus.model.SpotifyTokenResponse;
 import com.giorgimode.SpotMyStatus.persistence.User;
 import com.giorgimode.SpotMyStatus.persistence.UserRepository;
@@ -59,7 +59,7 @@ public class SpotifyClient {
         userCache.put(user.getId(), newCachedUser);
     }
 
-    public Optional<SpotifyCurrentTrackResponse> getCurrentTrack(CachedUser user) {
+    public Optional<SpotifyCurrentItem> getCurrentTrack(CachedUser user) {
         try {
             return tryGetSpotifyCurrentTrack(user);
         } catch (HttpClientErrorException ex) {
@@ -77,7 +77,7 @@ public class SpotifyClient {
         return Optional.empty();
     }
 
-    private Optional<SpotifyCurrentTrackResponse> refreshSpotifyAccessToken(CachedUser user) {
+    private Optional<SpotifyCurrentItem> refreshSpotifyAccessToken(CachedUser user) {
         try {
             SpotifyTokenResponse spotifyTokens = spotifyAuthClient.getNewAccessToken(user.getSpotifyRefreshToken());
             log.info("Retrieved spotify access token expiring in {} seconds", spotifyTokens.getExpiresIn());
@@ -89,12 +89,13 @@ public class SpotifyClient {
         }
     }
 
-    private Optional<SpotifyCurrentTrackResponse> tryGetSpotifyCurrentTrack(CachedUser user) {
-        SpotifyCurrentTrackResponse currentTrackResponse = RestHelper.builder()
-                                                                     .withBaseUrl(spotifyApiUri + "/v1/me/player/currently-playing")
-                                                                     .withBearer(user.getSpotifyAccessToken())
-                                                                     .getBody(restTemplate, SpotifyCurrentTrackResponse.class);
-        if (currentTrackResponse == null || currentTrackResponse.getSongTitle() == null || currentTrackResponse.getIsPlaying() == null) {
+    private Optional<SpotifyCurrentItem> tryGetSpotifyCurrentTrack(CachedUser user) {
+        SpotifyCurrentItem currentTrackResponse = RestHelper.builder()
+                                                            .withBaseUrl(spotifyApiUri + "/v1/me/player/currently-playing")
+                                                            .withBearer(user.getSpotifyAccessToken())
+                                                            .withQueryParam("additional_types", "track,episode")
+                                                            .getBody(restTemplate, SpotifyCurrentItem.class);
+        if (currentTrackResponse == null || currentTrackResponse.getTitle() == null || currentTrackResponse.getIsPlaying() == null) {
             return Optional.empty();
         }
         return Optional.of(currentTrackResponse);
