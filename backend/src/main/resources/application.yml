@@ -22,7 +22,7 @@ spotmystatus:
   passivate_start_hr: ${PASSIVATE_START:21}
   passivate_end_hr: ${PASSIVATE_END:6}
   timeout: ${POLLING_TIMEOUT:2000}
-  expiration_overhead: ${EXPIRATION_OVERHEAD:20000}
+  expiration_overhead: ${EXPIRATION_OVERHEAD:120000}
   emojis:
     - ":headphones:"
     - ":musical_note:"
