@@ -1,4 +1,4 @@
-package com.giorgimode.SpotMyStatus.model.modals.state;
+package com.giorgimode.SpotMyStatus.model.modals;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;

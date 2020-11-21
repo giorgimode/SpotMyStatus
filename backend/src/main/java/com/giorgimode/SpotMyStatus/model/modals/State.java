@@ -1,5 +1,5 @@
 
-package com.giorgimode.SpotMyStatus.model.modals.state;
+package com.giorgimode.SpotMyStatus.model.modals;
 
 import static com.giorgimode.SpotMyStatus.util.SpotUtil.OBJECT_MAPPER;
 import static com.giorgimode.SpotMyStatus.util.SpotUtil.safeGet;
@@ -9,7 +9,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.giorgimode.SpotMyStatus.model.modals.Option;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;

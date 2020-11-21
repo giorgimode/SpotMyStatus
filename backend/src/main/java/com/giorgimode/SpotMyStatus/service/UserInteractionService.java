@@ -23,7 +23,7 @@ import com.giorgimode.SpotMyStatus.model.modals.SlackModalIn;
 import com.giorgimode.SpotMyStatus.model.modals.SlackModalOut;
 import com.giorgimode.SpotMyStatus.model.modals.SlackModalView;
 import com.giorgimode.SpotMyStatus.model.modals.Text;
-import com.giorgimode.SpotMyStatus.model.modals.state.StateValue;
+import com.giorgimode.SpotMyStatus.model.modals.StateValue;
 import com.giorgimode.SpotMyStatus.persistence.UserRepository;
 import com.giorgimode.SpotMyStatus.slack.SlackPollingClient;
 import com.giorgimode.SpotMyStatus.util.RestHelper;
