@@ -1,5 +1,6 @@
 package com.giorgimode.SpotMyStatus;
 
+import com.giorgimode.SpotMyStatus.common.PropertyVault;
 import com.giorgimode.SpotMyStatus.model.CachedUser;
 import com.giorgimode.SpotMyStatus.model.SpotifyTokenResponse;
 import com.giorgimode.SpotMyStatus.persistence.User;
@@ -33,8 +34,11 @@ public class SpotMyStatusConfiguration {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private CleanupService cleanupService;
+
+    @Bean
+    public CleanupService cleanupService(PropertyVault propertyVault) {
+        return new CleanupService(userRepository, propertyVault, restTemplate(null));
+    }
 
     @Bean
     public RestTemplate restTemplate(RestTemplateBuilder restTemplateBuilder) {
@@ -50,18 +54,19 @@ public class SpotMyStatusConfiguration {
 
     @Bean
     public LoadingCache<String, CachedUser> userCache(SpotifyAuthClient spotifyAuthClient) {
+        CleanupService cleanupService = cleanupService(null);
         LoadingCache<String, CachedUser> cache = Caffeine.newBuilder()
                                                          .maximumSize(10_000)
-                                                         .build(key -> loadUser(key, spotifyAuthClient));
-        populateCache(cache, spotifyAuthClient);
+                                                         .build(key -> loadUser(key, spotifyAuthClient, cleanupService));
+        populateCache(cache, spotifyAuthClient, cleanupService);
         return cache;
     }
 
 
-    private void populateCache(LoadingCache<String, CachedUser> cache, SpotifyAuthClient spotifyAuthClient) {
+    private void populateCache(LoadingCache<String, CachedUser> cache, SpotifyAuthClient spotifyAuthClient, CleanupService cleanupService) {
         userRepository.findAll()
                       .stream()
-                      .map(user -> cacheUser(spotifyAuthClient, user))
+                      .map(user -> cacheUser(spotifyAuthClient, user, cleanupService))
                       .filter(Objects::nonNull)
                       .forEach(cachedUser -> cache.put(cachedUser.getId(), cachedUser));
     }
@@ -72,13 +77,13 @@ public class SpotMyStatusConfiguration {
         return newAccessToken.getAccessToken();
     }
 
-    private CachedUser loadUser(String key, SpotifyAuthClient spotifyAuthClient) {
+    private CachedUser loadUser(String key, SpotifyAuthClient spotifyAuthClient, CleanupService cleanupService) {
         return userRepository.findById(key)
-                             .map(user -> cacheUser(spotifyAuthClient, user))
+                             .map(user -> cacheUser(spotifyAuthClient, user, cleanupService))
                              .orElse(null);
     }
 
-    private CachedUser cacheUser(SpotifyAuthClient spotifyAuthClient, User user) {
+    private CachedUser cacheUser(SpotifyAuthClient spotifyAuthClient, User user, CleanupService cleanupService) {
         try {
             return SpotUtil.toCachedUser(user, getAccessToken(spotifyAuthClient, user));
         } catch (HttpClientErrorException ex) {
