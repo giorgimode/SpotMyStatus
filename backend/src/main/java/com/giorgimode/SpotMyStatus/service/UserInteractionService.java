@@ -2,6 +2,7 @@ package com.giorgimode.SpotMyStatus.service;
 
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_EMOJI_INPUT;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_EMOJI_LIST;
+import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_HOURS_INPUT;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_SPOTIFY_ITEMS;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_SYNC_TOGGLE;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.PAYLOAD_TYPE_BLOCK_ACTIONS;
@@ -29,9 +30,13 @@ import com.giorgimode.SpotMyStatus.slack.SlackPollingClient;
 import com.giorgimode.SpotMyStatus.util.RestHelper;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import java.io.IOException;
+import java.time.LocalTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -101,7 +106,7 @@ public class UserInteractionService {
                 block.getAccessory().setOptions(emojiOptions);
                 block.getAccessory().setInitialOptions(emojiOptions);
             } else if (BLOCK_ID_SYNC_TOGGLE.equals(block.getBlockId())) {
-                if (getCachedUser(userId).isDisabled()) {
+                if (cachedUser.isDisabled()) {
                     block.getAccessory().setInitialOptions(null);
                 }
             }
@@ -148,6 +153,7 @@ public class UserInteractionService {
 
     public void handleUserInteraction(SlackModalIn payload) {
         String userId = getUserId(payload);
+        CachedUser cachedUser = getCachedUser(userId);
         if (PAYLOAD_TYPE_BLOCK_ACTIONS.equals(payload.getType())) {
             getUserAction(payload)
                 .filter(action -> BLOCK_ID_EMOJI_INPUT.equals(action.getBlockId()))
@@ -163,14 +169,25 @@ public class UserInteractionService {
                 if (BLOCK_ID_EMOJI_LIST.equals(block.getBlockId())) {
                     StateValue emojiStateValue = getStateValue(payload, BLOCK_ID_EMOJI_LIST);
                     if (isNotBlank(emojiStateValue.getType())) {
-                        updateEmojis(userId, emojiStateValue.getSelectedOptions());
+                        updateEmojis(cachedUser, emojiStateValue.getSelectedOptions());
                     } else {
-                        updateEmojis(userId, block.getAccessory().getInitialOptions());
+                        updateEmojis(cachedUser, block.getAccessory().getInitialOptions());
                     }
                 }
             }
-            updateSpotifyItems(userId, spotifyItems);
+            updateSpotifyItems(cachedUser, spotifyItems);
             updateSync(userId, disableSync);
+            String startHour = getStateValue(payload, BLOCK_ID_HOURS_INPUT).getStartHour();
+            String endHour = getStateValue(payload, BLOCK_ID_HOURS_INPUT).getEndHour();
+            updateSyncHours(cachedUser, startHour, endHour);
+            //todo add liquibase. change shouldSlowDownOutsideWorkHours()
+            userRepository.findById(cachedUser.getId()).ifPresent(user -> {
+                user.setEmojis(String.join(",", cachedUser.getEmojis()));
+                user.setSpotifyItems(cachedUser.getSpotifyItems().stream().map(SpotifyItem::title).collect(Collectors.joining(",")));
+                user.setSyncFrom(cachedUser.getSyncStartHour());
+                user.setSyncTo(cachedUser.getSyncEndHour());
+                userRepository.save(user);
+            });
         }
     }
 
@@ -182,18 +199,28 @@ public class UserInteractionService {
         }
     }
 
-    public void updateEmojis(String userId, List<Option> selectedEmojiOptions) {
+    public void updateEmojis(CachedUser cachedUser, List<Option> selectedEmojiOptions) {
         List<String> selectedEmojis = getOptionValues(selectedEmojiOptions);
         if (selectedEmojis.isEmpty()) {
             selectedEmojis.addAll(spotMyStatusProperties.getDefaultEmojis());
         }
 
-        CachedUser cachedUser = getCachedUser(userId);
         cachedUser.setEmojis(selectedEmojis);
-        userRepository.findById(userId).ifPresent(user -> {
-            user.setEmojis(String.join(",", selectedEmojis));
-            userRepository.save(user);
-        });
+    }
+
+
+    private void updateSyncHours(CachedUser cachedUser, String startHour, String endHour) {
+        ZoneOffset offset = ZoneOffset.ofTotalSeconds(cachedUser.getTimezoneOffsetSeconds());
+        int offsetStartHour = LocalTime.parse(startHour, DateTimeFormatter.ISO_LOCAL_TIME)
+                                       .atOffset(offset)
+                                       .withOffsetSameInstant(ZoneOffset.UTC)
+                                       .getHour();
+        int offsetEndHour = LocalTime.parse(endHour, DateTimeFormatter.ISO_LOCAL_TIME)
+                                     .atOffset(offset)
+                                     .withOffsetSameInstant(ZoneOffset.UTC)
+                                     .getHour();
+        cachedUser.setSyncStartHour(offsetStartHour);
+        cachedUser.setSyncEndHour(offsetEndHour);
     }
 
     private CachedUser getCachedUser(String userId) {
@@ -204,15 +231,10 @@ public class UserInteractionService {
         return cachedUser;
     }
 
-    public void updateSpotifyItems(String userId, List<Option> selectedSpotifyOptions) {
+    public void updateSpotifyItems(CachedUser cachedUser, List<Option> selectedSpotifyOptions) {
         List<String> spotifyItemsList = getOptionValues(selectedSpotifyOptions);
         List<SpotifyItem> spotifyItems = spotifyItemsList.stream().map(SpotifyItem::from).collect(toList());
-        CachedUser cachedUser = getCachedUser(userId);
         cachedUser.setSpotifyItems(spotifyItems);
-        userRepository.findById(userId).ifPresent(user -> {
-            user.setSpotifyItems(String.join(",", spotifyItemsList));
-            userRepository.save(user);
-        });
     }
 
     private List<String> getOptionValues(List<Option> options) {

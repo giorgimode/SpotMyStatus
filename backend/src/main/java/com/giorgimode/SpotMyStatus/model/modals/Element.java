@@ -17,4 +17,6 @@ public class Element {
     @JsonProperty("action_id")
     public String actionId;
     public Text placeholder;
+    @JsonProperty("initial_time")
+    public String initialTime;
 }

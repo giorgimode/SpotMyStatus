@@ -15,6 +15,8 @@ public class StateValue {
 
     private String type;
     private String value;
+    private String startHour;
+    private String endHour;
     @JsonProperty("selected_options")
     private List<Option> selectedOptions;
 }
