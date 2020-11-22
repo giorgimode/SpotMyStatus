@@ -15,6 +15,7 @@ import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import com.giorgimode.SpotMyStatus.common.SpotMyStatusProperties;
 import com.giorgimode.SpotMyStatus.exceptions.UserNotFoundException;
 import com.giorgimode.SpotMyStatus.model.CachedUser;
+import com.giorgimode.SpotMyStatus.model.SpotifyItem;
 import com.giorgimode.SpotMyStatus.model.modals.Action;
 import com.giorgimode.SpotMyStatus.model.modals.Block;
 import com.giorgimode.SpotMyStatus.model.modals.Option;
@@ -83,8 +84,8 @@ public class UserInteractionService {
                                                                         .collect(toList());
                 List<Option> selectedItemsOptions = cachedUser.getSpotifyItems()
                                                               .stream()
-                                                              .map(spotifyItem -> createOption(spotifyItem,
-                                                                  spotMyStatusProperties.getDefaultSpotifyItems().get(spotifyItem)))
+                                                              .map(spotifyItem -> createOption(spotifyItem.title(),
+                                                                  spotMyStatusProperties.getDefaultSpotifyItems().get(spotifyItem.title())))
                                                               .collect(toList());
                 block.getAccessory().setOptions(defaultItemOptions);
                 if (selectedItemsOptions.isEmpty()) {
@@ -204,11 +205,12 @@ public class UserInteractionService {
     }
 
     public void updateSpotifyItems(String userId, List<Option> selectedSpotifyOptions) {
-        List<String> spotifyItems = getOptionValues(selectedSpotifyOptions);
+        List<String> spotifyItemsList = getOptionValues(selectedSpotifyOptions);
+        List<SpotifyItem> spotifyItems = spotifyItemsList.stream().map(SpotifyItem::from).collect(toList());
         CachedUser cachedUser = getCachedUser(userId);
         cachedUser.setSpotifyItems(spotifyItems);
         userRepository.findById(userId).ifPresent(user -> {
-            user.setSpotifyItems(String.join(",", spotifyItems));
+            user.setSpotifyItems(String.join(",", spotifyItemsList));
             userRepository.save(user);
         });
     }

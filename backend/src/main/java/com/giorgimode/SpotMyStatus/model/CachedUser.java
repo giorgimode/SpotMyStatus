@@ -3,12 +3,14 @@ package com.giorgimode.SpotMyStatus.model;
 
 import static com.giorgimode.SpotMyStatus.util.SpotUtil.requireNonBlank;
 import static java.util.Objects.requireNonNull;
+import static java.util.function.Predicate.not;
 import com.google.common.base.MoreObjects;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.Data;
 
 @Data
@@ -25,7 +27,7 @@ public class CachedUser implements Serializable {
     private boolean cleaned = true;
     private LocalDateTime updatedAt;
     private List<String> emojis;
-    private List<String> spotifyItems;
+    private List<SpotifyItem> spotifyItems;
 
     @Override
     public String toString() {
@@ -110,17 +112,28 @@ public class CachedUser implements Serializable {
             cachedUser.setSlackAccessToken(requireNonBlank(slackAccessToken));
             cachedUser.setSpotifyRefreshToken(requireNonBlank(spotifyRefreshToken));
             cachedUser.setSpotifyAccessToken(requireNonBlank(spotifyAccessToken));
-            cachedUser.setEmojis(split(emojis));
-            cachedUser.setSpotifyItems(split(spotifyItems));
+            cachedUser.setEmojis(splitEmojis(emojis));
+            cachedUser.setSpotifyItems(splitItems(spotifyItems));
             cachedUser.setDisabled(disabled);
             return cachedUser;
         }
 
-        private List<String> split(String emojis) {
-            return Optional.ofNullable(emojis)
+        private List<String> splitEmojis(String items) {
+            return Optional.ofNullable(items)
+                           .filter(not(String::isBlank))
                            .map(field -> field.split(","))
                            .map(Arrays::asList)
                            .orElse(List.of());
+        }
+
+        private List<SpotifyItem> splitItems(String list) {
+            return Optional.ofNullable(list)
+                           .filter(not(String::isBlank))
+                           .map(field -> field.split(","))
+                           .stream()
+                           .flatMap(Arrays::stream)
+                           .map(SpotifyItem::from)
+                           .collect(Collectors.toList());
         }
     }
 }
