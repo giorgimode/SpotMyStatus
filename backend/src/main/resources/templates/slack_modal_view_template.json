@@ -52,7 +52,7 @@
         "initial_options": [
           {
             "text": {
-              "type": "mrkdwn",
+              "type": "plain_text",
               "text": "Music"
             },
             "value": "track"
@@ -81,6 +81,7 @@
     },
     {
       "type": "input",
+      "dispatch_action": true,
       "block_id": "emoji_input_block",
       "optional": true,
       "element": {
@@ -96,20 +97,6 @@
         "text": "Add new emojis to rotate through",
         "emoji": true
       }
-    },
-    {
-      "type": "actions",
-      "elements": [
-        {
-          "type": "button",
-          "text": {
-            "type": "plain_text",
-            "text": "Add emojis to the current list",
-            "emoji": true
-          },
-          "action_id": "action_add_emoji"
-        }
-      ]
     },
     {
       "type": "section",

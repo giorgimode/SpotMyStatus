@@ -1,6 +1,5 @@
 package com.giorgimode.SpotMyStatus.service;
 
-import static com.giorgimode.SpotMyStatus.util.SpotConstants.ACTION_ID_EMOJI_ADD;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_EMOJI_INPUT;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_EMOJI_LIST;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_SPOTIFY_ITEMS;
@@ -22,8 +21,8 @@ import com.giorgimode.SpotMyStatus.model.modals.Option;
 import com.giorgimode.SpotMyStatus.model.modals.SlackModalIn;
 import com.giorgimode.SpotMyStatus.model.modals.SlackModalOut;
 import com.giorgimode.SpotMyStatus.model.modals.SlackModalView;
-import com.giorgimode.SpotMyStatus.model.modals.Text;
 import com.giorgimode.SpotMyStatus.model.modals.StateValue;
+import com.giorgimode.SpotMyStatus.model.modals.Text;
 import com.giorgimode.SpotMyStatus.persistence.UserRepository;
 import com.giorgimode.SpotMyStatus.slack.SlackPollingClient;
 import com.giorgimode.SpotMyStatus.util.RestHelper;
@@ -149,11 +148,12 @@ public class UserInteractionService {
     public void handleUserInteraction(SlackModalIn payload) {
         String userId = getUserId(payload);
         if (PAYLOAD_TYPE_BLOCK_ACTIONS.equals(payload.getType())) {
-            String userAction = getUserAction(payload);
-            log.debug("User {} triggered {}", userId, userAction);
-            if (payload.getActions() != null && ACTION_ID_EMOJI_ADD.equals(userAction)) {
-                handleEmojiAdd(payload);
-            }
+            getUserAction(payload)
+                .filter(action -> BLOCK_ID_EMOJI_INPUT.equals(action.getBlockId()))
+                .ifPresent(userAction -> {
+                    log.debug("User {} triggered {}", userId, userAction);
+                    handleEmojiAdd(payload, userAction.getValue());
+                });
         } else if (PAYLOAD_TYPE_SUBMISSION.equals(payload.getType())) {
             log.debug("User {} submitted the form", userId);
             boolean disableSync = getStateValue(payload, BLOCK_ID_SYNC_TOGGLE).getSelectedOptions().isEmpty();
@@ -217,10 +217,13 @@ public class UserInteractionService {
         return options.stream().map(Option::getValue).collect(toList());
     }
 
-    private void handleEmojiAdd(SlackModalIn payload) {
+    private void handleEmojiAdd(SlackModalIn payload, String newEmojiInput) {
+        //todo validate(newEmojiInput)
+        if (isBlank(newEmojiInput)) {
+            return;
+        }
         for (Block block : payload.getView().getBlocks()) {
             if (BLOCK_ID_EMOJI_LIST.equals(block.getBlockId())) {
-                String newEmojiInput = getStateValue(payload, BLOCK_ID_EMOJI_INPUT).getValue();
                 StateValue selectedEmojiBlock = getStateValue(payload, BLOCK_ID_EMOJI_LIST);
                 List<Option> selectedOptions;
                 if (isBlank(selectedEmojiBlock.getType())) {
@@ -233,10 +236,6 @@ public class UserInteractionService {
                 }
 
                 block.getAccessory().setInitialOptions(selectedOptions);
-                //todo validate(newEmojiInput)
-                if (isBlank(newEmojiInput)) {
-                    return;
-                }
                 Arrays.stream(newEmojiInput.split(","))
                       .filter(StringUtils::isNotBlank)
                       .map(emoji -> emoji.trim().replaceAll(":", ""))
@@ -276,12 +275,10 @@ public class UserInteractionService {
         return payload.getUser() != null ? payload.getUser().getId() : null;
     }
 
-    private String getUserAction(SlackModalIn payload) {
+    private Optional<Action> getUserAction(SlackModalIn payload) {
         return Optional.ofNullable(payload)
                        .map(SlackModalIn::getActions)
                        .filter(not(CollectionUtils::isEmpty))
-                       .map(actions -> actions.get(0))
-                       .map(Action::getActionId)
-                       .orElse(null);
+                       .map(actions -> actions.get(0));
     }
 }

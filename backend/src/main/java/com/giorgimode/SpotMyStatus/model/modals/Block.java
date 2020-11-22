@@ -17,6 +17,8 @@ public class Block {
     @JsonProperty("block_id")
     public String blockId;
     public Boolean optional;
+    @JsonProperty("dispatch_action")
+    public Boolean dispatchAction;
     public Element element;
     public Text label;
     public List<Element> elements;
