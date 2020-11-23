@@ -2,6 +2,8 @@ package com.giorgimode.SpotMyStatus.spotify;
 
 import com.giorgimode.SpotMyStatus.model.CachedUser;
 import com.giorgimode.SpotMyStatus.model.SpotifyCurrentItem;
+import com.giorgimode.SpotMyStatus.model.SpotifyDevice;
+import com.giorgimode.SpotMyStatus.model.SpotifyDevices;
 import com.giorgimode.SpotMyStatus.model.SpotifyTokenResponse;
 import com.giorgimode.SpotMyStatus.persistence.User;
 import com.giorgimode.SpotMyStatus.persistence.UserRepository;
@@ -9,6 +11,7 @@ import com.giorgimode.SpotMyStatus.service.UserInteractionService;
 import com.giorgimode.SpotMyStatus.util.RestHelper;
 import com.giorgimode.SpotMyStatus.util.SpotUtil;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
@@ -99,5 +102,21 @@ public class SpotifyClient {
             return Optional.empty();
         }
         return Optional.of(currentTrackResponse);
+    }
+
+    public List<SpotifyDevice> getSpotifyDevices(CachedUser user) {
+        try {
+            SpotifyDevices spotifyDevices = RestHelper.builder()
+                                                      .withBaseUrl(spotifyApiUri + "/v1/me/player/devices")
+                                                      .withBearer(user.getSpotifyAccessToken())
+                                                      .getBody(restTemplate, SpotifyDevices.class);
+            if (spotifyDevices == null || spotifyDevices.getDevices() == null) {
+                return List.of();
+            }
+            return spotifyDevices.getDevices();
+        } catch (Exception e) {
+            log.error("Failed to retrieve Spotify devices for user {}", user.getId(), e);
+            return List.of();
+        }
     }
 }

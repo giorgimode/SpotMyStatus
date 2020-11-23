@@ -46,6 +46,9 @@ public class User implements Serializable {
     @Column(name = "spotify_items")
     private String spotifyItems;
 
+    @Column(name = "spotify_devices")
+    private String spotifyDevices;
+
     @Column(name = "disabled", nullable = false)
     private boolean disabled = false;
 

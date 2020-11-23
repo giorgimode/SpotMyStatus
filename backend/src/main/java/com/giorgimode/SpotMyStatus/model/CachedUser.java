@@ -28,6 +28,7 @@ public class CachedUser implements Serializable {
     private LocalDateTime updatedAt;
     private List<String> emojis;
     private List<SpotifyItem> spotifyItems;
+    private List<String> spotifyDeviceIds;
     private Integer syncStartHour;
     private Integer syncEndHour;
 
@@ -43,6 +44,7 @@ public class CachedUser implements Serializable {
             .add("spotifyRefreshToken", spotifyRefreshToken)
             .add("emojis", emojis)
             .add("spotifyItems", spotifyItems)
+            .add("spotifyDeviceIds", spotifyDeviceIds)
             .add("syncStartHour", syncStartHour)
             .add("syncEndHour", syncEndHour)
             .add("disabled", disabled)
@@ -65,6 +67,7 @@ public class CachedUser implements Serializable {
         private Boolean disabled;
         private String emojis;
         private String spotifyItems;
+        private String spotifyDeviceIds;
         private Integer syncStartHour;
         private Integer syncEndHour;
 
@@ -111,6 +114,11 @@ public class CachedUser implements Serializable {
             return this;
         }
 
+        public CachedUserBuilder spotifyDeviceIds(String spotifyDeviceIds) {
+            this.spotifyDeviceIds = spotifyDeviceIds;
+            return this;
+        }
+
         public CachedUserBuilder syncStartHour(Integer syncStartHour) {
             this.syncStartHour = syncStartHour;
             return this;
@@ -128,15 +136,16 @@ public class CachedUser implements Serializable {
             cachedUser.setSlackAccessToken(requireNonBlank(slackAccessToken));
             cachedUser.setSpotifyRefreshToken(requireNonBlank(spotifyRefreshToken));
             cachedUser.setSpotifyAccessToken(requireNonBlank(spotifyAccessToken));
-            cachedUser.setEmojis(splitEmojis(emojis));
+            cachedUser.setEmojis(split(emojis));
             cachedUser.setSpotifyItems(splitItems(spotifyItems));
+            cachedUser.setSpotifyDeviceIds(split(spotifyDeviceIds));
             cachedUser.setDisabled(disabled);
             cachedUser.setSyncStartHour(syncStartHour);
             cachedUser.setSyncEndHour(syncEndHour);
             return cachedUser;
         }
 
-        private List<String> splitEmojis(String items) {
+        private List<String> split(String items) {
             return Optional.ofNullable(items)
                            .filter(not(String::isBlank))
                            .map(field -> field.split(","))

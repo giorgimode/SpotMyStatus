@@ -200,6 +200,25 @@
     },
     {
       "type": "section",
+      "block_id": "spotify_devices_block",
+      "text": {
+        "type": "mrkdwn",
+        "text": "Choose Spotify devices to sync from"
+      },
+      "accessory": {
+        "type": "multi_static_select",
+        "placeholder": {
+          "type": "plain_text",
+          "text": "Select devices"
+        },
+        "options": []
+      }
+    },
+    {
+      "type": "divider"
+    },
+    {
+      "type": "section",
       "text": {
         "type": "mrkdwn",
         "text": "<http://spotmystatus.giomo.de/|_*SpotMyStatus Home*_>"

@@ -1,0 +1,10 @@
+package com.giorgimode.SpotMyStatus.model;
+
+import java.util.List;
+import lombok.Data;
+
+@Data
+public class SpotifyDevices {
+
+    private List<SpotifyDevice> devices;
+}

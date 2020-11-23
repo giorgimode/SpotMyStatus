@@ -23,6 +23,7 @@ public class SpotUtil {
                          .disabled(user.isDisabled())
                          .emojis(user.getEmojis())
                          .spotifyItems(user.getSpotifyItems())
+                         .spotifyDeviceIds(user.getSpotifyDevices())
                          .syncStartHour(user.getSyncFrom())
                          .syncEndHour(user.getSyncTo())
                          .build();

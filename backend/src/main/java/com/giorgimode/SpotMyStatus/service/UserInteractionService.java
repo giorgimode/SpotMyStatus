@@ -3,6 +3,7 @@ package com.giorgimode.SpotMyStatus.service;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_EMOJI_INPUT;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_EMOJI_LIST;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_HOURS_INPUT;
+import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_SPOTIFY_DEVICES;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_SPOTIFY_ITEMS;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_SYNC_TOGGLE;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.PAYLOAD_TYPE_BLOCK_ACTIONS;
@@ -17,6 +18,7 @@ import com.giorgimode.SpotMyStatus.common.SpotMyStatusProperties;
 import com.giorgimode.SpotMyStatus.exceptions.UserNotFoundException;
 import com.giorgimode.SpotMyStatus.model.CachedUser;
 import com.giorgimode.SpotMyStatus.model.SpotifyItem;
+import com.giorgimode.SpotMyStatus.model.modals.Accessory;
 import com.giorgimode.SpotMyStatus.model.modals.Action;
 import com.giorgimode.SpotMyStatus.model.modals.Block;
 import com.giorgimode.SpotMyStatus.model.modals.Option;
@@ -27,6 +29,7 @@ import com.giorgimode.SpotMyStatus.model.modals.StateValue;
 import com.giorgimode.SpotMyStatus.model.modals.Text;
 import com.giorgimode.SpotMyStatus.persistence.UserRepository;
 import com.giorgimode.SpotMyStatus.slack.SlackPollingClient;
+import com.giorgimode.SpotMyStatus.spotify.SpotifyClient;
 import com.giorgimode.SpotMyStatus.util.RestHelper;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import java.io.IOException;
@@ -69,6 +72,9 @@ public class UserInteractionService {
     @Autowired
     private SlackPollingClient slackClient;
 
+    @Autowired
+    private SpotifyClient spotifyClient;
+
     @Value("classpath:templates/slack_modal_view_template.json")
     private Resource resourceFile;
 
@@ -88,6 +94,7 @@ public class UserInteractionService {
         SlackModalIn slackModalIn = new SlackModalIn();
         slackModalIn.setTriggerId(triggerId);
         modalViewTemplate.getBlocks().forEach(block -> {
+            Accessory accessory = block.getAccessory();
             if (BLOCK_ID_SPOTIFY_ITEMS.equals(block.getBlockId())) {
                 List<Option> defaultItemOptions = spotMyStatusProperties.getDefaultSpotifyItems()
                                                                         .entrySet()
@@ -99,22 +106,22 @@ public class UserInteractionService {
                                                               .map(spotifyItem -> createOption(spotifyItem.title(),
                                                                   spotMyStatusProperties.getDefaultSpotifyItems().get(spotifyItem.title())))
                                                               .collect(toList());
-                block.getAccessory().setOptions(defaultItemOptions);
+                accessory.setOptions(defaultItemOptions);
                 if (selectedItemsOptions.isEmpty()) {
-                    block.getAccessory().setInitialOptions(defaultItemOptions);
+                    accessory.setInitialOptions(defaultItemOptions);
                 } else {
-                    block.getAccessory().setInitialOptions(selectedItemsOptions);
+                    accessory.setInitialOptions(selectedItemsOptions);
                 }
             } else if (BLOCK_ID_EMOJI_LIST.equals(block.getBlockId())) {
                 List<Option> emojiOptions = getUserEmojis(cachedUser)
                     .stream()
                     .map(emoji -> createOption(emoji, ":" + emoji + ":"))
                     .collect(toList());
-                block.getAccessory().setOptions(emojiOptions);
-                block.getAccessory().setInitialOptions(emojiOptions);
+                accessory.setOptions(emojiOptions);
+                accessory.setInitialOptions(emojiOptions);
             } else if (BLOCK_ID_SYNC_TOGGLE.equals(block.getBlockId())) {
                 if (cachedUser.isDisabled()) {
-                    block.getAccessory().setInitialOptions(null);
+                    accessory.setInitialOptions(null);
                 }
             } else if (BLOCK_ID_HOURS_INPUT.equals(block.getBlockId())) {
                 if (cachedUser.getSyncStartHour() != null && cachedUser.getSyncEndHour() != null) {
@@ -131,6 +138,16 @@ public class UserInteractionService {
                     block.getElements().get(0).setInitialTime(offsetStartTime.format(formatter));
                     block.getElements().get(1).setInitialTime(offsetEndTime.format(formatter));
                 }
+            } else if (BLOCK_ID_SPOTIFY_DEVICES.equals(block.getBlockId())) {
+                List<Option> spotifyDevices = spotifyClient.getSpotifyDevices(cachedUser)
+                                                           .stream()
+                                                           .map(device -> createOption(device.getId(), device.getName()))
+                                                           .collect(toList());
+                accessory.setOptions(spotifyDevices);
+                List<Option> selectedDevices = spotifyDevices.stream()
+                                                             .filter(device -> cachedUser.getSpotifyDeviceIds().contains(device.getValue()))
+                                                             .collect(toList());
+                accessory.setInitialOptions(selectedDevices.isEmpty() ? spotifyDevices : selectedDevices);
             }
         });
         slackModalIn.setView(modalViewTemplate);
@@ -187,6 +204,7 @@ public class UserInteractionService {
             log.debug("User {} submitted the form", userId);
             boolean disableSync = getStateValue(payload, BLOCK_ID_SYNC_TOGGLE).getSelectedOptions().isEmpty();
             List<Option> spotifyItems = getStateValue(payload, BLOCK_ID_SPOTIFY_ITEMS).getSelectedOptions();
+            List<Option> spotifyDevices = getStateValue(payload, BLOCK_ID_SPOTIFY_DEVICES).getSelectedOptions();
             for (Block block : payload.getView().getBlocks()) {
                 if (BLOCK_ID_EMOJI_LIST.equals(block.getBlockId())) {
                     StateValue emojiStateValue = getStateValue(payload, BLOCK_ID_EMOJI_LIST);
@@ -198,16 +216,17 @@ public class UserInteractionService {
                 }
             }
             updateSpotifyItems(cachedUser, spotifyItems);
+            updateSpotifyDevices(cachedUser, spotifyDevices);
             updateSync(userId, disableSync);
             String startHour = getStateValue(payload, BLOCK_ID_HOURS_INPUT).getStartHour();
             String endHour = getStateValue(payload, BLOCK_ID_HOURS_INPUT).getEndHour();
             updateSyncHours(cachedUser, startHour, endHour);
-            //todo add liquibase. change shouldSlowDownOutsideWorkHours()
             userRepository.findById(cachedUser.getId()).ifPresent(user -> {
                 user.setEmojis(String.join(",", cachedUser.getEmojis()));
                 user.setSpotifyItems(cachedUser.getSpotifyItems().stream().map(SpotifyItem::title).collect(Collectors.joining(",")));
                 user.setSyncFrom(cachedUser.getSyncStartHour());
                 user.setSyncTo(cachedUser.getSyncEndHour());
+                user.setSpotifyDevices(String.join(",", cachedUser.getSpotifyDeviceIds()));
                 userRepository.save(user);
             });
         }
@@ -257,6 +276,11 @@ public class UserInteractionService {
         List<String> spotifyItemsList = getOptionValues(selectedSpotifyOptions);
         List<SpotifyItem> spotifyItems = spotifyItemsList.stream().map(SpotifyItem::from).collect(toList());
         cachedUser.setSpotifyItems(spotifyItems);
+    }
+
+    public void updateSpotifyDevices(CachedUser cachedUser, List<Option> spotifyDevices) {
+        List<String> spotifyDevicesList = getOptionValues(spotifyDevices);
+        cachedUser.setSpotifyDeviceIds(spotifyDevicesList);
     }
 
     private List<String> getOptionValues(List<Option> options) {
