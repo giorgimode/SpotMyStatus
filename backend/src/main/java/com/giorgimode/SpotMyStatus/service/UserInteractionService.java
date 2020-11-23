@@ -31,6 +31,7 @@ import com.giorgimode.SpotMyStatus.util.RestHelper;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import java.io.IOException;
 import java.time.LocalTime;
+import java.time.OffsetTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -211,15 +212,15 @@ public class UserInteractionService {
 
     private void updateSyncHours(CachedUser cachedUser, String startHour, String endHour) {
         ZoneOffset offset = ZoneOffset.ofTotalSeconds(cachedUser.getTimezoneOffsetSeconds());
-        int offsetStartHour = LocalTime.parse(startHour, DateTimeFormatter.ISO_LOCAL_TIME)
-                                       .atOffset(offset)
-                                       .withOffsetSameInstant(ZoneOffset.UTC)
-                                       .getHour();
-        int offsetEndHour = LocalTime.parse(endHour, DateTimeFormatter.ISO_LOCAL_TIME)
-                                     .atOffset(offset)
-                                     .withOffsetSameInstant(ZoneOffset.UTC)
-                                     .getHour();
-        cachedUser.setSyncStartHour(offsetStartHour);
+        OffsetTime startTime = LocalTime.parse(startHour, DateTimeFormatter.ISO_LOCAL_TIME)
+                                        .atOffset(offset)
+                                        .withOffsetSameInstant(ZoneOffset.UTC);
+        int offsetStartTime = startTime.getHour() * 100 + startTime.getMinute();
+        OffsetTime endTime = LocalTime.parse(endHour, DateTimeFormatter.ISO_LOCAL_TIME)
+                                      .atOffset(offset)
+                                      .withOffsetSameInstant(ZoneOffset.UTC);
+        int offsetEndHour = endTime.getHour() * 100 + endTime.getMinute();
+        cachedUser.setSyncStartHour(offsetStartTime);
         cachedUser.setSyncEndHour(offsetEndHour);
     }
 
@@ -242,7 +243,7 @@ public class UserInteractionService {
     }
 
     private void handleEmojiAdd(SlackModalIn payload, String newEmojiInput) {
-        //todo validate(newEmojiInput)
+        //todo validate(newEmojiInput),
         if (isBlank(newEmojiInput)) {
             return;
         }

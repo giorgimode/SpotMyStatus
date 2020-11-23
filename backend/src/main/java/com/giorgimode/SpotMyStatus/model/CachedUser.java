@@ -28,8 +28,8 @@ public class CachedUser implements Serializable {
     private LocalDateTime updatedAt;
     private List<String> emojis;
     private List<SpotifyItem> spotifyItems;
-    private int syncStartHour;
-    private int syncEndHour;
+    private Integer syncStartHour;
+    private Integer syncEndHour;
 
     @Override
     public String toString() {
@@ -62,11 +62,11 @@ public class CachedUser implements Serializable {
         private String slackAccessToken;
         private String spotifyAccessToken;
         private String spotifyRefreshToken;
-        private boolean disabled;
+        private Boolean disabled;
         private String emojis;
         private String spotifyItems;
-        private int syncStartHour;
-        private int syncEndHour;
+        private Integer syncStartHour;
+        private Integer syncEndHour;
 
         private CachedUserBuilder() {
         }
@@ -96,7 +96,7 @@ public class CachedUser implements Serializable {
             return this;
         }
 
-        public CachedUserBuilder disabled(boolean disabled) {
+        public CachedUserBuilder disabled(Boolean disabled) {
             this.disabled = disabled;
             return this;
         }
@@ -111,12 +111,12 @@ public class CachedUser implements Serializable {
             return this;
         }
 
-        public CachedUserBuilder syncStartHour(int syncStartHour) {
+        public CachedUserBuilder syncStartHour(Integer syncStartHour) {
             this.syncStartHour = syncStartHour;
             return this;
         }
 
-        public CachedUserBuilder syncEndHour(int syncEndHour) {
+        public CachedUserBuilder syncEndHour(Integer syncEndHour) {
             this.syncEndHour = syncEndHour;
             return this;
         }

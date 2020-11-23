@@ -15,8 +15,8 @@ public class SpotMyStatusProperties {
 
     private Integer passivePollingProbability;
     private Integer passivateAfterMin;
-    private Integer passivateStartHr;
-    private Integer passivateEndHr;
+    private Integer syncStartHr;
+    private Integer syncEndHr;
     private Integer timeout;
     private Integer expirationOverhead;
     private List<String> defaultEmojis;

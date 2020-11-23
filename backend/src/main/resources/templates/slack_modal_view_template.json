@@ -166,7 +166,7 @@
       "type": "section",
       "text": {
         "type": "mrkdwn",
-        "text": "*Enter the start and end time to sync status in between*"
+        "text": "*Sync status between these hours*"
       }
     },
     {
@@ -175,7 +175,7 @@
       "elements": [
         {
           "type": "timepicker",
-          "initial_time": "06:00",
+          "initial_time": "07:00",
           "placeholder": {
             "type": "plain_text",
             "text": "Start time",

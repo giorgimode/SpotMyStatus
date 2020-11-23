@@ -6,7 +6,6 @@ import com.giorgimode.SpotMyStatus.model.SpotifyCurrentItem;
 import com.giorgimode.SpotMyStatus.slack.SlackPollingClient;
 import com.giorgimode.SpotMyStatus.spotify.SpotifyClient;
 import com.github.benmanes.caffeine.cache.LoadingCache;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Random;
@@ -50,7 +49,7 @@ public class StatusUpdateScheduler {
                 }
             });
         } catch (Exception e) {
-            log.error("Failed to poll users", e);
+            log.error("Failed offlineEnd poll users", e);
         }
     }
 
@@ -60,7 +59,7 @@ public class StatusUpdateScheduler {
                 log.trace("Skipping the polling for {} since user account is disabled", cachedUser.getId());
                 return;
             }
-            if (shouldSlowDownOutsideWorkHours(cachedUser)) {
+            if (isInOfflineHours(cachedUser)) {
                 log.trace("Skipping the polling for {} outside working hours", cachedUser.getId());
                 return;
             }
@@ -74,26 +73,23 @@ public class StatusUpdateScheduler {
             }
             updateSlackStatus(cachedUser);
         } catch (Exception e) {
-            log.error("Failed to poll user {}", cachedUser.getId(), e);
+            log.error("Failed offlineEnd poll user {}", cachedUser.getId(), e);
         }
     }
 
-    private boolean shouldSlowDownOutsideWorkHours(CachedUser user) {
-        if (hasBeenPassiveRecently(user) && isNonWorkingHour(user)) {
-            log.debug("Slowing down polling outside nonworking hours");
-            return RANDOM.nextInt(spotMyStatusProperties.getPassivePollingProbability() / 10) != 0;
+
+    private boolean isInOfflineHours(CachedUser user) {
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.ofTotalSeconds(user.getTimezoneOffsetSeconds()));
+        int currentTime = now.getHour() * 100 + now.getMinute();
+        Integer offlineStart = user.getSyncEndHour();
+        Integer offlineEnd = user.getSyncStartHour();
+        if (offlineStart == null || offlineEnd == null) {
+            offlineStart = spotMyStatusProperties.getSyncEndHr();
+            offlineEnd = spotMyStatusProperties.getSyncStartHr();
         }
-        return false;
-    }
 
-    private boolean isNonWorkingHour(CachedUser user) {
-        int currentHour = LocalDateTime.now(ZoneOffset.ofTotalSeconds(user.getTimezoneOffsetSeconds())).getHour();
-        return !(currentHour > spotMyStatusProperties.getPassivateEndHr() && currentHour < spotMyStatusProperties.getPassivateStartHr());
-    }
-
-    private boolean hasBeenPassiveRecently(CachedUser user) {
-        return user.getUpdatedAt() != null
-            && Duration.between(LocalDateTime.now(), user.getUpdatedAt()).toMinutes() > spotMyStatusProperties.getPassivateAfterMin();
+        return offlineEnd > offlineStart && currentTime >= offlineStart && currentTime <= offlineEnd
+            || offlineEnd < offlineStart && (currentTime >= offlineStart || currentTime <= offlineEnd);
     }
 
     private void updateSlackStatus(CachedUser user) {

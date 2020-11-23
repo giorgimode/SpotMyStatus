@@ -3,7 +3,10 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
-    <include file="/db/changelog/changes/create-users-table-1.xml"/>
-    <include file="/db/changelog/changes/add_emojis_spotify_items.xml"/>
-    <include file="/db/changelog/changes/add_sync_hours.xml"/>
+    <changeSet author="gio" id="add_sync_hours">
+        <addColumn tableName="users">
+            <column name="sync_from" type="smallint"/>
+            <column name="sync_to" type="smallint"/>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>
