@@ -349,7 +349,9 @@ public class SlackPollingClient {
         userCache.asMap().values().forEach(cachedUser -> {
             try {
                 log.debug("Cleaning status of user {} before shutdown", cachedUser.getId());
-                updateStatus(cachedUser, new SlackStatusPayload());
+                if (!cachedUser.isManualStatus()) {
+                    updateStatus(cachedUser, new SlackStatusPayload());
+                }
             } catch (Exception e) {
                 log.debug("Failed to clean status of user {}", cachedUser.getId());
             }

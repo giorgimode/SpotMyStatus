@@ -7,6 +7,7 @@ import com.giorgimode.SpotMyStatus.slack.SlackPollingClient;
 import com.giorgimode.SpotMyStatus.spotify.SpotifyClient;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
@@ -79,7 +80,9 @@ public class StatusUpdateScheduler {
 
 
     private boolean isInOfflineHours(CachedUser user) {
-        LocalDateTime now = LocalDateTime.now(ZoneOffset.ofTotalSeconds(user.getTimezoneOffsetSeconds()));
+        OffsetDateTime now = LocalDateTime.now()
+                                          .atOffset(ZoneOffset.ofTotalSeconds(user.getTimezoneOffsetSeconds()))
+                                          .withOffsetSameInstant(ZoneOffset.UTC);
         int currentTime = now.getHour() * 100 + now.getMinute();
         Integer offlineStart = user.getSyncEndHour();
         Integer offlineEnd = user.getSyncStartHour();

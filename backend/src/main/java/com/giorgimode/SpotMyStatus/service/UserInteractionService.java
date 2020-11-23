@@ -110,6 +110,21 @@ public class UserInteractionService {
                 if (cachedUser.isDisabled()) {
                     block.getAccessory().setInitialOptions(null);
                 }
+            } else if (BLOCK_ID_HOURS_INPUT.equals(block.getBlockId())) {
+                if (cachedUser.getSyncStartHour() != null && cachedUser.getSyncEndHour() != null) {
+                    Integer syncStartHour = cachedUser.getSyncStartHour();
+                    Integer setSyncEndHour = cachedUser.getSyncEndHour();
+                    OffsetTime offsetStartTime = LocalTime.of(syncStartHour / 100, syncStartHour % 100)
+                                                          .atOffset(ZoneOffset.ofTotalSeconds(-cachedUser.getTimezoneOffsetSeconds()))
+                                                          .withOffsetSameInstant(ZoneOffset.UTC);
+                    OffsetTime offsetEndTime = LocalTime.of(setSyncEndHour / 100, setSyncEndHour % 100)
+                                                        .atOffset(ZoneOffset.ofTotalSeconds(-cachedUser.getTimezoneOffsetSeconds()))
+                                                        .withOffsetSameInstant(ZoneOffset.UTC);
+
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+                    block.getElements().get(0).setInitialTime(offsetStartTime.format(formatter));
+                    block.getElements().get(1).setInitialTime(offsetEndTime.format(formatter));
+                }
             }
         });
         slackModalIn.setView(modalViewTemplate);
@@ -146,7 +161,7 @@ public class UserInteractionService {
     public ResponseEntity<String> notifyUser(Object body, final String viewAction) {
         return RestHelper.builder()
                          .withBaseUrl("https://slack.com/api/views." + viewAction) //todo
-                         .withBearer("some_bearer")
+                         .withBearer("xoxb-2537469034-1434471288304-oeSacXyGHeJUpoI9RWBm8Rqd")
                          .withContentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
                          .withBody(body)
                          .post(restTemplate, String.class);
