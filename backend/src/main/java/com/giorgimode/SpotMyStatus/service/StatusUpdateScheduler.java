@@ -98,9 +98,19 @@ public class StatusUpdateScheduler {
     private void updateSlackStatus(CachedUser user) {
         spotifyClient.getCurrentTrack(user)
                      .filter(SpotifyCurrentItem::getIsPlaying)
+                     .filter(spotifyCurrentItem -> isPlayingDeviceEnabled(user, spotifyCurrentItem))
                      .filter(currentItem -> isItemEnabled(user, currentItem))
                      .ifPresentOrElse(usersCurrentTrack -> slackClient.updateAndPersistStatus(user, usersCurrentTrack),
                          () -> cleanStatus(user));
+    }
+
+    private boolean isPlayingDeviceEnabled(CachedUser user, SpotifyCurrentItem spotifyCurrentItem) {
+        boolean isCurrentDeviceEnabled = user.getSpotifyDeviceIds().isEmpty()
+            || user.getSpotifyDeviceIds().contains(spotifyCurrentItem.getDeviceId());
+        if (!isCurrentDeviceEnabled) {
+            log.debug("Skipping syncing, since spotify device is not enabled for user {}", user.getId());
+        }
+        return isCurrentDeviceEnabled;
     }
 
     private boolean isItemEnabled(CachedUser user, SpotifyCurrentItem currentItem) {
