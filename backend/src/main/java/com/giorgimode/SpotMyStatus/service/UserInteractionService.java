@@ -72,6 +72,12 @@ public class UserInteractionService {
     @Value("classpath:templates/slack_modal_view_template.json")
     private Resource resourceFile;
 
+    @Value("${slack_uri}")
+    private String slackUri;
+
+    @Value("${secret.slack.bot_token}")
+    private String slackBotToken;
+
     public void invalidateAndNotifyUser(String userId) {
         slackClient.invalidateAndNotifyUser(userId);
     }
@@ -160,8 +166,8 @@ public class UserInteractionService {
 
     public ResponseEntity<String> notifyUser(Object body, final String viewAction) {
         return RestHelper.builder()
-                         .withBaseUrl("https://slack.com/api/views." + viewAction) //todo
-                         .withBearer("xoxb-2537469034-1434471288304-oeSacXyGHeJUpoI9RWBm8Rqd")
+                         .withBaseUrl(slackUri + "/api/views." + viewAction) //todo
+                         .withBearer(slackBotToken)
                          .withContentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
                          .withBody(body)
                          .post(restTemplate, String.class);

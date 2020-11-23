@@ -2,7 +2,6 @@ package com.giorgimode.SpotMyStatus.spotify;
 
 import static com.giorgimode.SpotMyStatus.common.SpotConstants.SPOTIFY_REDIRECT_PATH;
 import static com.giorgimode.SpotMyStatus.model.SpotifyScopes.USER_CURRENTLY_PLAYING;
-import static com.giorgimode.SpotMyStatus.model.SpotifyScopes.USER_TOP_READ;
 import static com.giorgimode.SpotMyStatus.util.SpotUtil.baseUri;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 import com.giorgimode.SpotMyStatus.common.OauthProperties;
@@ -75,7 +74,7 @@ public class SpotifyAuthClient {
                          .withQueryParam("client_id", propertyVault.getSpotify().getClientId())
                          .withQueryParam("response_type", "code")
                          .withQueryParam("redirect_uri", baseUri(uriScheme) + SPOTIFY_REDIRECT_PATH)
-                         .withQueryParam("scope", USER_CURRENTLY_PLAYING.scope() + " " + USER_TOP_READ.scope())
+                         .withQueryParam("scope", USER_CURRENTLY_PLAYING.scope())
                          .withQueryParam("state", state)
                          .createUri();
     }

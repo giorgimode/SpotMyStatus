@@ -29,9 +29,11 @@ public class SpotifyCurrentItem {
 
     private List<String> artists;
 
+    private String deviceId;
+
     @SuppressWarnings("unchecked")
     @JsonProperty("item")
-    private void unpackNested(Map<String, Object> item) {
+    private void unpackNestedItem(Map<String, Object> item) {
         this.durationMs = ((Number) item.get("duration_ms")).longValue();
         this.title = (String) item.get("name");
 
@@ -47,6 +49,10 @@ public class SpotifyCurrentItem {
         } else {
             log.warn("Cannot parse unknown item type {}", receivedType);
         }
+    }
 
+    @JsonProperty("device")
+    private void unpackNestedDevice(Map<String, Object> deviceMap) {
+        this.deviceId = (String) deviceMap.get("id");
     }
 }

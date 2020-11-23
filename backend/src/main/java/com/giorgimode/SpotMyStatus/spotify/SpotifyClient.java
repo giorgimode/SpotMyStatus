@@ -91,7 +91,7 @@ public class SpotifyClient {
 
     private Optional<SpotifyCurrentItem> tryGetSpotifyCurrentTrack(CachedUser user) {
         SpotifyCurrentItem currentTrackResponse = RestHelper.builder()
-                                                            .withBaseUrl(spotifyApiUri + "/v1/me/player/currently-playing")
+                                                            .withBaseUrl(spotifyApiUri + "/v1/me/player")
                                                             .withBearer(user.getSpotifyAccessToken())
                                                             .withQueryParam("additional_types", "track,episode")
                                                             .getBody(restTemplate, SpotifyCurrentItem.class);

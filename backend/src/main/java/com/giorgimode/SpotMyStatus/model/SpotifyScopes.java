@@ -1,7 +1,7 @@
 package com.giorgimode.SpotMyStatus.model;
 
 public enum SpotifyScopes {
-    USER_CURRENTLY_PLAYING("user-read-currently-playing"),
+    USER_CURRENTLY_PLAYING("user-read-playback-state"),
     USER_TOP_READ("user-top-read");
 
     private final String scope;
