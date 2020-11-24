@@ -3,6 +3,7 @@ package com.giorgimode.SpotMyStatus.service;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_EMOJI_INPUT;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_EMOJI_LIST;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_HOURS_INPUT;
+import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_PURGE;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_SPOTIFY_DEVICES;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_SPOTIFY_ITEMS;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_SYNC_TOGGLE;
@@ -195,10 +196,13 @@ public class UserInteractionService {
         CachedUser cachedUser = getCachedUser(userId);
         if (PAYLOAD_TYPE_BLOCK_ACTIONS.equals(payload.getType())) {
             getUserAction(payload)
-                .filter(action -> BLOCK_ID_EMOJI_INPUT.equals(action.getBlockId()))
                 .ifPresent(userAction -> {
                     log.debug("User {} triggered {}", userId, userAction);
-                    handleEmojiAdd(payload, userAction.getValue());
+                    if (BLOCK_ID_EMOJI_INPUT.equals(userAction.getBlockId())) {
+                        handleEmojiAdd(payload, userAction.getValue());
+                    } else if (BLOCK_ID_PURGE.equals(userAction.getBlockId())) {
+                        slackClient.purge(userId);
+                    }
                 });
         } else if (PAYLOAD_TYPE_SUBMISSION.equals(payload.getType())) {
             log.debug("User {} submitted the form", userId);

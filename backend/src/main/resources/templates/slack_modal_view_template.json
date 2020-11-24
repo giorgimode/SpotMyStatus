@@ -218,11 +218,57 @@
       "type": "divider"
     },
     {
+      "type": "divider"
+    },
+    {
       "type": "section",
       "text": {
         "type": "mrkdwn",
         "text": "<http://spotmystatus.giomo.de/|_*SpotMyStatus Home*_>"
       }
+    },
+    {
+      "type": "divider"
+    },
+    {
+      "type": "divider"
+    },
+    {
+      "type": "header",
+      "text": {
+        "type": "plain_text",
+        "text": "Danger Zone",
+        "emoji": true
+      }
+    },
+    {
+      "type": "actions",
+      "block_id": "purge_block",
+      "elements": [
+        {
+          "type": "button",
+          "action_id": "purge_action",
+          "text": {
+            "type": "plain_text",
+            "text": "Purge"
+          },
+          "confirm": {
+            "title": {
+              "type": "plain_text",
+              "text": "Are you sure?"
+            },
+            "text": {
+              "type": "mrkdwn",
+              "text": "Access tokens granted by you will be revoked. You'll have to sign up again to use the app"
+            },
+            "confirm": {
+              "type": "plain_text",
+              "text": "Purge"
+            }
+          },
+          "style": "danger"
+        }
+      ]
     }
   ]
 }

@@ -207,6 +207,9 @@ public class SlackPollingClient {
     }
 
     public void cleanStatus(CachedUser user) {
+        if (user.isManualStatus()) {
+            return;
+        }
         log.info("Cleaning status for user {} ", user.getId());
         try {
             SlackStatusPayload statusPayload = new SlackStatusPayload();
@@ -302,8 +305,8 @@ public class SlackPollingClient {
     public String pause(String userId) {
         return Optional.ofNullable(userCache.getIfPresent(userId))
                        .map(cachedUser -> {
-                           cleanStatus(cachedUser);
                            cachedUser.setDisabled(true);
+                           cleanStatus(cachedUser);
                            persistState(userId, true);
                            return "Status updates have been paused";
                        })

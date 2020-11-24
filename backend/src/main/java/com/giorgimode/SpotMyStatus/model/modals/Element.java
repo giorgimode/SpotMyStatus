@@ -19,4 +19,6 @@ public class Element {
     public Text placeholder;
     @JsonProperty("initial_time")
     public String initialTime;
+    public ConfirmDialog confirm;
+    public String style;
 }
