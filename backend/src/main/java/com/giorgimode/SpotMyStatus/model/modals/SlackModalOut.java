@@ -15,4 +15,6 @@ public class SlackModalOut {
     public String viewId;
     public String hash;
     public SlackModalView view;
+    @JsonProperty("response_action")
+    private String responseAction;
 }

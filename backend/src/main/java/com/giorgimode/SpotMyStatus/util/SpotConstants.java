@@ -13,6 +13,7 @@ public class SpotConstants {
     public static String BLOCK_ID_HOURS_INPUT = "hours_input_block";
     public static String BLOCK_ID_SPOTIFY_DEVICES = "spotify_devices_block";
     public static String BLOCK_ID_PURGE = "purge_block";
+    public static String BLOCK_ID_INVALID_HOURS = "invalid_hours_block";
     public static String EMOJI_REGEX = "^[a-z0-9-_]+$";
     public static String DEFAULT_EMOJI_PLACEHOLDER = "e.g. guitar, the_horns";
 }

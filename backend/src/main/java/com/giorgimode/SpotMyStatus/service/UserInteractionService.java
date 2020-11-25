@@ -3,6 +3,7 @@ package com.giorgimode.SpotMyStatus.service;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_EMOJI_INPUT;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_EMOJI_LIST;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_HOURS_INPUT;
+import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_INVALID_HOURS;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_PURGE;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_SPOTIFY_DEVICES;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_SPOTIFY_ITEMS;
@@ -24,6 +25,7 @@ import com.giorgimode.SpotMyStatus.model.SpotifyItem;
 import com.giorgimode.SpotMyStatus.model.modals.Accessory;
 import com.giorgimode.SpotMyStatus.model.modals.Action;
 import com.giorgimode.SpotMyStatus.model.modals.Block;
+import com.giorgimode.SpotMyStatus.model.modals.Element;
 import com.giorgimode.SpotMyStatus.model.modals.Option;
 import com.giorgimode.SpotMyStatus.model.modals.SlackModalIn;
 import com.giorgimode.SpotMyStatus.model.modals.SlackModalOut;
@@ -193,10 +195,16 @@ public class UserInteractionService {
                          .post(restTemplate, String.class);
     }
 
-    public void handleUserInteraction(SlackModalIn payload) {
+    public SlackModalOut handleUserInteraction(SlackModalIn payload) {
         String userId = getUserId(payload);
         CachedUser cachedUser = getCachedUser(userId);
+        List<Block> blocks = payload.getView().getBlocks();
         if (PAYLOAD_TYPE_BLOCK_ACTIONS.equals(payload.getType())) {
+            blocks.stream()
+                  .filter(block -> BLOCK_ID_INVALID_HOURS.equals(block.getBlockId()))
+                  .findAny()
+                  .ifPresent(block -> block = null);
+
             getUserAction(payload)
                 .ifPresent(userAction -> {
                     log.debug("User {} triggered {}", userId, userAction);
@@ -204,6 +212,26 @@ public class UserInteractionService {
                         handleEmojiAdd(payload, userAction.getValue());
                     } else if (BLOCK_ID_PURGE.equals(userAction.getBlockId())) {
                         slackClient.purge(userId);
+                    } else if (BLOCK_ID_HOURS_INPUT.equals(userAction.getBlockId())) {
+                        String startHour = getStateValue(payload, BLOCK_ID_HOURS_INPUT).getStartHour();
+                        String endHour = getStateValue(payload, BLOCK_ID_HOURS_INPUT).getEndHour();
+                        SlackModalOut slackModal = createModalResponse(payload);
+                        if (startHour != null && startHour.equals(endHour)) {
+                            Block block = createWarningBlock();
+                            for (int i = 0; i < blocks.size(); i++) {
+                                if (BLOCK_ID_HOURS_INPUT.equals(blocks.get(i).getBlockId())) {
+                                    blocks.add(i + 1, block);
+                                }
+                            }
+                            String response = notifyUser(slackModal, "update").getBody();//todo
+                            log.trace("Received warning update response: {}", response);
+                        } else {
+                            boolean removed = blocks.removeIf(block -> BLOCK_ID_INVALID_HOURS.equals(block.getBlockId()));
+                            if (removed) {
+                                String response = notifyUser(slackModal, "update").getBody();//todo
+                                log.trace("Received warning update response: {}", response);
+                            }
+                        }
                     }
                 });
         } else if (PAYLOAD_TYPE_SUBMISSION.equals(payload.getType())) {
@@ -211,25 +239,36 @@ public class UserInteractionService {
             boolean disableSync = getStateValue(payload, BLOCK_ID_SYNC_TOGGLE).getSelectedOptions().isEmpty();
             List<Option> spotifyItems = getStateValue(payload, BLOCK_ID_SPOTIFY_ITEMS).getSelectedOptions();
             List<Option> spotifyDevices = getStateValue(payload, BLOCK_ID_SPOTIFY_DEVICES).getSelectedOptions();
-            for (Block block : payload.getView().getBlocks()) {
-                if (BLOCK_ID_EMOJI_LIST.equals(block.getBlockId())) {
+            for (int i = 0; i < blocks.size(); i++) {
+                if (BLOCK_ID_HOURS_INPUT.equals(blocks.get(i).getBlockId())) {
+                    String startHour = getStateValue(payload, BLOCK_ID_HOURS_INPUT).getStartHour();
+                    String endHour = getStateValue(payload, BLOCK_ID_HOURS_INPUT).getEndHour();
+                    if (startHour.equals(endHour)) {
+                        Block block = createWarningBlock();
+                        blocks.add(i + 1, block);
+                        String response = "{ \"response_action\": \"update\", \"view\": { \"type\": \"modal\", \"title\": { \"type\": \"plain_text\", \"text\": \"Updated view\" }, \"blocks\": [ { \"type\": \"section\", \"text\": { \"type\": \"plain_text\", \"text\": \"I've changed and I'll never be the same. You must believe me.\" } } ] } }";
+                        SlackModalOut modalResponse = createModalResponse(payload);
+//                        modalResponse.getView().setSubmit(null);
+                        modalResponse.setViewId(null);
+                        modalResponse.setHash(null);
+                        modalResponse.getView().setCallbackId(null);
+                        modalResponse.setResponseAction("update");
+                        return modalResponse;
+                    }
+                    updateSyncHours(cachedUser, startHour, endHour);
+                } else if (BLOCK_ID_EMOJI_LIST.equals(blocks.get(i).getBlockId())) {
                     StateValue emojiStateValue = getStateValue(payload, BLOCK_ID_EMOJI_LIST);
                     if (isNotBlank(emojiStateValue.getType())) {
                         updateEmojis(cachedUser, emojiStateValue.getSelectedOptions());
                     } else {
-                        updateEmojis(cachedUser, block.getAccessory().getInitialOptions());
+                        updateEmojis(cachedUser, blocks.get(i).getAccessory().getInitialOptions());
                     }
                 }
             }
             updateSpotifyItems(cachedUser, spotifyItems);
             updateSpotifyDevices(cachedUser, spotifyDevices);
             updateSync(userId, disableSync);
-            String startHour = getStateValue(payload, BLOCK_ID_HOURS_INPUT).getStartHour();
-            String endHour = getStateValue(payload, BLOCK_ID_HOURS_INPUT).getEndHour();
-            if (startHour.equals(endHour)) {
-                //todo handle
-            }
-            updateSyncHours(cachedUser, startHour, endHour);
+
             userRepository.findById(cachedUser.getId()).ifPresent(user -> {
                 user.setEmojis(String.join(",", cachedUser.getEmojis()));
                 user.setSpotifyItems(cachedUser.getSpotifyItems().stream().map(SpotifyItem::title).collect(Collectors.joining(",")));
@@ -239,6 +278,18 @@ public class UserInteractionService {
                 userRepository.save(user);
             });
         }
+        return null;
+    }
+
+    private Block createWarningBlock() {
+        Block block = new Block();
+        block.setType("context");
+        block.setBlockId(BLOCK_ID_INVALID_HOURS);
+        Element element = new Element();
+        element.setType("mrkdwn");
+        element.setText(":warning: start and end time cannot identical");
+        block.setElements(List.of(element));
+        return block;
     }
 
     private void updateSync(String userId, boolean disableSync) {

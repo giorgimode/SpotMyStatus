@@ -7,6 +7,7 @@ import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 import com.giorgimode.SpotMyStatus.helpers.SlackModalConverter;
 import com.giorgimode.SpotMyStatus.model.SlackEvent;
 import com.giorgimode.SpotMyStatus.model.modals.SlackModalIn;
+import com.giorgimode.SpotMyStatus.model.modals.SlackModalOut;
 import com.giorgimode.SpotMyStatus.service.UserInteractionService;
 import com.giorgimode.SpotMyStatus.slack.SlackPollingClient;
 import com.giorgimode.SpotMyStatus.spotify.SpotifyClient;
@@ -139,9 +140,9 @@ public class SpotMyStatusController {
     }
 
     @PostMapping(value = "/slack/interaction", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-    public void handleInteraction(@RequestParam("payload") SlackModalIn payload, @RequestParam("payload") String payloadRaw) {
+    public SlackModalOut handleInteraction(@RequestParam("payload") SlackModalIn payload, @RequestParam("payload") String payloadRaw) {
         log.debug("Received interaction: {}", payloadRaw);
-        userInteractionService.handleUserInteraction(payload);
+        return userInteractionService.handleUserInteraction(payload);
     }
 
     @InitBinder
