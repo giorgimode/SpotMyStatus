@@ -239,29 +239,27 @@ public class UserInteractionService {
             boolean disableSync = getStateValue(payload, BLOCK_ID_SYNC_TOGGLE).getSelectedOptions().isEmpty();
             List<Option> spotifyItems = getStateValue(payload, BLOCK_ID_SPOTIFY_ITEMS).getSelectedOptions();
             List<Option> spotifyDevices = getStateValue(payload, BLOCK_ID_SPOTIFY_DEVICES).getSelectedOptions();
-            for (int i = 0; i < blocks.size(); i++) {
-                if (BLOCK_ID_HOURS_INPUT.equals(blocks.get(i).getBlockId())) {
+            for (Block block : blocks) {
+                if (BLOCK_ID_HOURS_INPUT.equals(block.getBlockId())) {
                     String startHour = getStateValue(payload, BLOCK_ID_HOURS_INPUT).getStartHour();
                     String endHour = getStateValue(payload, BLOCK_ID_HOURS_INPUT).getEndHour();
                     if (startHour.equals(endHour)) {
-                        Block block = createWarningBlock();
-                        blocks.add(i + 1, block);
-                        String response = "{ \"response_action\": \"update\", \"view\": { \"type\": \"modal\", \"title\": { \"type\": \"plain_text\", \"text\": \"Updated view\" }, \"blocks\": [ { \"type\": \"section\", \"text\": { \"type\": \"plain_text\", \"text\": \"I've changed and I'll never be the same. You must believe me.\" } } ] } }";
                         SlackModalOut modalResponse = createModalResponse(payload);
-//                        modalResponse.getView().setSubmit(null);
                         modalResponse.setViewId(null);
                         modalResponse.setHash(null);
                         modalResponse.getView().setCallbackId(null);
                         modalResponse.setResponseAction("update");
                         return modalResponse;
+                    } else {
+                        updateSyncHours(cachedUser, startHour, endHour);
                     }
-                    updateSyncHours(cachedUser, startHour, endHour);
-                } else if (BLOCK_ID_EMOJI_LIST.equals(blocks.get(i).getBlockId())) {
+
+                } else if (BLOCK_ID_EMOJI_LIST.equals(block.getBlockId())) {
                     StateValue emojiStateValue = getStateValue(payload, BLOCK_ID_EMOJI_LIST);
                     if (isNotBlank(emojiStateValue.getType())) {
                         updateEmojis(cachedUser, emojiStateValue.getSelectedOptions());
                     } else {
-                        updateEmojis(cachedUser, blocks.get(i).getAccessory().getInitialOptions());
+                        updateEmojis(cachedUser, block.getAccessory().getInitialOptions());
                     }
                 }
             }
