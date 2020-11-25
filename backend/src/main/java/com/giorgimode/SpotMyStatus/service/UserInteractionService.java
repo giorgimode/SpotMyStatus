@@ -7,6 +7,8 @@ import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_PURGE;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_SPOTIFY_DEVICES;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_SPOTIFY_ITEMS;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_SYNC_TOGGLE;
+import static com.giorgimode.SpotMyStatus.util.SpotConstants.DEFAULT_EMOJI_PLACEHOLDER;
+import static com.giorgimode.SpotMyStatus.util.SpotConstants.EMOJI_REGEX;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.PAYLOAD_TYPE_BLOCK_ACTIONS;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.PAYLOAD_TYPE_SUBMISSION;
 import static com.giorgimode.SpotMyStatus.util.SpotUtil.OBJECT_MAPPER;
@@ -107,11 +109,11 @@ public class UserInteractionService {
                                                               .map(spotifyItem -> createOption(spotifyItem.title(),
                                                                   spotMyStatusProperties.getDefaultSpotifyItems().get(spotifyItem.title())))
                                                               .collect(toList());
-                accessory.setOptions(defaultItemOptions);
+                block.getElement().setOptions(defaultItemOptions);
                 if (selectedItemsOptions.isEmpty()) {
-                    accessory.setInitialOptions(defaultItemOptions);
+                    block.getElement().setInitialOptions(defaultItemOptions);
                 } else {
-                    accessory.setInitialOptions(selectedItemsOptions);
+                    block.getElement().setInitialOptions(selectedItemsOptions);
                 }
             } else if (BLOCK_ID_EMOJI_LIST.equals(block.getBlockId())) {
                 List<Option> emojiOptions = getUserEmojis(cachedUser)
@@ -144,11 +146,11 @@ public class UserInteractionService {
                                                            .stream()
                                                            .map(device -> createOption(device.getId(), device.getName()))
                                                            .collect(toList());
-                accessory.setOptions(spotifyDevices);
+                block.getElement().setOptions(spotifyDevices);
                 List<Option> selectedDevices = spotifyDevices.stream()
                                                              .filter(device -> cachedUser.getSpotifyDeviceIds().contains(device.getValue()))
                                                              .collect(toList());
-                accessory.setInitialOptions(selectedDevices.isEmpty() ? spotifyDevices : selectedDevices);
+                block.getElement().setInitialOptions(selectedDevices.isEmpty() ? spotifyDevices : selectedDevices);
             }
         });
         slackModalIn.setView(modalViewTemplate);
@@ -224,6 +226,9 @@ public class UserInteractionService {
             updateSync(userId, disableSync);
             String startHour = getStateValue(payload, BLOCK_ID_HOURS_INPUT).getStartHour();
             String endHour = getStateValue(payload, BLOCK_ID_HOURS_INPUT).getEndHour();
+            if (startHour.equals(endHour)) {
+                //todo handle
+            }
             updateSyncHours(cachedUser, startHour, endHour);
             userRepository.findById(cachedUser.getId()).ifPresent(user -> {
                 user.setEmojis(String.join(",", cachedUser.getEmojis()));
@@ -296,6 +301,12 @@ public class UserInteractionService {
         if (isBlank(newEmojiInput)) {
             return;
         }
+        String validationError = "";
+        if (newEmojiInput.length() > 100) {
+            validationError = "Emoji cannot be longer than 100 characters";
+        } else if (!StringUtils.strip(newEmojiInput, ":").matches(EMOJI_REGEX)) {
+            validationError = "Emoji can only contain alphanumeric characters, - and _";
+        }
         for (Block block : payload.getView().getBlocks()) {
             if (BLOCK_ID_EMOJI_LIST.equals(block.getBlockId())) {
                 StateValue selectedEmojiBlock = getStateValue(payload, BLOCK_ID_EMOJI_LIST);
@@ -310,23 +321,36 @@ public class UserInteractionService {
                 }
 
                 block.getAccessory().setInitialOptions(selectedOptions);
-                Arrays.stream(newEmojiInput.split(","))
-                      .filter(StringUtils::isNotBlank)
-                      .map(emoji -> emoji.trim().replaceAll(":", ""))
-                      .map(emoji -> createOption(emoji, ":" + emoji + ":"))
-                      .forEach(emojiOption -> {
-                          if (!block.getAccessory().getOptions().contains(emojiOption)) {
-                              block.getAccessory().getOptions().add(emojiOption);
-                          }
-                          if (!block.getAccessory().getInitialOptions().contains(emojiOption)) {
-                              block.getAccessory().getInitialOptions().add(emojiOption);
-                          }
-                      });
+                if (validationError.isEmpty()) {
+                    updateEmojiList(newEmojiInput, block);
+                }
                 block.getAccessory().setActionId(String.valueOf(System.currentTimeMillis()));
             } else if (BLOCK_ID_EMOJI_INPUT.equals(block.getBlockId())) {
+                block.getElement().getPlaceholder().setText(validationError.isEmpty() ? DEFAULT_EMOJI_PLACEHOLDER : validationError);
                 block.getElement().setActionId(null);
             }
         }
+        SlackModalOut slackModal = createModalResponse(payload);
+        String response = notifyUser(slackModal, "update").getBody();//todo
+//        log.trace("Received modal update response: {}", response);
+    }
+
+    private void updateEmojiList(String newEmojiInput, Block block) {
+        Arrays.stream(newEmojiInput.split(","))
+              .filter(StringUtils::isNotBlank)
+              .map(emoji -> emoji.trim().replaceAll(":", ""))
+              .map(emoji -> createOption(emoji, ":" + emoji + ":"))
+              .forEach(emojiOption -> {
+                  if (!block.getAccessory().getOptions().contains(emojiOption)) {
+                      block.getAccessory().getOptions().add(emojiOption);
+                  }
+                  if (!block.getAccessory().getInitialOptions().contains(emojiOption)) {
+                      block.getAccessory().getInitialOptions().add(emojiOption);
+                  }
+              });
+    }
+
+    SlackModalOut createModalResponse(SlackModalIn payload) {
         SlackModalOut slackModal = new SlackModalOut();
         slackModal.setViewId(payload.getView().getId());
         slackModal.setHash(payload.getView().getHash());
@@ -334,8 +358,7 @@ public class UserInteractionService {
         slackModal.getView().setHash(null);
         slackModal.getView().setId(null);
         slackModal.getView().setState(null);
-        String response = notifyUser(slackModal, "update").getBody();//todo
-//        log.trace("Received modal update response: {}", response);
+        return slackModal;
     }
 
     private StateValue getStateValue(SlackModalIn payload, String blockId) {

@@ -41,13 +41,13 @@
       }
     },
     {
-      "type": "section",
+      "type": "input",
       "block_id": "spotify_items_block",
-      "text": {
-        "type": "mrkdwn",
+      "label": {
+        "type": "plain_text",
         "text": "Pick at least one of these Spotify items to sync"
       },
-      "accessory": {
+      "element": {
         "type": "checkboxes",
         "initial_options": [
           {
@@ -199,13 +199,13 @@
       "type": "divider"
     },
     {
-      "type": "section",
+      "type": "input",
       "block_id": "spotify_devices_block",
-      "text": {
-        "type": "mrkdwn",
+      "label": {
+        "type": "plain_text",
         "text": "Choose Spotify devices to sync from"
       },
-      "accessory": {
+      "element": {
         "type": "multi_static_select",
         "placeholder": {
           "type": "plain_text",
