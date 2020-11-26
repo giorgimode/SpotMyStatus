@@ -3,12 +3,12 @@ package com.giorgimode.SpotMyStatus.service;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_EMOJI_INPUT;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_EMOJI_LIST;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_HOURS_INPUT;
+import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_INVALID_EMOJI;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_INVALID_HOURS;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_PURGE;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_SPOTIFY_DEVICES;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_SPOTIFY_ITEMS;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.BLOCK_ID_SYNC_TOGGLE;
-import static com.giorgimode.SpotMyStatus.util.SpotConstants.DEFAULT_EMOJI_PLACEHOLDER;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.EMOJI_REGEX;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.PAYLOAD_TYPE_BLOCK_ACTIONS;
 import static com.giorgimode.SpotMyStatus.util.SpotConstants.PAYLOAD_TYPE_SUBMISSION;
@@ -200,11 +200,6 @@ public class UserInteractionService {
         CachedUser cachedUser = getCachedUser(userId);
         List<Block> blocks = payload.getView().getBlocks();
         if (PAYLOAD_TYPE_BLOCK_ACTIONS.equals(payload.getType())) {
-            blocks.stream()
-                  .filter(block -> BLOCK_ID_INVALID_HOURS.equals(block.getBlockId()))
-                  .findAny()
-                  .ifPresent(block -> block = null);
-
             getUserAction(payload)
                 .ifPresent(userAction -> {
                     log.debug("User {} triggered {}", userId, userAction);
@@ -217,7 +212,7 @@ public class UserInteractionService {
                         String endHour = getStateValue(payload, BLOCK_ID_HOURS_INPUT).getEndHour();
                         SlackModalOut slackModal = createModalResponse(payload);
                         if (startHour != null && startHour.equals(endHour)) {
-                            Block block = createWarningBlock();
+                            Block block = createWarningBlock(BLOCK_ID_INVALID_HOURS, "start and end time cannot identical");
                             for (int i = 0; i < blocks.size(); i++) {
                                 if (BLOCK_ID_HOURS_INPUT.equals(blocks.get(i).getBlockId())) {
                                     blocks.add(i + 1, block);
@@ -279,13 +274,13 @@ public class UserInteractionService {
         return null;
     }
 
-    private Block createWarningBlock() {
+    private Block createWarningBlock(String blockId, String warningMessage) {
         Block block = new Block();
         block.setType("context");
-        block.setBlockId(BLOCK_ID_INVALID_HOURS);
+        block.setBlockId(blockId);
         Element element = new Element();
         element.setType("mrkdwn");
-        element.setText(":warning: start and end time cannot identical");
+        element.setText(":warning: " + warningMessage);
         block.setElements(List.of(element));
         return block;
     }
@@ -356,7 +351,10 @@ public class UserInteractionService {
         } else if (!StringUtils.strip(newEmojiInput, ":").matches(EMOJI_REGEX)) {
             validationError = "Emoji can only contain alphanumeric characters, - and _";
         }
-        for (Block block : payload.getView().getBlocks()) {
+        List<Block> blocks = payload.getView().getBlocks();
+        blocks.removeIf(warningBlock -> BLOCK_ID_INVALID_EMOJI.equals(warningBlock.getBlockId()));
+        for (int i = 0, blocksSize = blocks.size(); i < blocksSize; i++) {
+            Block block = blocks.get(i);
             if (BLOCK_ID_EMOJI_LIST.equals(block.getBlockId())) {
                 StateValue selectedEmojiBlock = getStateValue(payload, BLOCK_ID_EMOJI_LIST);
                 List<Option> selectedOptions;
@@ -375,8 +373,13 @@ public class UserInteractionService {
                 }
                 block.getAccessory().setActionId(String.valueOf(System.currentTimeMillis()));
             } else if (BLOCK_ID_EMOJI_INPUT.equals(block.getBlockId())) {
-                block.getElement().getPlaceholder().setText(validationError.isEmpty() ? DEFAULT_EMOJI_PLACEHOLDER : validationError);
-                block.getElement().setActionId(null);
+                if (!validationError.isEmpty()) {
+                    Block warningBlock = createWarningBlock(BLOCK_ID_INVALID_EMOJI, validationError);
+                    blocks.add(i + 1, warningBlock);
+                    break;
+                } else {
+                    block.getElement().setActionId(null);
+                }
             }
         }
         SlackModalOut slackModal = createModalResponse(payload);
