@@ -18,7 +18,7 @@ public class SpotifyCurrentItem {
     private Boolean isPlaying;
 
     @JsonProperty(value = "currently_playing_type", required = true)
-    private SpotifyItem type;
+    private String type;
 
     @JsonProperty(value = "progress_ms", required = true)
     private Long progressMs = 0L;
@@ -29,11 +29,15 @@ public class SpotifyCurrentItem {
 
     private List<String> artists;
 
-    private String deviceId;
+    private SpotifyDevice device;
 
     @SuppressWarnings("unchecked")
     @JsonProperty("item")
     private void unpackNestedItem(Map<String, Object> item) {
+        if (item == null) {
+            log.debug("Spotify item is null");
+            return;
+        }
         this.durationMs = ((Number) item.get("duration_ms")).longValue();
         this.title = (String) item.get("name");
 
@@ -49,10 +53,5 @@ public class SpotifyCurrentItem {
         } else {
             log.warn("Cannot parse unknown item type {}", receivedType);
         }
-    }
-
-    @JsonProperty("device")
-    private void unpackNestedDevice(Map<String, Object> deviceMap) {
-        this.deviceId = (String) deviceMap.get("id");
     }
 }

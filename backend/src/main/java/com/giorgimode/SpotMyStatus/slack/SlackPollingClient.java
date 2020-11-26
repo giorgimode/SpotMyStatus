@@ -171,7 +171,7 @@ public class SlackPollingClient {
      * Slack only allows max 100character as a status. In this case we first drop extra artists and also trim if necessary
      */
     private String buildNewStatus(SpotifyCurrentItem currentTrack) {
-        String newStatus = EPISODE.equals(currentTrack.getType()) ? "PODCAST: " : "";
+        String newStatus = EPISODE.title().equals(currentTrack.getType()) ? "PODCAST: " : "";
         newStatus += String.join(", ", currentTrack.getArtists()) + " - " + currentTrack.getTitle();
         if (newStatus.length() > 100) {
             String firstArtistOnly = currentTrack.getArtists().get(0);
@@ -181,7 +181,7 @@ public class SlackPollingClient {
     }
 
     private String getEmoji(SpotifyCurrentItem currentTrack, CachedUser user) {
-        if (EPISODE.equals(currentTrack.getType())) {
+        if (EPISODE.title().equals(currentTrack.getType())) {
             return ":" + spotMyStatusProperties.getPodcastEmoji() + ":";
         }
         List<String> emojis = user.getEmojis();

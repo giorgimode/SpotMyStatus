@@ -3,6 +3,7 @@ package com.giorgimode.SpotMyStatus.service;
 import com.giorgimode.SpotMyStatus.common.SpotMyStatusProperties;
 import com.giorgimode.SpotMyStatus.model.CachedUser;
 import com.giorgimode.SpotMyStatus.model.SpotifyCurrentItem;
+import com.giorgimode.SpotMyStatus.model.SpotifyItem;
 import com.giorgimode.SpotMyStatus.slack.SlackPollingClient;
 import com.giorgimode.SpotMyStatus.spotify.SpotifyClient;
 import com.github.benmanes.caffeine.cache.LoadingCache;
@@ -98,15 +99,15 @@ public class StatusUpdateScheduler {
     private void updateSlackStatus(CachedUser user) {
         spotifyClient.getCurrentTrack(user)
                      .filter(SpotifyCurrentItem::getIsPlaying)
-                     .filter(spotifyCurrentItem -> isPlayingDeviceEnabled(user, spotifyCurrentItem))
-                     .filter(currentItem -> isItemEnabled(user, currentItem))
+                     .filter(spotifyItem -> isPlayingDeviceEnabled(user, spotifyItem))
+                     .filter(spotifyItem -> isItemEnabled(user, spotifyItem))
                      .ifPresentOrElse(usersCurrentTrack -> slackClient.updateAndPersistStatus(user, usersCurrentTrack),
                          () -> cleanStatus(user));
     }
 
     private boolean isPlayingDeviceEnabled(CachedUser user, SpotifyCurrentItem spotifyCurrentItem) {
         boolean isCurrentDeviceEnabled = user.getSpotifyDeviceIds().isEmpty()
-            || user.getSpotifyDeviceIds().contains(spotifyCurrentItem.getDeviceId());
+            || user.getSpotifyDeviceIds().contains(spotifyCurrentItem.getDevice().getId());
         if (!isCurrentDeviceEnabled) {
             log.debug("Skipping syncing, since spotify device is not enabled for user {}", user.getId());
         }
@@ -114,7 +115,7 @@ public class StatusUpdateScheduler {
     }
 
     private boolean isItemEnabled(CachedUser user, SpotifyCurrentItem currentItem) {
-        boolean isItemEnabled = user.getSpotifyItems().isEmpty() || user.getSpotifyItems().contains(currentItem.getType());
+        boolean isItemEnabled = user.getSpotifyItems().isEmpty() || user.getSpotifyItems().contains(SpotifyItem.from(currentItem.getType()));
         if (!isItemEnabled) {
             log.debug("Skipping syncing, since spotify item type {} is not enabled for user {}", currentItem.getType(), user.getId());
         }

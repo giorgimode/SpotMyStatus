@@ -75,7 +75,7 @@ public class SpotifyClient {
                 log.error("Failed to retrieve current track for user {}", user.getId(), ex);
             }
         } catch (Exception e) {
-            log.error("Failed to retrieve current track for user {}", user.getId());
+            log.error("Failed to retrieve current track for user {}", user.getId(), e);
         }
         return Optional.empty();
     }
@@ -93,15 +93,24 @@ public class SpotifyClient {
     }
 
     private Optional<SpotifyCurrentItem> tryGetSpotifyCurrentTrack(CachedUser user) {
-        SpotifyCurrentItem currentTrackResponse = RestHelper.builder()
-                                                            .withBaseUrl(spotifyApiUri + "/v1/me/player")
-                                                            .withBearer(user.getSpotifyAccessToken())
-                                                            .withQueryParam("additional_types", "track,episode")
-                                                            .getBody(restTemplate, SpotifyCurrentItem.class);
-        if (currentTrackResponse == null || currentTrackResponse.getTitle() == null || currentTrackResponse.getIsPlaying() == null) {
+        SpotifyCurrentItem currentItem = RestHelper.builder()
+                                                   .withBaseUrl(spotifyApiUri + "/v1/me/player")
+                                                   .withBearer(user.getSpotifyAccessToken())
+                                                   .withQueryParam("additional_types", "track,episode")
+                                                   .getBody(restTemplate, SpotifyCurrentItem.class);
+        if (currentItem == null || isPrivateSession(user.getId(), currentItem) || currentItem.getTitle() == null
+            || currentItem.getIsPlaying() == null) {
             return Optional.empty();
         }
-        return Optional.of(currentTrackResponse);
+        return Optional.of(currentItem);
+    }
+
+    private boolean isPrivateSession(String userId, SpotifyCurrentItem spotifyCurrentItem) {
+        boolean isPrivateSession = spotifyCurrentItem.getDevice().isPrivateSession();
+        if (isPrivateSession) {
+            log.debug("Skipping syncing, since user {} is in private Spotify session", userId);
+        }
+        return isPrivateSession;
     }
 
     public List<SpotifyDevice> getSpotifyDevices(CachedUser user) {
