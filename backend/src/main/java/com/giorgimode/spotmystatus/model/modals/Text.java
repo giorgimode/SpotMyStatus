@@ -2,6 +2,7 @@ package com.giorgimode.spotmystatus.model.modals;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 import lombok.Data;
 
@@ -11,7 +12,10 @@ import lombok.Data;
 public class Text {
 
     private String type;
-    private String text;
+
+    @JsonProperty("text")
+    private String textValue;
+
     private Boolean emoji;
 
     @Override
@@ -24,11 +28,11 @@ public class Text {
         }
         Text other = (Text) o;
         return Objects.equals(type, other.type) &&
-            Objects.equals(text, other.text);
+            Objects.equals(textValue, other.textValue);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(type, text);
+        return Objects.hash(type, textValue);
     }
 }

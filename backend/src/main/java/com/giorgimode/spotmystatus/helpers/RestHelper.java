@@ -17,7 +17,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-public final class RestHelper {
+@SuppressWarnings("unused") public final class RestHelper {
 
     private String cookie;
     private String contentType;

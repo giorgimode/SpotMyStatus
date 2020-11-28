@@ -36,26 +36,36 @@ public class State {
     @SuppressWarnings("unchecked")
     private StateValue collectValues(Map.Entry<String, Object> value) {
         Map<String, Object> valueMap = (Map<String, Object>) value.getValue();
-        StateValue stateValue = new StateValue();
         if (valueMap.containsKey(ACTION_START_HOUR)) {
-            String startHour = safeGet(((Map<String, Object>) valueMap.get(ACTION_START_HOUR)), "selected_time");
-            String endHour = safeGet(((Map<String, Object>) valueMap.get(ACTION_END_HOUR)), "selected_time");
-            stateValue.setType("timepicker");
-            stateValue.setStartHour(startHour);
-            stateValue.setEndHour(endHour);
+            return createHourStateValue(valueMap);
         } else {
-            valueMap.values().stream().findFirst()
-                    .map(o -> (Map<String, Object>) o)
-                    .ifPresent(firstValue -> {
-                        String type = safeGet(firstValue, "type");
-                        stateValue.setType(type);
-                        stateValue.setValue(safeGet(firstValue, "value"));
-                        List<Object> optionsList = safeGet(firstValue, "selected_options", List.of());
-                        List<Option> selectedOptions = OBJECT_MAPPER.convertValue(optionsList, new TypeReference<>() {
-                        });
-                        stateValue.setSelectedOptions(selectedOptions);
-                    });
+            return valueMap.values().stream().findFirst()
+                           .map(map -> (Map<String, Object>) map)
+                           .map(this::createOptionsStateValue)
+                           .orElseGet(StateValue::new);
         }
+    }
+
+    private StateValue createOptionsStateValue(Map<String, Object> firstValue) {
+        StateValue stateValue = new StateValue();
+        String type = safeGet(firstValue, "type");
+        stateValue.setType(type);
+        stateValue.setValue(safeGet(firstValue, "value"));
+        List<Object> optionsList = safeGet(firstValue, "selected_options", List.of());
+        List<Option> selectedOptions = OBJECT_MAPPER.convertValue(optionsList, new TypeReference<>() {
+        });
+        stateValue.setSelectedOptions(selectedOptions);
+        return stateValue;
+    }
+
+    @SuppressWarnings("unchecked")
+    private StateValue createHourStateValue(Map<String, Object> valueMap) {
+        StateValue stateValue = new StateValue();
+        String startHour = safeGet(((Map<String, Object>) valueMap.get(ACTION_START_HOUR)), "selected_time");
+        String endHour = safeGet(((Map<String, Object>) valueMap.get(ACTION_END_HOUR)), "selected_time");
+        stateValue.setType("timepicker");
+        stateValue.setStartHour(startHour);
+        stateValue.setEndHour(endHour);
         return stateValue;
     }
 

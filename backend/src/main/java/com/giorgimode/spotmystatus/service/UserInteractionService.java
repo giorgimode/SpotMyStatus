@@ -174,7 +174,7 @@ public class UserInteractionService {
         option.setValue(itemValue);
         Text text = new Text();
         text.setType("plain_text");
-        text.setText(itemText);
+        text.setTextValue(itemText);
         option.setText(text);
         return option;
     }
