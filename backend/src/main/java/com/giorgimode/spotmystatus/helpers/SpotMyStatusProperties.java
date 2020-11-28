@@ -1,4 +1,4 @@
-package com.giorgimode.spotmystatus.common;
+package com.giorgimode.spotmystatus.helpers;
 
 import java.util.List;
 import java.util.Map;

@@ -10,9 +10,9 @@ import lombok.Data;
 @Data
 public class Text {
 
-    public String type;
-    public String text;
-    public Boolean emoji;
+    private String type;
+    private String text;
+    private Boolean emoji;
 
     @Override
     public boolean equals(Object o) {

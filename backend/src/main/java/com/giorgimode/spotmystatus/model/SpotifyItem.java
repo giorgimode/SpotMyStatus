@@ -1,14 +1,10 @@
 package com.giorgimode.spotmystatus.model;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.giorgimode.spotmystatus.exceptions.InvalidConfigurationException;
 
 public enum SpotifyItem {
-
-    @JsonProperty("episode")
     EPISODE,
-    @JsonProperty("track")
     TRACK;
 
     public String title() {

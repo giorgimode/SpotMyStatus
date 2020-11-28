@@ -12,9 +12,10 @@ public class SlackModalOut {
 
 
     @JsonProperty("view_id")
-    public String viewId;
-    public String hash;
-    public SlackModalView view;
+    private String viewId;
+    private String hash;
+    private SlackModalView view;
+
     @JsonProperty("response_action")
     private String responseAction;
 }

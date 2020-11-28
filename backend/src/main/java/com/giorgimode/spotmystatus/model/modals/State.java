@@ -1,10 +1,10 @@
 
 package com.giorgimode.spotmystatus.model.modals;
 
-import static com.giorgimode.spotmystatus.util.SpotConstants.ACTION_END_HOUR;
-import static com.giorgimode.spotmystatus.util.SpotConstants.ACTION_START_HOUR;
-import static com.giorgimode.spotmystatus.util.SpotUtil.OBJECT_MAPPER;
-import static com.giorgimode.spotmystatus.util.SpotUtil.safeGet;
+import static com.giorgimode.spotmystatus.helpers.SpotConstants.ACTION_END_HOUR;
+import static com.giorgimode.spotmystatus.helpers.SpotConstants.ACTION_START_HOUR;
+import static com.giorgimode.spotmystatus.helpers.SpotUtil.OBJECT_MAPPER;
+import static com.giorgimode.spotmystatus.helpers.SpotUtil.safeGet;
 import static java.util.stream.Collectors.toMap;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;

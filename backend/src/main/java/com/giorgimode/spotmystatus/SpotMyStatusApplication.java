@@ -7,6 +7,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class SpotMyStatusApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(SpotMyStatusApplication.class, args);
+        SpringApplication.run(SpotMyStatusApplication.class);
     }
 }

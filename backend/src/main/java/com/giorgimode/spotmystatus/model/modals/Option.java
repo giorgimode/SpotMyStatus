@@ -10,8 +10,8 @@ import lombok.Data;
 @Data
 public class Option {
 
-    public Text text;
-    public String value;
+    private Text text;
+    private String value;
 
     @Override
     public boolean equals(Object o) {

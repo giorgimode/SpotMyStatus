@@ -12,11 +12,14 @@ import lombok.Data;
 @Data
 public class Accessory {
 
-    public String type;
-    public List<Option> options;
+    private String type;
+    private List<Option> options;
+
     @JsonProperty("action_id")
-    public String actionId;
+    private String actionId;
+
     @JsonProperty("initial_options")
-    public List<Option> initialOptions;
-    public Text placeholder;
+    private List<Option> initialOptions;
+
+    private Text placeholder;
 }

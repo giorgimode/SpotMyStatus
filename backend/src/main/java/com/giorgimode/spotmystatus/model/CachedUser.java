@@ -1,7 +1,7 @@
 package com.giorgimode.spotmystatus.model;
 
 
-import static com.giorgimode.spotmystatus.util.SpotUtil.requireNonBlank;
+import static com.giorgimode.spotmystatus.helpers.SpotUtil.requireNonBlank;
 import static java.util.Objects.requireNonNull;
 import static java.util.function.Predicate.not;
 import com.google.common.base.MoreObjects;
@@ -42,6 +42,7 @@ public class CachedUser implements Serializable {
             .add("manualStatus", manualStatus)
             .add("spotifyAccessToken", spotifyAccessToken)
             .add("spotifyRefreshToken", spotifyRefreshToken)
+            .add("slackAccessToken", slackAccessToken)
             .add("emojis", emojis)
             .add("spotifyItems", spotifyItems)
             .add("spotifyDeviceIds", spotifyDeviceIds)

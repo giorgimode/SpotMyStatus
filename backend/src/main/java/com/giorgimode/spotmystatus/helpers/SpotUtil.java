@@ -1,4 +1,4 @@
-package com.giorgimode.spotmystatus.util;
+package com.giorgimode.spotmystatus.helpers;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import com.fasterxml.jackson.databind.ObjectMapper;

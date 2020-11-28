@@ -9,9 +9,8 @@ import lombok.Data;
 @Data
 public class ConfirmDialog {
 
-    public Text title;
-    public Text text;
-    public Text confirm;
-    public String style;
-
+    private Text title;
+    private Text text;
+    private Text confirm;
+    private String style;
 }

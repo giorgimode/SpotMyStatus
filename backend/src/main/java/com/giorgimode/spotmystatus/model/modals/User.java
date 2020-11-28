@@ -11,12 +11,15 @@ import lombok.Data;
 public class User {
 
     @JsonProperty("id")
-    public String id;
+    private String id;
+
     @JsonProperty("username")
-    public String username;
+    private String username;
+
     @JsonProperty("name")
-    public String name;
+    private String name;
+
     @JsonProperty("team_id")
-    public String teamId;
+    private String teamId;
 
 }

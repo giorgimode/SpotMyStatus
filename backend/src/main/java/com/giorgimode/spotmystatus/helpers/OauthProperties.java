@@ -1,4 +1,4 @@
-package com.giorgimode.spotmystatus.common;
+package com.giorgimode.spotmystatus.helpers;
 
 import javax.validation.constraints.NotEmpty;
 import lombok.Data;
@@ -11,7 +11,6 @@ public class OauthProperties {
 
     @NotEmpty
     private String clientSecret;
-
     private String botToken;
     private String signingSecret;
 }

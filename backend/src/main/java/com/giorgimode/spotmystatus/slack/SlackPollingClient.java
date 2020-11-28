@@ -1,24 +1,24 @@
 package com.giorgimode.spotmystatus.slack;
 
-import static com.giorgimode.spotmystatus.common.SpotConstants.SLACK_BOT_SCOPES;
-import static com.giorgimode.spotmystatus.common.SpotConstants.SLACK_PROFILE_SCOPES;
-import static com.giorgimode.spotmystatus.common.SpotConstants.SLACK_REDIRECT_PATH;
+import static com.giorgimode.spotmystatus.helpers.SpotConstants.SLACK_BOT_SCOPES;
+import static com.giorgimode.spotmystatus.helpers.SpotConstants.SLACK_PROFILE_SCOPES;
+import static com.giorgimode.spotmystatus.helpers.SpotConstants.SLACK_REDIRECT_PATH;
 import static com.giorgimode.spotmystatus.model.SpotifyItem.EPISODE;
-import static com.giorgimode.spotmystatus.util.SpotUtil.baseUri;
+import static com.giorgimode.spotmystatus.helpers.SpotUtil.baseUri;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
-import com.giorgimode.spotmystatus.common.PropertyVault;
-import com.giorgimode.spotmystatus.common.SpotMyStatusProperties;
+import com.giorgimode.spotmystatus.helpers.PropertyVault;
+import com.giorgimode.spotmystatus.helpers.SpotMyStatusProperties;
 import com.giorgimode.spotmystatus.model.CachedUser;
 import com.giorgimode.spotmystatus.model.SlackMessage;
 import com.giorgimode.spotmystatus.model.SlackToken;
 import com.giorgimode.spotmystatus.model.SpotifyCurrentItem;
 import com.giorgimode.spotmystatus.persistence.User;
 import com.giorgimode.spotmystatus.persistence.UserRepository;
-import com.giorgimode.spotmystatus.util.RestHelper;
+import com.giorgimode.spotmystatus.helpers.RestHelper;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.jayway.jsonpath.JsonPath;
 import java.time.LocalDateTime;
@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 import javax.annotation.PreDestroy;
 import javax.crypto.Mac;
@@ -49,6 +50,7 @@ public class SlackPollingClient {
 
     private static final Random RANDOM = new Random();
     private static final String SHA_256_ALGORITHM = "HmacSHA256";
+    private static final String MISSING_USER_ERROR = "User not found";
 
     @Autowired
     private RestTemplate restTemplate;
@@ -286,9 +288,9 @@ public class SlackPollingClient {
 
         String statusText = JsonPath.read(userProfile, "$.profile.status_text");
         // Slack escapes reserved characters, see here https://api.slack.com/reference/surfaces/formatting#escaping
-        String sanitizedStatus = statusText.replaceAll("&amp;", "&")
-                                           .replaceAll("&lt;", "<")
-                                           .replaceAll("&gt;", ">");
+        String sanitizedStatus = statusText.replace("&amp;", "&")
+                                           .replace("&lt;", "<")
+                                           .replace("&gt;", ">");
         boolean statusHasBeenManuallyChanged = isNotBlank(sanitizedStatus) &&
             (!sanitizedStatus.equalsIgnoreCase(user.getSlackStatus()) || user.isManualStatus());
         if (statusHasBeenManuallyChanged) {
@@ -310,7 +312,7 @@ public class SlackPollingClient {
                            persistState(userId, true);
                            return "Status updates have been paused";
                        })
-                       .orElse("User not found");
+                       .orElse(MISSING_USER_ERROR);
     }
 
     public String resume(String userId) {
@@ -320,7 +322,7 @@ public class SlackPollingClient {
                            cachedUser.setDisabled(false);
                            return "Status updates have been resumed";
                        })
-                       .orElse("User not found");
+                       .orElse(MISSING_USER_ERROR);
     }
 
     private void persistState(String userId, boolean isDisabled) {
@@ -338,13 +340,17 @@ public class SlackPollingClient {
                            userCache.invalidate(userId);
                            return "User data has been purged";
                        })
-                       .orElse("User not found");
+                       .orElse(MISSING_USER_ERROR);
     }
 
     public void validateSignature(Long timestamp, String signature, String bodyString) {
-        calculateSha256("v0:" + timestamp + ":" + bodyString)
-            .filter(hashedString -> ("v0=" + hashedString).equalsIgnoreCase(signature))
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN));
+        boolean isValid = calculateSha256("v0:" + timestamp + ":" + bodyString)
+            .map(hashedString -> ("v0=" + hashedString).equalsIgnoreCase(signature))
+            .orElse(false);
+
+        if (isValid) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
     }
 
     @PreDestroy
@@ -371,9 +377,9 @@ public class SlackPollingClient {
         }
     }
 
-    private boolean tryCheck(Supplier<Boolean> supplier) {
+    private boolean tryCheck(BooleanSupplier supplier) {
         try {
-            return supplier.get();
+            return supplier.getAsBoolean();
         } catch (Exception e) {
             log.error("Caught", e);
         }

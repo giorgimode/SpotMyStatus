@@ -1,7 +1,7 @@
 package com.giorgimode.spotmystatus;
 
-import static com.giorgimode.spotmystatus.common.SpotConstants.SLACK_REDIRECT_PATH;
-import static com.giorgimode.spotmystatus.common.SpotConstants.SPOTIFY_REDIRECT_PATH;
+import static com.giorgimode.spotmystatus.helpers.SpotConstants.SLACK_REDIRECT_PATH;
+import static com.giorgimode.spotmystatus.helpers.SpotConstants.SPOTIFY_REDIRECT_PATH;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 import com.giorgimode.spotmystatus.helpers.SlackModalConverter;

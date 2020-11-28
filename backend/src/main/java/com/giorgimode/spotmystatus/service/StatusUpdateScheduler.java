@@ -1,6 +1,6 @@
 package com.giorgimode.spotmystatus.service;
 
-import com.giorgimode.spotmystatus.common.SpotMyStatusProperties;
+import com.giorgimode.spotmystatus.helpers.SpotMyStatusProperties;
 import com.giorgimode.spotmystatus.model.CachedUser;
 import com.giorgimode.spotmystatus.model.SpotifyCurrentItem;
 import com.giorgimode.spotmystatus.model.SpotifyItem;
@@ -10,7 +10,6 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -24,7 +23,6 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class StatusUpdateScheduler {
 
-    private static final Random RANDOM = new Random();
     @Autowired
     private LoadingCache<String, CachedUser> userCache;
 

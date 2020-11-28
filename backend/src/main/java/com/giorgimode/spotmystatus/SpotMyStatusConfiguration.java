@@ -1,13 +1,13 @@
 package com.giorgimode.spotmystatus;
 
-import com.giorgimode.spotmystatus.common.PropertyVault;
+import com.giorgimode.spotmystatus.helpers.PropertyVault;
 import com.giorgimode.spotmystatus.model.CachedUser;
 import com.giorgimode.spotmystatus.model.SpotifyTokenResponse;
 import com.giorgimode.spotmystatus.persistence.User;
 import com.giorgimode.spotmystatus.persistence.UserRepository;
 import com.giorgimode.spotmystatus.service.CleanupService;
 import com.giorgimode.spotmystatus.spotify.SpotifyAuthClient;
-import com.giorgimode.spotmystatus.util.SpotUtil;
+import com.giorgimode.spotmystatus.helpers.SpotUtil;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import java.time.Duration;

@@ -1,9 +1,9 @@
 package com.giorgimode.spotmystatus.service;
 
-import com.giorgimode.spotmystatus.common.PropertyVault;
+import com.giorgimode.spotmystatus.helpers.PropertyVault;
 import com.giorgimode.spotmystatus.model.SlackMessage;
 import com.giorgimode.spotmystatus.persistence.UserRepository;
-import com.giorgimode.spotmystatus.util.RestHelper;
+import com.giorgimode.spotmystatus.helpers.RestHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;

@@ -12,9 +12,9 @@ import lombok.Data;
 public class SlackModalIn {
 
     @JsonProperty("trigger_id")
-    public String triggerId;
-    public String type;
-    public User user;
-    public SlackModalView view;
-    public List<Action> actions;
+    private String triggerId;
+    private String type;
+    private User user;
+    private SlackModalView view;
+    private List<Action> actions;
 }

@@ -12,17 +12,22 @@ import lombok.Data;
 @Data
 public class Element {
 
-    public String type;
+    private String type;
+
     @JsonDeserialize(using = TextObjectDeserializer.class)
-    public Object text;
+    private Object text;
+
     @JsonProperty("action_id")
-    public String actionId;
-    public Text placeholder;
+    private String actionId;
+    private Text placeholder;
+
     @JsonProperty("initial_time")
-    public String initialTime;
-    public ConfirmDialog confirm;
-    public String style;
+    private String initialTime;
+
+    private ConfirmDialog confirm;
+    private String style;
+
     @JsonProperty("initial_options")
-    public List<Option> initialOptions;
-    public List<Option> options;
+    private List<Option> initialOptions;
+    private List<Option> options;
 }

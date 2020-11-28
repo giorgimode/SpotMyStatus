@@ -1,13 +1,13 @@
 package com.giorgimode.spotmystatus.spotify;
 
-import static com.giorgimode.spotmystatus.common.SpotConstants.SPOTIFY_REDIRECT_PATH;
-import static com.giorgimode.spotmystatus.model.SpotifyScopes.USER_CURRENTLY_PLAYING;
-import static com.giorgimode.spotmystatus.util.SpotUtil.baseUri;
+import static com.giorgimode.spotmystatus.helpers.SpotConstants.SPOTIFY_REDIRECT_PATH;
+import static com.giorgimode.spotmystatus.helpers.SpotConstants.SPOTIFY_SCOPE_USER_PLAYBACK;
+import static com.giorgimode.spotmystatus.helpers.SpotUtil.baseUri;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
-import com.giorgimode.spotmystatus.common.OauthProperties;
-import com.giorgimode.spotmystatus.common.PropertyVault;
+import com.giorgimode.spotmystatus.helpers.OauthProperties;
+import com.giorgimode.spotmystatus.helpers.PropertyVault;
 import com.giorgimode.spotmystatus.model.SpotifyTokenResponse;
-import com.giorgimode.spotmystatus.util.RestHelper;
+import com.giorgimode.spotmystatus.helpers.RestHelper;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,7 +74,7 @@ public class SpotifyAuthClient {
                          .withQueryParam("client_id", propertyVault.getSpotify().getClientId())
                          .withQueryParam("response_type", "code")
                          .withQueryParam("redirect_uri", baseUri(uriScheme) + SPOTIFY_REDIRECT_PATH)
-                         .withQueryParam("scope", USER_CURRENTLY_PLAYING.scope())
+                         .withQueryParam("scope", SPOTIFY_SCOPE_USER_PLAYBACK)
                          .withQueryParam("state", state)
                          .createUri();
     }

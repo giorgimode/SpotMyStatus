@@ -9,7 +9,7 @@ import java.io.IOException;
 public class TextObjectDeserializer extends JsonDeserializer<Object> {
 
     @Override
-    public Object deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+    public Object deserialize(JsonParser p, DeserializationContext context) throws IOException {
         JsonToken jsonToken = p.getCurrentToken();
         if (jsonToken == JsonToken.VALUE_STRING) {
             return p.getValueAsString();

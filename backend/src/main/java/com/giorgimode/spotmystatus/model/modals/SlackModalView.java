@@ -11,13 +11,14 @@ import lombok.Data;
 @Data
 public class SlackModalView {
 
-    public String id;
-    public String hash;
-    public String type = "modal";
+    private String id;
+    private String hash;
+    private String type = "modal";
+
     @JsonProperty("callback_id")
-    public String callbackId;
-    public Text title;
-    public Text submit;
-    public List<Block> blocks;
+    private String callbackId;
+    private Text title;
+    private Text submit;
+    private List<Block> blocks;
     private State state;
 }

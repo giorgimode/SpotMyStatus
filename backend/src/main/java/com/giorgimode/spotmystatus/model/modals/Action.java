@@ -12,10 +12,13 @@ import lombok.Data;
 public class Action {
 
     @JsonProperty("action_id")
-    public String actionId;
-    public String value;
+    private String actionId;
+
+    private String value;
+
     @JsonProperty("block_id")
     public String blockId;
+
     @JsonDeserialize(using = TextObjectDeserializer.class)
     public Object text;
 }

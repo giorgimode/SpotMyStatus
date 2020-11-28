@@ -1,6 +1,6 @@
 package com.giorgimode.spotmystatus.helpers;
 
-import static com.giorgimode.spotmystatus.util.SpotUtil.OBJECT_MAPPER;
+import static com.giorgimode.spotmystatus.helpers.SpotUtil.OBJECT_MAPPER;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.giorgimode.spotmystatus.model.modals.SlackModalIn;
@@ -17,7 +17,7 @@ public class SlackModalConverter extends PropertyEditorSupport {
     }
 
     @Override
-    public void setAsText(String text) throws IllegalArgumentException {
+    public void setAsText(String text) {
         if (isBlank(text)) {
             setValue(null);
         } else {

@@ -2,7 +2,7 @@ package com.giorgimode.spotmystatus.model;
 
 import static com.giorgimode.spotmystatus.model.SpotifyItem.EPISODE;
 import static com.giorgimode.spotmystatus.model.SpotifyItem.TRACK;
-import static com.giorgimode.spotmystatus.util.SpotUtil.safeGet;
+import static com.giorgimode.spotmystatus.helpers.SpotUtil.safeGet;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import java.util.Map;
