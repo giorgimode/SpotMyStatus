@@ -1,5 +1,6 @@
 package com.giorgimode.spotmystatus.service;
 
+import static org.mockito.Mockito.verify;
 import com.giorgimode.spotmystatus.helpers.PropertyVault;
 import com.giorgimode.spotmystatus.model.CachedUser;
 import com.giorgimode.spotmystatus.persistence.UserRepository;

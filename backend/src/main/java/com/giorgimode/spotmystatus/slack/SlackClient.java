@@ -15,12 +15,12 @@ import com.giorgimode.spotmystatus.helpers.RestHelper;
 import com.giorgimode.spotmystatus.helpers.SpotMyStatusProperties;
 import com.giorgimode.spotmystatus.model.CachedUser;
 import com.giorgimode.spotmystatus.model.SlackMessage;
+import com.giorgimode.spotmystatus.model.SlackResponse;
 import com.giorgimode.spotmystatus.model.SlackToken;
 import com.giorgimode.spotmystatus.model.SpotifyCurrentItem;
 import com.giorgimode.spotmystatus.persistence.User;
 import com.giorgimode.spotmystatus.persistence.UserRepository;
 import com.github.benmanes.caffeine.cache.LoadingCache;
-import com.jayway.jsonpath.JsonPath;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -115,15 +115,15 @@ public class SlackClient {
     }
 
     private Integer getUserTimezone(SlackToken slackToken) {
-        String userString = tryCall(() -> RestHelper.builder()
-                                                    .withBaseUrl(configProperties.getSlackUri() + "/api/users.info")
-                                                    .withBearer(slackToken.getAccessToken())
-                                                    .withContentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-                                                    .withQueryParam("user", slackToken.getId())
-                                                    .get(restTemplate, String.class));
+        SlackResponse response = tryCall(() -> RestHelper.builder()
+                                                         .withBaseUrl(configProperties.getSlackUri() + "/api/users.info")
+                                                         .withBearer(slackToken.getAccessToken())
+                                                         .withContentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+                                                         .withQueryParam("user", slackToken.getId())
+                                                         .get(restTemplate, SlackResponse.class));
 
-        log.trace("Received response {}", userString);
-        return JsonPath.read(userString, "$.user.tz_offset");
+        log.trace("Received response {}", response);
+        return response.getTimezoneOffset();
     }
 
     public <T> T tryCall(Supplier<ResponseEntity<T>> responseTypeSupplier) {
@@ -192,15 +192,15 @@ public class SlackClient {
 
     private boolean updateStatus(CachedUser user, SlackStatusPayload statusPayload) {
         //noinspection deprecation: Slack issues warning on missing charset
-        String response = RestHelper.builder()
-                                    .withBaseUrl(configProperties.getSlackUri() + "/api/users.profile.set")
-                                    .withBearer(user.getSlackAccessToken())
-                                    .withContentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
-                                    .withBody(statusPayload)
-                                    .postAndGetBody(restTemplate, String.class);
+        SlackResponse response = RestHelper.builder()
+                                           .withBaseUrl(configProperties.getSlackUri() + "/api/users.profile.set")
+                                           .withBearer(user.getSlackAccessToken())
+                                           .withContentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
+                                           .withBody(statusPayload)
+                                           .postAndGetBody(restTemplate, SlackResponse.class);
 
         log.trace("Slack response to status update {}", response);
-        return JsonPath.read(response, "$.ok");
+        return response.isOk();
     }
 
     public void cleanStatus(CachedUser user) {
@@ -232,18 +232,17 @@ public class SlackClient {
     }
 
     private boolean checkIsUserOffline(CachedUser user) {
-        String userPresenceResponse = RestHelper.builder()
-                                                .withBaseUrl(configProperties.getSlackUri() + "/api/users.getPresence")
-                                                .withBearer(user.getSlackAccessToken())
-                                                .getBody(restTemplate, String.class);
+        SlackResponse response = RestHelper.builder()
+                                           .withBaseUrl(configProperties.getSlackUri() + "/api/users.getPresence")
+                                           .withBearer(user.getSlackAccessToken())
+                                           .getBody(restTemplate, SlackResponse.class);
 
-        if (userPresenceResponse.contains("invalid_auth") || userPresenceResponse.contains("token_revoked")) {
-            log.trace(userPresenceResponse);
+        if (response.getError() != null && (response.getError().contains("invalid_auth") || response.getError().contains("token_revoked"))) {
+            log.trace("Received error response {}", response);
             invalidateAndNotifyUser(user.getId());
             return true;
         }
-        String usersPresence = JsonPath.read(userPresenceResponse, "$.presence");
-        boolean isUserActive = "active".equalsIgnoreCase(usersPresence);
+        boolean isUserActive = "active".equalsIgnoreCase(response.getPresence());
         if (!isUserActive && !user.isCleaned()) {
             log.info("User {} is away.", user.getId());
             cleanStatus(user);
@@ -276,16 +275,16 @@ public class SlackClient {
     }
 
     public boolean checkStatusHasBeenChanged(CachedUser user) {
-        String userProfile = RestHelper.builder()
-                                       .withBaseUrl(configProperties.getSlackUri() + "/api/users.profile.get")
-                                       .withBearer(user.getSlackAccessToken())
-                                       .getBody(restTemplate, String.class);
+        SlackResponse response = RestHelper.builder()
+                                           .withBaseUrl(configProperties.getSlackUri() + "/api/users.profile.get")
+                                           .withBearer(user.getSlackAccessToken())
+                                           .getBody(restTemplate, SlackResponse.class);
 
-        String statusText = JsonPath.read(userProfile, "$.profile.status_text");
         // Slack escapes reserved characters, see here https://api.slack.com/reference/surfaces/formatting#escaping
-        String sanitizedStatus = statusText.replace("&amp;", "&")
-                                           .replace("&lt;", "<")
-                                           .replace("&gt;", ">");
+        String sanitizedStatus = response.getStatusText()
+                                         .replace("&amp;", "&")
+                                         .replace("&lt;", "<")
+                                         .replace("&gt;", ">");
         boolean statusHasBeenManuallyChanged = isNotBlank(sanitizedStatus) &&
             (!sanitizedStatus.equalsIgnoreCase(user.getSlackStatus()) || user.isManualStatus());
         if (statusHasBeenManuallyChanged) {

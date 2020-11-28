@@ -1,5 +1,7 @@
 package com.giorgimode.spotmystatus.spotify;
 
+import com.giorgimode.spotmystatus.helpers.RestHelper;
+import com.giorgimode.spotmystatus.helpers.SpotUtil;
 import com.giorgimode.spotmystatus.model.CachedUser;
 import com.giorgimode.spotmystatus.model.SpotifyCurrentItem;
 import com.giorgimode.spotmystatus.model.SpotifyDevice;
@@ -7,9 +9,6 @@ import com.giorgimode.spotmystatus.model.SpotifyDevices;
 import com.giorgimode.spotmystatus.model.SpotifyTokenResponse;
 import com.giorgimode.spotmystatus.persistence.User;
 import com.giorgimode.spotmystatus.persistence.UserRepository;
-import com.giorgimode.spotmystatus.service.UserInteractionService;
-import com.giorgimode.spotmystatus.helpers.RestHelper;
-import com.giorgimode.spotmystatus.helpers.SpotUtil;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import java.util.List;
 import java.util.Optional;
@@ -41,9 +40,6 @@ public class SpotifyClient {
     @Autowired
     private SpotifyAuthClient spotifyAuthClient;
 
-    @Autowired
-    private UserInteractionService cleanupService;
-
     public String requestAuthorization(UUID state) {
         return spotifyAuthClient.requestAuthorization(state);
     }
@@ -70,7 +66,7 @@ public class SpotifyClient {
                 return refreshSpotifyAccessToken(user);
             } else if (ex.getStatusCode() == HttpStatus.BAD_REQUEST && ex.getResponseBodyAsString().contains("invalid_grant")) {
                 log.error("User's Spotify token has been invalidated. Cleaning up user {}", user.getId());
-                cleanupService.invalidateAndNotifyUser(user.getId()); //todo bad architecture
+                invalidateUser(user.getId());
             } else {
                 log.error("Failed to retrieve current track for user {}", user.getId(), ex);
             }
@@ -126,6 +122,15 @@ public class SpotifyClient {
         } catch (Exception e) {
             log.error("Failed to retrieve Spotify devices for user {}", user.getId(), e);
             return List.of();
+        }
+    }
+
+    public void invalidateUser(String userId) {
+        try {
+            userCache.invalidate(userId);
+            userRepository.deleteById(userId);
+        } catch (Exception e) {
+            log.error("Failed to clean up user properly", e);
         }
     }
 }
