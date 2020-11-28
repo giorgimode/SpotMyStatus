@@ -48,7 +48,7 @@ public class SpotMyStatusConfiguration {
     }
 
     @Bean
-    public ThreadPoolExecutor cachedThreadPool(@Value("${core_pool_size}") Integer corePoolSize) {
+    public ThreadPoolExecutor cachedThreadPool(@Value("${spotmystatus.core_pool_size}") Integer corePoolSize) {
         return new ThreadPoolExecutor(corePoolSize, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS, new SynchronousQueue<>());
     }
 

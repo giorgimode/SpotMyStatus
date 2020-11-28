@@ -12,10 +12,10 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 public class CleanupService {
 
-    @Value("${slack_uri}")
+    @Value("${spotmystatus.slack_uri}")
     private String slackUri;
 
-    @Value("${sign_up_uri}")
+    @Value("${spotmystatus.sign_up_uri}")
     private String signupUri;
 
     private final UserRepository userRepository;

@@ -13,6 +13,13 @@ import org.springframework.stereotype.Component;
 @Setter
 public class SpotMyStatusProperties {
 
+    private String redirectUriScheme;
+    private String slackUri;
+    private String spotifyAccountUri;
+    private String spotifyApiUri;
+    private String signUpUri;
+    private String corePoolSize;
+    private String pollingRate;
     private Integer passivePollingProbability;
     private Integer passivateAfterMin;
     private Integer syncStartHr;

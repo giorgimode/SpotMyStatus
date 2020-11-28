@@ -4,7 +4,7 @@ import com.giorgimode.spotmystatus.helpers.SpotMyStatusProperties;
 import com.giorgimode.spotmystatus.model.CachedUser;
 import com.giorgimode.spotmystatus.model.SpotifyCurrentItem;
 import com.giorgimode.spotmystatus.model.SpotifyItem;
-import com.giorgimode.spotmystatus.slack.SlackPollingClient;
+import com.giorgimode.spotmystatus.slack.SlackClient;
 import com.giorgimode.spotmystatus.spotify.SpotifyClient;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import java.time.LocalDateTime;
@@ -27,7 +27,7 @@ public class StatusUpdateScheduler {
     private LoadingCache<String, CachedUser> userCache;
 
     @Autowired
-    private SlackPollingClient slackClient;
+    private SlackClient slackClient;
 
     @Autowired
     private SpotifyClient spotifyClient;

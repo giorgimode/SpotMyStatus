@@ -3,14 +3,15 @@ package com.giorgimode.spotmystatus.slack;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.SLACK_BOT_SCOPES;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.SLACK_PROFILE_SCOPES;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.SLACK_REDIRECT_PATH;
-import static com.giorgimode.spotmystatus.model.SpotifyItem.EPISODE;
 import static com.giorgimode.spotmystatus.helpers.SpotUtil.baseUri;
+import static com.giorgimode.spotmystatus.model.SpotifyItem.EPISODE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 import com.giorgimode.spotmystatus.helpers.PropertyVault;
+import com.giorgimode.spotmystatus.helpers.RestHelper;
 import com.giorgimode.spotmystatus.helpers.SpotMyStatusProperties;
 import com.giorgimode.spotmystatus.model.CachedUser;
 import com.giorgimode.spotmystatus.model.SlackMessage;
@@ -18,7 +19,6 @@ import com.giorgimode.spotmystatus.model.SlackToken;
 import com.giorgimode.spotmystatus.model.SpotifyCurrentItem;
 import com.giorgimode.spotmystatus.persistence.User;
 import com.giorgimode.spotmystatus.persistence.UserRepository;
-import com.giorgimode.spotmystatus.helpers.RestHelper;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.jayway.jsonpath.JsonPath;
 import java.time.LocalDateTime;
@@ -46,7 +46,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Component
 @Slf4j
-public class SlackPollingClient {
+public class SlackClient {
 
     private static final Random RANDOM = new Random();
     private static final String SHA_256_ALGORITHM = "HmacSHA256";
@@ -61,20 +61,11 @@ public class SlackPollingClient {
     @Value("${secret.slack.client_secret}")
     private String slackClientSecret;
 
-    @Value("${slack_uri}")
-    private String slackUri;
-
-    @Value("${redirect_uri_scheme}")
-    private String uriScheme;
-
-    @Value("${sign_up_uri}")
-    private String signupUri;
-
     @Autowired
     private UserRepository userRepository;
 
     @Autowired
-    private SpotMyStatusProperties spotMyStatusProperties;
+    private SpotMyStatusProperties configProperties;
 
     @Autowired
     private LoadingCache<String, CachedUser> userCache;
@@ -84,22 +75,22 @@ public class SlackPollingClient {
 
     public String requestAuthorization() {
         return RestHelper.builder()
-                         .withBaseUrl(slackUri + "/oauth/v2/authorize")
+                         .withBaseUrl(configProperties.getSlackUri() + "/oauth/v2/authorize")
                          .withQueryParam("client_id", slackClientId)
                          .withQueryParam("user_scope", String.join(",", SLACK_PROFILE_SCOPES))
                          .withQueryParam("scope", String.join(",", SLACK_BOT_SCOPES))
-                         .withQueryParam("redirect_uri", baseUri(uriScheme) + SLACK_REDIRECT_PATH)
+                         .withQueryParam("redirect_uri", getRedirectUri())
                          .createUri();
 
     }
 
     public UUID updateAuthToken(String slackCode) {
         SlackToken slackToken = tryCall(() -> RestHelper.builder()
-                                                        .withBaseUrl(slackUri + "/api/oauth.v2.access")
+                                                        .withBaseUrl(configProperties.getSlackUri() + "/api/oauth.v2.access")
                                                         .withQueryParam("client_id", slackClientId)
                                                         .withQueryParam("client_secret", slackClientSecret)
                                                         .withQueryParam("code", slackCode)
-                                                        .withQueryParam("redirect_uri", baseUri(uriScheme) + SLACK_REDIRECT_PATH)
+                                                        .withQueryParam("redirect_uri", getRedirectUri())
                                                         .get(restTemplate, SlackToken.class));
         if (isBlank(slackToken.getAccessToken())) {
             log.error("Slack access token not returned");
@@ -108,6 +99,10 @@ public class SlackPollingClient {
         UUID state = UUID.randomUUID();
         persistNewUser(slackToken, state);
         return state;
+    }
+
+    private String getRedirectUri() {
+        return baseUri(configProperties.getRedirectUriScheme()) + SLACK_REDIRECT_PATH;
     }
 
     private void persistNewUser(SlackToken slackToken, UUID state) {
@@ -121,7 +116,7 @@ public class SlackPollingClient {
 
     private Integer getUserTimezone(SlackToken slackToken) {
         String userString = tryCall(() -> RestHelper.builder()
-                                                    .withBaseUrl(slackUri + "/api/users.info")
+                                                    .withBaseUrl(configProperties.getSlackUri() + "/api/users.info")
                                                     .withBearer(slackToken.getAccessToken())
                                                     .withContentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
                                                     .withQueryParam("user", slackToken.getId())
@@ -153,7 +148,7 @@ public class SlackPollingClient {
     }
 
     private void tryUpdateAndPersistStatus(CachedUser user, SpotifyCurrentItem currentTrack) {
-        long expiringInMs = currentTrack.getDurationMs() - currentTrack.getProgressMs() + spotMyStatusProperties.getExpirationOverhead();
+        long expiringInMs = currentTrack.getDurationMs() - currentTrack.getProgressMs() + configProperties.getExpirationOverhead();
         long expiringOnUnixTime = (System.currentTimeMillis() + expiringInMs) / 1000;
         String newStatus = buildNewStatus(currentTrack);
         SlackStatusPayload statusPayload = new SlackStatusPayload(newStatus, getEmoji(currentTrack, user), expiringOnUnixTime);
@@ -184,11 +179,11 @@ public class SlackPollingClient {
 
     private String getEmoji(SpotifyCurrentItem currentTrack, CachedUser user) {
         if (EPISODE.title().equals(currentTrack.getType())) {
-            return ":" + spotMyStatusProperties.getPodcastEmoji() + ":";
+            return ":" + configProperties.getPodcastEmoji() + ":";
         }
         List<String> emojis = user.getEmojis();
         if (emojis.isEmpty()) {
-            emojis = spotMyStatusProperties.getDefaultEmojis();
+            emojis = configProperties.getDefaultEmojis();
         } else if (emojis.size() == 1) {
             return ":" + emojis.get(0) + ":";
         }
@@ -198,7 +193,7 @@ public class SlackPollingClient {
     private boolean updateStatus(CachedUser user, SlackStatusPayload statusPayload) {
         //noinspection deprecation: Slack issues warning on missing charset
         String response = RestHelper.builder()
-                                    .withBaseUrl(slackUri + "/api/users.profile.set")
+                                    .withBaseUrl(configProperties.getSlackUri() + "/api/users.profile.set")
                                     .withBearer(user.getSlackAccessToken())
                                     .withContentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
                                     .withBody(statusPayload)
@@ -238,7 +233,7 @@ public class SlackPollingClient {
 
     private boolean checkIsUserOffline(CachedUser user) {
         String userPresenceResponse = RestHelper.builder()
-                                                .withBaseUrl(slackUri + "/api/users.getPresence")
+                                                .withBaseUrl(configProperties.getSlackUri() + "/api/users.getPresence")
                                                 .withBearer(user.getSlackAccessToken())
                                                 .getBody(restTemplate, String.class);
 
@@ -262,7 +257,7 @@ public class SlackPollingClient {
             userCache.invalidate(userId);
             userRepository.deleteById(userId);
             RestHelper.builder()
-                      .withBaseUrl(slackUri + "/api/chat.postMessage")
+                      .withBaseUrl(configProperties.getSlackUri() + "/api/chat.postMessage")
                       .withBearer(propertyVault.getSlack().getBotToken())
                       .withContentType(MediaType.APPLICATION_JSON_VALUE)
                       .withBody(new SlackMessage(userId, createNotificationText()))
@@ -273,7 +268,7 @@ public class SlackPollingClient {
     }
 
     private String createNotificationText() {
-        return "Spotify token has been invalidated. Please authorize again <" + signupUri + "|here>";
+        return "Spotify token has been invalidated. Please authorize again <" + configProperties.getSignUpUri() + "|here>";
     }
 
     public boolean statusHasBeenManuallyChanged(CachedUser user) {
@@ -282,7 +277,7 @@ public class SlackPollingClient {
 
     public boolean checkStatusHasBeenChanged(CachedUser user) {
         String userProfile = RestHelper.builder()
-                                       .withBaseUrl(slackUri + "/api/users.profile.get")
+                                       .withBaseUrl(configProperties.getSlackUri() + "/api/users.profile.get")
                                        .withBearer(user.getSlackAccessToken())
                                        .getBody(restTemplate, String.class);
 

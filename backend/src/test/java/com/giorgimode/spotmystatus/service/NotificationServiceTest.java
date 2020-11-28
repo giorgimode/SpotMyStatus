@@ -3,7 +3,7 @@ package com.giorgimode.spotmystatus.service;
 import com.giorgimode.spotmystatus.helpers.PropertyVault;
 import com.giorgimode.spotmystatus.model.CachedUser;
 import com.giorgimode.spotmystatus.persistence.UserRepository;
-import com.giorgimode.spotmystatus.slack.SlackPollingClient;
+import com.giorgimode.spotmystatus.slack.SlackClient;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,7 +32,7 @@ class NotificationServiceTest {
     private UserInteractionService notificationService;
 
     @Mock
-    private SlackPollingClient slackPollingClient;
+    private SlackClient slackPollingClient;
 
 
     @BeforeEach

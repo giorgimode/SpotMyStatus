@@ -33,7 +33,7 @@ import com.giorgimode.spotmystatus.model.modals.SlackModalView;
 import com.giorgimode.spotmystatus.model.modals.StateValue;
 import com.giorgimode.spotmystatus.model.modals.Text;
 import com.giorgimode.spotmystatus.persistence.UserRepository;
-import com.giorgimode.spotmystatus.slack.SlackPollingClient;
+import com.giorgimode.spotmystatus.slack.SlackClient;
 import com.giorgimode.spotmystatus.spotify.SpotifyClient;
 import com.giorgimode.spotmystatus.helpers.RestHelper;
 import com.github.benmanes.caffeine.cache.LoadingCache;
@@ -75,7 +75,7 @@ public class UserInteractionService {
     private RestTemplate restTemplate;
 
     @Autowired
-    private SlackPollingClient slackClient;
+    private SlackClient slackClient;
 
     @Autowired
     private SpotifyClient spotifyClient;
@@ -83,7 +83,7 @@ public class UserInteractionService {
     @Value("classpath:templates/slack_modal_view_template.json")
     private Resource resourceFile;
 
-    @Value("${slack_uri}")
+    @Value("${spotmystatus.slack_uri}")
     private String slackUri;
 
     @Value("${secret.slack.bot_token}")

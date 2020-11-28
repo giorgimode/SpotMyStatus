@@ -32,7 +32,7 @@ public class SpotifyClient {
     @Autowired
     private RestTemplate restTemplate;
 
-    @Value("${spotify_api_uri}")
+    @Value("${spotmystatus.spotify_api_uri}")
     private String spotifyApiUri;
 
     @Autowired
@@ -70,7 +70,7 @@ public class SpotifyClient {
                 return refreshSpotifyAccessToken(user);
             } else if (ex.getStatusCode() == HttpStatus.BAD_REQUEST && ex.getResponseBodyAsString().contains("invalid_grant")) {
                 log.error("User's Spotify token has been invalidated. Cleaning up user {}", user.getId());
-                cleanupService.invalidateAndNotifyUser(user.getId());
+                cleanupService.invalidateAndNotifyUser(user.getId()); //todo bad architecture
             } else {
                 log.error("Failed to retrieve current track for user {}", user.getId(), ex);
             }

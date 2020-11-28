@@ -9,7 +9,7 @@ import com.giorgimode.spotmystatus.model.SlackEvent;
 import com.giorgimode.spotmystatus.model.modals.SlackModalIn;
 import com.giorgimode.spotmystatus.model.modals.SlackModalOut;
 import com.giorgimode.spotmystatus.service.UserInteractionService;
-import com.giorgimode.spotmystatus.slack.SlackPollingClient;
+import com.giorgimode.spotmystatus.slack.SlackClient;
 import com.giorgimode.spotmystatus.spotify.SpotifyClient;
 import java.io.IOException;
 import java.util.List;
@@ -40,7 +40,7 @@ public class SpotMyStatusController {
     private SpotifyClient spotifyClient;
 
     @Autowired
-    private SlackPollingClient slackPollingClient;
+    private SlackClient slackPollingClient;
 
     @Autowired
     private UserInteractionService userInteractionService;

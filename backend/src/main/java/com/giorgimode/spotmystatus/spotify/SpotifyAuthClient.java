@@ -6,12 +6,12 @@ import static com.giorgimode.spotmystatus.helpers.SpotUtil.baseUri;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 import com.giorgimode.spotmystatus.helpers.OauthProperties;
 import com.giorgimode.spotmystatus.helpers.PropertyVault;
-import com.giorgimode.spotmystatus.model.SpotifyTokenResponse;
 import com.giorgimode.spotmystatus.helpers.RestHelper;
+import com.giorgimode.spotmystatus.helpers.SpotMyStatusProperties;
+import com.giorgimode.spotmystatus.model.SpotifyTokenResponse;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -30,12 +30,8 @@ public class SpotifyAuthClient {
     @Autowired
     private RestTemplate restTemplate;
 
-    @Value("${spotify_account_uri}")
-    private String spotifyAccountUri;
-
-
-    @Value("${redirect_uri_scheme}")
-    private String uriScheme;
+    @Autowired
+    private SpotMyStatusProperties configProperties;
 
     public SpotifyTokenResponse getSpotifyTokens(String code) {
         OauthProperties authProps = propertyVault.getSpotify();
@@ -43,7 +39,7 @@ public class SpotifyAuthClient {
         ResponseEntity<SpotifyTokenResponse> tokenResponse;
         try {
             tokenResponse = RestHelper.builder()
-                                      .withBaseUrl(spotifyAccountUri + "/api/token")
+                                      .withBaseUrl(configProperties.getSpotifyAccountUri() + "/api/token")
                                       .withBasicAuth(authProps.getClientId(), authProps.getClientSecret())
                                       .withContentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
                                       .withBody(authMap)
@@ -64,19 +60,23 @@ public class SpotifyAuthClient {
         MultiValueMap<String, String> authMap = new LinkedMultiValueMap<>();
         authMap.add("grant_type", "authorization_code");
         authMap.add("code", code);
-        authMap.add("redirect_uri", baseUri(uriScheme) + SPOTIFY_REDIRECT_PATH);
+        authMap.add("redirect_uri", getRedirectUri());
         return authMap;
     }
 
     public String requestAuthorization(UUID state) {
         return RestHelper.builder()
-                         .withBaseUrl(spotifyAccountUri + "/authorize")
+                         .withBaseUrl(configProperties.getSpotifyAccountUri() + "/authorize")
                          .withQueryParam("client_id", propertyVault.getSpotify().getClientId())
                          .withQueryParam("response_type", "code")
-                         .withQueryParam("redirect_uri", baseUri(uriScheme) + SPOTIFY_REDIRECT_PATH)
+                         .withQueryParam("redirect_uri", getRedirectUri())
                          .withQueryParam("scope", SPOTIFY_SCOPE_USER_PLAYBACK)
                          .withQueryParam("state", state)
                          .createUri();
+    }
+
+    private String getRedirectUri() {
+        return baseUri(configProperties.getRedirectUriScheme()) + SPOTIFY_REDIRECT_PATH;
     }
 
     public SpotifyTokenResponse getNewAccessToken(String refreshToken) {
@@ -85,7 +85,7 @@ public class SpotifyAuthClient {
         authMap.add("grant_type", "refresh_token");
         authMap.add("refresh_token", refreshToken);
         return RestHelper.builder()
-                         .withBaseUrl(spotifyAccountUri + "/api/token")
+                         .withBaseUrl(configProperties.getSpotifyAccountUri() + "/api/token")
                          .withBasicAuth(propertyVault.getSpotify().getClientId(), propertyVault.getSpotify().getClientSecret())
                          .withContentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
                          .withBody(authMap)
