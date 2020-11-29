@@ -5,7 +5,6 @@ import static com.giorgimode.spotmystatus.helpers.SpotConstants.SLACK_PROFILE_SC
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.SLACK_REDIRECT_PATH;
 import static com.giorgimode.spotmystatus.helpers.SpotUtil.baseUri;
 import static com.giorgimode.spotmystatus.model.SpotifyItem.EPISODE;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
@@ -29,14 +28,10 @@ import java.util.UUID;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 import javax.annotation.PreDestroy;
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-import javax.xml.bind.DatatypeConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -49,8 +44,8 @@ import org.springframework.web.server.ResponseStatusException;
 public class SlackClient {
 
     private static final Random RANDOM = new Random();
-    private static final String SHA_256_ALGORITHM = "HmacSHA256";
     private static final String MISSING_USER_ERROR = "User not found";
+    private static final String SPOTIFY_INVALIDATED_MESSAGE = "Spotify token has been invalidated. Please authorize again";
 
     @Autowired
     private RestTemplate restTemplate;
@@ -259,15 +254,11 @@ public class SlackClient {
                       .withBaseUrl(configProperties.getSlackUri() + "/api/chat.postMessage")
                       .withBearer(propertyVault.getSlack().getBotToken())
                       .withContentType(MediaType.APPLICATION_JSON_VALUE)
-                      .withBody(new SlackMessage(userId, createNotificationText()))
+                      .withBody(new SlackMessage(userId, SPOTIFY_INVALIDATED_MESSAGE))
                       .post(restTemplate, String.class);
         } catch (Exception e) {
             log.error("Failed to clean up user properly", e);
         }
-    }
-
-    private String createNotificationText() {
-        return "Spotify token has been invalidated. Please authorize again";
     }
 
     public boolean statusHasBeenManuallyChanged(CachedUser user) {
@@ -337,16 +328,6 @@ public class SlackClient {
                        .orElse(MISSING_USER_ERROR);
     }
 
-    public void validateSignature(Long timestamp, String signature, String bodyString) {
-        boolean isValid = calculateSha256("v0:" + timestamp + ":" + bodyString)
-            .map(hashedString -> ("v0=" + hashedString).equalsIgnoreCase(signature))
-            .orElse(false);
-
-        if (isValid) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
-    }
-
     @PreDestroy
     public void onDestroy() {
         userCache.asMap().values().forEach(cachedUser -> {
@@ -359,16 +340,6 @@ public class SlackClient {
                 log.debug("Failed to clean status of user {}", cachedUser.getId());
             }
         });
-    }
-    private Optional<String> calculateSha256(String message) {
-        try {
-            Mac mac = Mac.getInstance(SHA_256_ALGORITHM);
-            mac.init(new SecretKeySpec(propertyVault.getSlack().getSigningSecret().getBytes(UTF_8), SHA_256_ALGORITHM));
-            return Optional.of(DatatypeConverter.printHexBinary(mac.doFinal(message.getBytes(UTF_8))));
-        } catch (Exception e) {
-            log.error("Failed to calculate hmac-sha256", e);
-            return Optional.empty();
-        }
     }
 
     private boolean tryCheck(BooleanSupplier supplier) {

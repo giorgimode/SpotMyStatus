@@ -1,7 +1,5 @@
-package com.giorgimode.spotmystatus;
+package com.giorgimode.spotmystatus.controller;
 
-import static com.giorgimode.spotmystatus.helpers.SpotConstants.SLACK_REDIRECT_PATH;
-import static com.giorgimode.spotmystatus.helpers.SpotConstants.SPOTIFY_REDIRECT_PATH;
 import static com.giorgimode.spotmystatus.helpers.SpotUtil.baseUri;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import com.giorgimode.spotmystatus.helpers.SlackModalConverter;
@@ -10,11 +8,6 @@ import com.giorgimode.spotmystatus.model.SlackEvent;
 import com.giorgimode.spotmystatus.model.modals.SlackModalIn;
 import com.giorgimode.spotmystatus.model.modals.SlackModalOut;
 import com.giorgimode.spotmystatus.service.UserInteractionService;
-import com.giorgimode.spotmystatus.slack.SlackClient;
-import com.giorgimode.spotmystatus.spotify.SpotifyClient;
-import java.io.IOException;
-import java.util.UUID;
-import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -23,72 +16,18 @@ import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @Slf4j
-public class SpotMyStatusController {
-
-    private static final String ERROR_PAGE = "/error.html";
-
-    @Autowired
-    private SpotifyClient spotifyClient;
-
-    @Autowired
-    private SlackClient slackPollingClient;
+public class UserInteractionController {
 
     @Autowired
     private UserInteractionService userInteractionService;
 
     @Autowired
     private SpotMyStatusProperties configProperties;
-
-    @RequestMapping("/start")
-    public void startNewUser(HttpServletResponse httpServletResponse) {
-        log.info("Starting authorization for a new user...");
-        String authorization = slackPollingClient.requestAuthorization();
-        httpServletResponse.setHeader("Location", authorization);
-        httpServletResponse.setStatus(302);
-    }
-
-    @RequestMapping(SLACK_REDIRECT_PATH)
-    public void slackRedirect(@RequestParam(value = "code", required = false) String slackCode,
-        @RequestParam(value = "error", required = false) String error,
-        HttpServletResponse httpServletResponse) throws IOException {
-
-        if (slackCode == null) {
-            log.info("User failed to grant permission on Slack. Received error {}", error);
-            httpServletResponse.sendRedirect(ERROR_PAGE);
-            return;
-        }
-
-        log.info("User has granted permission on Slack. Received code {}", slackCode);
-        UUID state = slackPollingClient.updateAuthToken(slackCode);
-
-        log.info("Slack authorization successful using code {} and state {}. Requesting authorization on spotify", slackCode, state);
-        String authorization = spotifyClient.requestAuthorization(state);
-        httpServletResponse.setHeader("Location", authorization);
-        httpServletResponse.setStatus(302);
-    }
-
-    @RequestMapping(SPOTIFY_REDIRECT_PATH)
-    public void spotifyRedirect(@RequestParam(value = "code", required = false) String spotifyCode,
-        @RequestParam(value = "state", required = false) UUID state,
-        @RequestParam(value = "error", required = false) String error,
-        HttpServletResponse httpServletResponse) throws IOException {
-
-        if (state == null || isBlank(spotifyCode)) {
-            log.info("User failed to grant permission on Spotify. Received code {}, state {} with error {}", spotifyCode, state, error);
-            httpServletResponse.sendRedirect(ERROR_PAGE);
-            return;
-        }
-
-        log.info("User has granted permission on Spotify. Received code {} for state {}", spotifyCode, state);
-        spotifyClient.updateAuthToken(spotifyCode, state);
-        httpServletResponse.sendRedirect("/success.html");
-    }
 
     @PostMapping(value = "/slack/command", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public String receiveSlackCommand(
@@ -100,7 +39,7 @@ public class SpotMyStatusController {
         @RequestBody String bodyString) {
 
         log.trace("Received a slack command {}", bodyString);
-        slackPollingClient.validateSignature(timestamp, signature, bodyString);
+        userInteractionService.validateSignature(timestamp, signature, bodyString);
         if (!userInteractionService.userExists(userId)) {
             return "User not found. Please sign up at " + baseUri(configProperties.getRedirectUriScheme()) + "/start";
         }
@@ -111,15 +50,15 @@ public class SpotMyStatusController {
         }
         if ("pause".equalsIgnoreCase(command)) {
             log.debug("Pausing updates for user {}", userId);
-            return slackPollingClient.pause(userId);
+            return userInteractionService.pause(userId);
         }
         if ("play".equalsIgnoreCase(command)) {
             log.debug("Resuming updates for user {}", userId);
-            return slackPollingClient.resume(userId);
+            return userInteractionService.resume(userId);
         }
         if ("purge".equalsIgnoreCase(command)) {
             log.debug("Removing all data for user {}", userId);
-            return slackPollingClient.purge(userId);
+            return userInteractionService.purge(userId);
         }
 
         return "- `pause`/`play` to temporarily pause or resume status updates"
@@ -131,11 +70,6 @@ public class SpotMyStatusController {
     public String receiveSlackEvent(@RequestBody SlackEvent slackEvent) {
         log.debug("Received a slack event {}", slackEvent);
         return slackEvent.getChallenge();
-    }
-
-    @RequestMapping("/error")
-    public void handleError(HttpServletResponse httpServletResponse) throws IOException {
-        httpServletResponse.sendRedirect(ERROR_PAGE);
     }
 
     @PostMapping(value = "/slack/interaction", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)

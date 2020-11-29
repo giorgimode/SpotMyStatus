@@ -13,13 +13,16 @@ import static com.giorgimode.spotmystatus.helpers.SpotConstants.EMOJI_REGEX;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.PAYLOAD_TYPE_BLOCK_ACTIONS;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.PAYLOAD_TYPE_SUBMISSION;
 import static com.giorgimode.spotmystatus.helpers.SpotUtil.OBJECT_MAPPER;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
-import com.giorgimode.spotmystatus.helpers.SpotMyStatusProperties;
 import com.giorgimode.spotmystatus.exceptions.UserNotFoundException;
+import com.giorgimode.spotmystatus.helpers.PropertyVault;
+import com.giorgimode.spotmystatus.helpers.RestHelper;
+import com.giorgimode.spotmystatus.helpers.SpotMyStatusProperties;
 import com.giorgimode.spotmystatus.model.CachedUser;
 import com.giorgimode.spotmystatus.model.SpotifyItem;
 import com.giorgimode.spotmystatus.model.modals.Accessory;
@@ -35,7 +38,6 @@ import com.giorgimode.spotmystatus.model.modals.Text;
 import com.giorgimode.spotmystatus.persistence.UserRepository;
 import com.giorgimode.spotmystatus.slack.SlackClient;
 import com.giorgimode.spotmystatus.spotify.SpotifyClient;
-import com.giorgimode.spotmystatus.helpers.RestHelper;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import java.io.IOException;
 import java.time.LocalTime;
@@ -46,11 +48,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import javax.xml.bind.DatatypeConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -61,6 +67,8 @@ import org.springframework.web.server.ResponseStatusException;
 @Component
 @Slf4j
 public class UserInteractionService {
+
+    private static final String SHA_256_ALGORITHM = "HmacSHA256";
 
     @Autowired
     private UserRepository userRepository;
@@ -79,6 +87,9 @@ public class UserInteractionService {
 
     @Autowired
     private SpotifyClient spotifyClient;
+
+    @Autowired
+    private PropertyVault propertyVault;
 
     @Value("classpath:templates/slack_modal_view_template.json")
     private Resource resourceFile;
@@ -429,5 +440,38 @@ public class UserInteractionService {
                        .map(SlackModalIn::getActions)
                        .filter(not(CollectionUtils::isEmpty))
                        .map(actions -> actions.get(0));
+    }
+
+    public void validateSignature(Long timestamp, String signature, String bodyString) {
+        boolean isValid = calculateSha256("v0:" + timestamp + ":" + bodyString)
+            .map(hashedString -> ("v0=" + hashedString).equalsIgnoreCase(signature))
+            .orElse(false);
+
+        if (isValid) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+    }
+
+    private Optional<String> calculateSha256(String message) {
+        try {
+            Mac mac = Mac.getInstance(SHA_256_ALGORITHM);
+            mac.init(new SecretKeySpec(propertyVault.getSlack().getSigningSecret().getBytes(UTF_8), SHA_256_ALGORITHM));
+            return Optional.of(DatatypeConverter.printHexBinary(mac.doFinal(message.getBytes(UTF_8))));
+        } catch (Exception e) {
+            log.error("Failed to calculate hmac-sha256", e);
+            return Optional.empty();
+        }
+    }
+
+    public String pause(String userId) {
+        return slackClient.pause(userId);
+    }
+
+    public String resume(String userId) {
+        return slackClient.resume(userId);
+    }
+
+    public String purge(String userId) {
+        return slackClient.purge(userId);
     }
 }
