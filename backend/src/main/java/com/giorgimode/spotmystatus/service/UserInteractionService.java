@@ -1,5 +1,6 @@
 package com.giorgimode.spotmystatus.service;
 
+import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_APP_URI;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_EMOJI_INPUT;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_EMOJI_LIST;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_HOURS_INPUT;
@@ -13,6 +14,7 @@ import static com.giorgimode.spotmystatus.helpers.SpotConstants.EMOJI_REGEX;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.PAYLOAD_TYPE_BLOCK_ACTIONS;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.PAYLOAD_TYPE_SUBMISSION;
 import static com.giorgimode.spotmystatus.helpers.SpotUtil.OBJECT_MAPPER;
+import static com.giorgimode.spotmystatus.helpers.SpotUtil.baseUri;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.toList;
@@ -104,6 +106,8 @@ public class UserInteractionService {
                 prepareHoursBlock(cachedUser, block);
             } else if (BLOCK_ID_SPOTIFY_DEVICES.equals(block.getBlockId())) {
                 prepareSpotifyDevicesBlock(cachedUser, block);
+            } else if (BLOCK_ID_APP_URI.equals(block.getBlockId())) {
+                block.getText().setTextValue(String.format("<%s/|_*SpotMyStatus Home*_>", baseUri(spotMyStatusProperties.getRedirectUriScheme())));
             }
         });
 

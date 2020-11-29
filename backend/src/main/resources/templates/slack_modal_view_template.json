@@ -222,16 +222,6 @@
       "type": "divider"
     },
     {
-      "type": "section",
-      "text": {
-        "type": "mrkdwn",
-        "text": "<http://spotmystatus.giomo.de/|_*SpotMyStatus Home*_>"
-      }
-    },
-    {
-      "type": "divider"
-    },
-    {
       "type": "divider"
     },
     {
@@ -270,6 +260,17 @@
           "style": "danger"
         }
       ]
+    },
+    {
+      "type": "divider"
+    },
+    {
+      "type": "section",
+      "block_id": "spotmystatus_uri_block",
+      "text": {
+        "type": "mrkdwn",
+        "text": "<http://spotmystatus.giomo.de/|_*SpotMyStatus Home*_>"
+      }
     }
   ]
 }

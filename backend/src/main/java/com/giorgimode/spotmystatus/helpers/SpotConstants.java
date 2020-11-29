@@ -20,6 +20,7 @@ public final class SpotConstants {
     public static final String BLOCK_ID_PURGE = "purge_block";
     public static final String BLOCK_ID_INVALID_HOURS = "invalid_hours_block";
     public static final String BLOCK_ID_INVALID_EMOJI = "invalid_emoji_block";
+    public static final String BLOCK_ID_APP_URI = "spotmystatus_uri_block";
     public static final String EMOJI_REGEX = "^[a-z0-9-_]+$";
     public static final String SLACK_REDIRECT_PATH = "/slack/redirect"; //todo
     public static final String SPOTIFY_REDIRECT_PATH = "/spotify/redirect";
