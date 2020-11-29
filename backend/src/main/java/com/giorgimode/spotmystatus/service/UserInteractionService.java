@@ -24,7 +24,6 @@ import com.giorgimode.spotmystatus.helpers.PropertyVault;
 import com.giorgimode.spotmystatus.helpers.SpotMyStatusProperties;
 import com.giorgimode.spotmystatus.model.CachedUser;
 import com.giorgimode.spotmystatus.model.SpotifyItem;
-import com.giorgimode.spotmystatus.model.modals.Accessory;
 import com.giorgimode.spotmystatus.model.modals.Action;
 import com.giorgimode.spotmystatus.model.modals.Block;
 import com.giorgimode.spotmystatus.model.modals.Element;
@@ -100,7 +99,7 @@ public class UserInteractionService {
             } else if (BLOCK_ID_EMOJI_LIST.equals(block.getBlockId())) {
                 prepareEmojiListBlock(cachedUser, block.getElement());
             } else if (BLOCK_ID_SYNC_TOGGLE.equals(block.getBlockId())) {
-                prepareSyncToggleBlock(cachedUser, block.getAccessory());
+                prepareSyncToggleBlock(cachedUser, block.getElement());
             } else if (BLOCK_ID_HOURS_INPUT.equals(block.getBlockId())) {
                 prepareHoursBlock(cachedUser, block);
             } else if (BLOCK_ID_SPOTIFY_DEVICES.equals(block.getBlockId())) {
@@ -153,9 +152,9 @@ public class UserInteractionService {
         }
     }
 
-    private void prepareSyncToggleBlock(CachedUser cachedUser, Accessory accessory) {
+    private void prepareSyncToggleBlock(CachedUser cachedUser, Element element) {
         if (cachedUser.isDisabled()) {
-            accessory.setInitialOptions(null);
+            element.setInitialOptions(null);
         }
     }
 
@@ -417,7 +416,7 @@ public class UserInteractionService {
         if (validationError.isEmpty()) {
             updateEmojiList(newEmojiInput, block);
         }
-        // resetting action id forces Slack to recreate the accessory
+        // resetting action id forces Slack to recreate the element
         block.getElement().setActionId(null);
     }
 

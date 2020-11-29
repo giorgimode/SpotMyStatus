@@ -13,7 +13,6 @@ public class Block {
 
     private String type;
     private Text text;
-    private Accessory accessory;
 
     @JsonProperty("block_id")
     private String blockId;
