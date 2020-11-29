@@ -11,14 +11,13 @@
   },
   "blocks": [
     {
-      "type": "input",
+      "type": "section",
       "block_id": "sync_toggle_block",
-      "optional": true,
-      "label": {
-        "type": "plain_text",
+      "text": {
+        "type": "mrkdwn",
         "text": " "
       },
-      "element": {
+      "accessory": {
         "type": "checkboxes",
         "options": [
           {
