@@ -5,11 +5,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.giorgimode.spotmystatus.model.CachedUser;
 import com.giorgimode.spotmystatus.persistence.User;
 import java.util.Map;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @Slf4j
-public class SpotUtil {
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+public final class SpotUtil {
 
     public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 

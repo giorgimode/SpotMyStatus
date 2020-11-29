@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -25,20 +24,22 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 public class SpotifyClient {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final SpotifyAuthClient spotifyAuthClient;
+    private final UserRepository userRepository;
+    private final RestTemplate restTemplate;
+    private final LoadingCache<String, CachedUser> userCache;
+    private final String spotifyApiUri;
 
-    @Autowired
-    private RestTemplate restTemplate;
+    public SpotifyClient(SpotifyAuthClient spotifyAuthClient, UserRepository userRepository,
+        RestTemplate restTemplate, LoadingCache<String, CachedUser> userCache,
+        @Value("${spotmystatus.spotify_api_uri}") String spotifyApiUri) {
 
-    @Value("${spotmystatus.spotify_api_uri}")
-    private String spotifyApiUri;
-
-    @Autowired
-    private LoadingCache<String, CachedUser> userCache;
-
-    @Autowired
-    private SpotifyAuthClient spotifyAuthClient;
+        this.spotifyAuthClient = spotifyAuthClient;
+        this.userRepository = userRepository;
+        this.restTemplate = restTemplate;
+        this.userCache = userCache;
+        this.spotifyApiUri = spotifyApiUri;
+    }
 
     public String requestAuthorization(UUID state) {
         return spotifyAuthClient.requestAuthorization(state);

@@ -10,7 +10,6 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -20,23 +19,23 @@ import org.springframework.web.client.HttpClientErrorException;
 @Slf4j
 public class CacheConfiguration {
 
-    @Autowired
-    private UserRepository userRepository;
-
     @Bean
-    public LoadingCache<String, CachedUser> userCache(SpotifyAuthClient spotifyAuthClient) {
+    public LoadingCache<String, CachedUser> userCache(SpotifyAuthClient spotifyAuthClient, UserRepository userRepository) {
         LoadingCache<String, CachedUser> cache = Caffeine.newBuilder()
                                                          .maximumSize(10_000)
-                                                         .build(key -> loadUser(key, spotifyAuthClient));
-        populateCache(cache, spotifyAuthClient);
+                                                         .build(key -> loadUser(key, spotifyAuthClient, userRepository));
+        populateCache(cache, spotifyAuthClient, userRepository);
         return cache;
     }
 
 
-    private void populateCache(LoadingCache<String, CachedUser> cache, SpotifyAuthClient spotifyAuthClient) {
+    private void populateCache(LoadingCache<String, CachedUser> cache,
+        SpotifyAuthClient spotifyAuthClient,
+        UserRepository userRepository) {
+
         userRepository.findAll()
                       .stream()
-                      .map(user -> cacheUser(spotifyAuthClient, user))
+                      .map(user -> cacheUser(spotifyAuthClient, user, userRepository))
                       .filter(Objects::nonNull)
                       .forEach(cachedUser -> cache.put(cachedUser.getId(), cachedUser));
     }
@@ -47,13 +46,19 @@ public class CacheConfiguration {
         return newAccessToken.getAccessToken();
     }
 
-    private CachedUser loadUser(String key, SpotifyAuthClient spotifyAuthClient) {
-        return userRepository.findById(key)
-                             .map(user -> cacheUser(spotifyAuthClient, user))
+    private CachedUser loadUser(String userId,
+        SpotifyAuthClient spotifyAuthClient,
+        UserRepository userRepository) {
+
+        return userRepository.findById(userId)
+                             .map(user -> cacheUser(spotifyAuthClient, user, userRepository))
                              .orElse(null);
     }
 
-    private CachedUser cacheUser(SpotifyAuthClient spotifyAuthClient, User user) {
+    private CachedUser cacheUser(SpotifyAuthClient spotifyAuthClient,
+        User user,
+        UserRepository userRepository) {
+
         try {
             return SpotUtil.toCachedUser(user, getAccessToken(spotifyAuthClient, user));
         } catch (HttpClientErrorException ex) {

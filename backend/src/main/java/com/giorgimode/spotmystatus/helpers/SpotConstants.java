@@ -1,11 +1,11 @@
 package com.giorgimode.spotmystatus.helpers;
 
 import java.util.List;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class SpotConstants {
-
-    private SpotConstants() {
-    }
 
     public static final String PAYLOAD_TYPE_BLOCK_ACTIONS = "block_actions";
     public static final String ACTION_START_HOUR = "start_hour-action";
@@ -21,7 +21,7 @@ public final class SpotConstants {
     public static final String BLOCK_ID_INVALID_HOURS = "invalid_hours_block";
     public static final String BLOCK_ID_INVALID_EMOJI = "invalid_emoji_block";
     public static final String EMOJI_REGEX = "^[a-z0-9-_]+$";
-    public static final String SLACK_REDIRECT_PATH = "/slack/redirect";
+    public static final String SLACK_REDIRECT_PATH = "/slack/redirect"; //todo
     public static final String SPOTIFY_REDIRECT_PATH = "/spotify/redirect";
     public static final String SPOTIFY_SCOPE_USER_PLAYBACK = "user-read-playback-state";
     public static final List<String> SLACK_PROFILE_SCOPES = List.of("users:read", "users.profile:read", "users.profile:write");

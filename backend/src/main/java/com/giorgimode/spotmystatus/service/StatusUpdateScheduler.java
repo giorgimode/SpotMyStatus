@@ -15,7 +15,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -23,33 +22,38 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class StatusUpdateScheduler {
 
-    @Autowired
-    private LoadingCache<String, CachedUser> userCache;
+    private final ExecutorService executor;
 
-    @Autowired
-    private SlackClient slackClient;
+    private final LoadingCache<String, CachedUser> userCache;
+    private final SlackClient slackClient;
+    private final SpotifyClient spotifyClient;
+    private final SpotMyStatusProperties spotMyStatusProperties;
 
-    @Autowired
-    private SpotifyClient spotifyClient;
-
-    @Autowired
-    private SpotMyStatusProperties spotMyStatusProperties;
-
-    private final ExecutorService service = Executors.newCachedThreadPool();
+    public StatusUpdateScheduler(LoadingCache<String, CachedUser> userCache,
+        SlackClient slackClient,
+        SpotifyClient spotifyClient, SpotMyStatusProperties spotMyStatusProperties) {
+        this.userCache = userCache;
+        this.slackClient = slackClient;
+        this.spotifyClient = spotifyClient;
+        this.spotMyStatusProperties = spotMyStatusProperties;
+        executor = Executors.newCachedThreadPool();
+    }
 
     @Scheduled(fixedDelayString = "${spotmystatus.polling_rate}")
     public void scheduleFixedDelayTask() {
         try {
-            userCache.asMap().values().forEach(cachedUser -> {
-                try {
-                    CompletableFuture<Void> future = CompletableFuture.runAsync(() -> pollUser(cachedUser), service);
-                    future.completeOnTimeout(null, spotMyStatusProperties.getTimeout(), TimeUnit.MILLISECONDS);
-                } catch (Exception e) {
-                    log.error("Polling user {} timed out", cachedUser.getId());
-                }
-            });
+            userCache.asMap().values().forEach(this::pollUserAsync);
         } catch (Exception e) {
-            log.error("Failed offlineEnd poll users", e);
+            log.error("Failed to poll users", e);
+        }
+    }
+
+    private void pollUserAsync(CachedUser cachedUser) {
+        try {
+            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> pollUser(cachedUser), executor);
+            future.completeOnTimeout(null, spotMyStatusProperties.getTimeout(), TimeUnit.MILLISECONDS);
+        } catch (Exception e) {
+            log.error("Polling user {} timed out", cachedUser.getId());
         }
     }
 

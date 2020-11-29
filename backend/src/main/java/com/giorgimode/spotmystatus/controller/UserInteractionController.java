@@ -5,11 +5,10 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import com.giorgimode.spotmystatus.helpers.SlackModalConverter;
 import com.giorgimode.spotmystatus.helpers.SpotMyStatusProperties;
 import com.giorgimode.spotmystatus.model.SlackEvent;
-import com.giorgimode.spotmystatus.model.modals.SlackModalIn;
-import com.giorgimode.spotmystatus.model.modals.SlackModalOut;
+import com.giorgimode.spotmystatus.model.modals.InteractionModal;
+import com.giorgimode.spotmystatus.model.modals.InvocationModal;
 import com.giorgimode.spotmystatus.service.UserInteractionService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
@@ -23,11 +22,14 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 public class UserInteractionController {
 
-    @Autowired
-    private UserInteractionService userInteractionService;
+    private final UserInteractionService userInteractionService;
+    private final SpotMyStatusProperties configProperties;
 
-    @Autowired
-    private SpotMyStatusProperties configProperties;
+    public UserInteractionController(UserInteractionService userInteractionService,
+        SpotMyStatusProperties configProperties) {
+        this.userInteractionService = userInteractionService;
+        this.configProperties = configProperties;
+    }
 
     @PostMapping(value = "/slack/command", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public String receiveSlackCommand(
@@ -58,12 +60,16 @@ public class UserInteractionController {
         }
         if ("purge".equalsIgnoreCase(command)) {
             log.debug("Removing all data for user {}", userId);
-            return userInteractionService.purge(userId);
+            return userInteractionService.purge(userId) + signupMessage();
         }
 
         return "- `pause`/`play` to temporarily pause or resume status updates"
             + "\n- `purge` to purge all user data. Fresh signup will be needed to use the app again"
-            + "\n- visit the app home page at " + baseUri(configProperties.getRedirectUriScheme());
+            + "\n- " + signupMessage();
+    }
+
+    private String signupMessage() {
+        return "Visit the app home page at " + baseUri(configProperties.getRedirectUriScheme());
     }
 
     @PostMapping(value = "/slack/events", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -73,13 +79,13 @@ public class UserInteractionController {
     }
 
     @PostMapping(value = "/slack/interaction", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-    public SlackModalOut handleInteraction(@RequestParam("payload") SlackModalIn payload, @RequestParam("payload") String payloadRaw) {
+    public InteractionModal handleInteraction(@RequestParam("payload") InvocationModal payload, @RequestParam("payload") String payloadRaw) {
         log.debug("Received interaction: {}", payloadRaw);
         return userInteractionService.handleUserInteraction(payload);
     }
 
     @InitBinder
     public void initBinder(WebDataBinder binder) {
-        binder.registerCustomEditor(SlackModalIn.class, new SlackModalConverter());
+        binder.registerCustomEditor(InvocationModal.class, new SlackModalConverter());
     }
 }

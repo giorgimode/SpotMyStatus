@@ -30,8 +30,6 @@ import java.util.function.Supplier;
 import javax.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -47,31 +45,27 @@ public class SlackClient {
     private static final String MISSING_USER_ERROR = "User not found";
     private static final String SPOTIFY_INVALIDATED_MESSAGE = "Spotify token has been invalidated. Please authorize again";
 
-    @Autowired
-    private RestTemplate restTemplate;
+    private final RestTemplate restTemplate;
+    private final UserRepository userRepository;
+    private final SpotMyStatusProperties configProperties;
+    private final LoadingCache<String, CachedUser> userCache;
+    private final PropertyVault propertyVault;
 
-    @Value("${secret.slack.client_id}")
-    private String slackClientId;
+    public SlackClient(RestTemplate restTemplate, UserRepository userRepository,
+        SpotMyStatusProperties configProperties, LoadingCache<String, CachedUser> userCache,
+        PropertyVault propertyVault) {
 
-    @Value("${secret.slack.client_secret}")
-    private String slackClientSecret;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private SpotMyStatusProperties configProperties;
-
-    @Autowired
-    private LoadingCache<String, CachedUser> userCache;
-
-    @Autowired
-    private PropertyVault propertyVault;
+        this.restTemplate = restTemplate;
+        this.userRepository = userRepository;
+        this.configProperties = configProperties;
+        this.userCache = userCache;
+        this.propertyVault = propertyVault;
+    }
 
     public String requestAuthorization() {
         return RestHelper.builder()
                          .withBaseUrl(configProperties.getSlackUri() + "/oauth/v2/authorize")
-                         .withQueryParam("client_id", slackClientId)
+                         .withQueryParam("client_id", propertyVault.getSlack().getClientId())
                          .withQueryParam("user_scope", String.join(",", SLACK_PROFILE_SCOPES))
                          .withQueryParam("scope", String.join(",", SLACK_BOT_SCOPES))
                          .withQueryParam("redirect_uri", getRedirectUri())
@@ -82,8 +76,8 @@ public class SlackClient {
     public UUID updateAuthToken(String slackCode) {
         SlackToken slackToken = tryCall(() -> RestHelper.builder()
                                                         .withBaseUrl(configProperties.getSlackUri() + "/api/oauth.v2.access")
-                                                        .withQueryParam("client_id", slackClientId)
-                                                        .withQueryParam("client_secret", slackClientSecret)
+                                                        .withQueryParam("client_id", propertyVault.getSlack().getClientId())
+                                                        .withQueryParam("client_secret", propertyVault.getSlack().getClientSecret())
                                                         .withQueryParam("code", slackCode)
                                                         .withQueryParam("redirect_uri", getRedirectUri())
                                                         .get(restTemplate, SlackToken.class));
@@ -288,6 +282,23 @@ public class SlackClient {
         return statusHasBeenManuallyChanged;
     }
 
+    public String createModal(Object body) {
+        return notifyUser(body, "open");
+    }
+
+    public String updateModal(Object body) {
+        return notifyUser(body, "update");
+    }
+
+    private String notifyUser(Object body, final String viewAction) {
+        //noinspection deprecation: Slack issues warning on missing charset
+        return RestHelper.builder()
+                         .withBaseUrl(configProperties.getSlackUri() + "/api/views." + viewAction)
+                         .withBearer(propertyVault.getSlack().getBotToken())
+                         .withContentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
+                         .withBody(body)
+                         .postAndGetBody(restTemplate, String.class);
+    }
 
     public String pause(String userId) {
         return Optional.ofNullable(userCache.getIfPresent(userId))
@@ -321,9 +332,9 @@ public class SlackClient {
         return Optional.ofNullable(userCache.getIfPresent(userId))
                        .map(cachedUser -> {
                            cleanStatus(cachedUser);
-                           userRepository.findById(userId).ifPresent(user -> userRepository.delete(user));
+                           userRepository.findById(userId).ifPresent(userRepository::delete);
                            userCache.invalidate(userId);
-                           return "User data has been purged";
+                           return "User data has been purged. ";
                        })
                        .orElse(MISSING_USER_ERROR);
     }

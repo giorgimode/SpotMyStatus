@@ -11,7 +11,6 @@ import com.giorgimode.spotmystatus.helpers.SpotMyStatusProperties;
 import com.giorgimode.spotmystatus.model.SpotifyTokenResponse;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -24,14 +23,18 @@ import org.springframework.web.server.ResponseStatusException;
 @Slf4j
 public class SpotifyAuthClient {
 
-    @Autowired
-    private PropertyVault propertyVault;
+    private final PropertyVault propertyVault;
+    private final RestTemplate restTemplate;
+    private final SpotMyStatusProperties configProperties;
 
-    @Autowired
-    private RestTemplate restTemplate;
+    public SpotifyAuthClient(PropertyVault propertyVault,
+        RestTemplate restTemplate,
+        SpotMyStatusProperties configProperties) {
 
-    @Autowired
-    private SpotMyStatusProperties configProperties;
+        this.propertyVault = propertyVault;
+        this.restTemplate = restTemplate;
+        this.configProperties = configProperties;
+    }
 
     public SpotifyTokenResponse getSpotifyTokens(String code) {
         OauthProperties authProps = propertyVault.getSpotify();

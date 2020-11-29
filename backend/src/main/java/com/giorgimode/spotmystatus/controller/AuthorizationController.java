@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.util.UUID;
 import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,11 +19,13 @@ public class AuthorizationController {
 
     private static final String ERROR_PAGE = "/error.html";
 
-    @Autowired
-    private SpotifyClient spotifyClient;
+    private final SpotifyClient spotifyClient;
+    private final SlackClient slackClient;
 
-    @Autowired
-    private SlackClient slackClient;
+    public AuthorizationController(SpotifyClient spotifyClient, SlackClient slackClient) {
+        this.spotifyClient = spotifyClient;
+        this.slackClient = slackClient;
+    }
 
     @RequestMapping("/start")
     public void startNewUser(HttpServletResponse httpServletResponse) {

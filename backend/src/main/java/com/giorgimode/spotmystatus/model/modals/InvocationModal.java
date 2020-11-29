@@ -9,12 +9,12 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Data
-public class SlackModalIn {
+public class InvocationModal {
 
     @JsonProperty("trigger_id")
     private String triggerId;
     private String type;
     private User user;
-    private SlackModalView view;
+    private ModalView view;
     private List<Action> actions;
 }

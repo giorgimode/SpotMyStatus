@@ -8,13 +8,13 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Data
-public class SlackModalOut {
+public class InteractionModal {
 
 
     @JsonProperty("view_id")
     private String viewId;
     private String hash;
-    private SlackModalView view;
+    private ModalView view;
 
     @JsonProperty("response_action")
     private String responseAction;
