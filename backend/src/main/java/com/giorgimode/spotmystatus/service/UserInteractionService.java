@@ -89,8 +89,8 @@ public class UserInteractionService {
     @Value("${secret.slack.bot_token}")
     private String slackBotToken;
 
-    public void invalidateAndNotifyUser(String userId) {
-        slackClient.invalidateAndNotifyUser(userId);
+    public boolean userExists(String userId) {
+        return userCache.getIfPresent(userId) != null;
     }
 
     public void handleTrigger(String userId, String triggerId) {

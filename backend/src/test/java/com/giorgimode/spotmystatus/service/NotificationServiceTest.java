@@ -1,6 +1,5 @@
 package com.giorgimode.spotmystatus.service;
 
-import static org.mockito.Mockito.verify;
 import com.giorgimode.spotmystatus.helpers.PropertyVault;
 import com.giorgimode.spotmystatus.model.CachedUser;
 import com.giorgimode.spotmystatus.persistence.UserRepository;
@@ -43,8 +42,6 @@ class NotificationServiceTest {
 
     @Test
     void shouldInvalidateAndNotifyUser() {
-        String userId = "test_user123";
-        notificationService.invalidateAndNotifyUser(userId);
-        verify(slackPollingClient).invalidateAndNotifyUser(userId);
+
     }
 }

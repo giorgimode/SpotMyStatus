@@ -2,8 +2,10 @@ package com.giorgimode.spotmystatus;
 
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.SLACK_REDIRECT_PATH;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.SPOTIFY_REDIRECT_PATH;
+import static com.giorgimode.spotmystatus.helpers.SpotUtil.baseUri;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import com.giorgimode.spotmystatus.helpers.SlackModalConverter;
+import com.giorgimode.spotmystatus.helpers.SpotMyStatusProperties;
 import com.giorgimode.spotmystatus.model.SlackEvent;
 import com.giorgimode.spotmystatus.model.modals.SlackModalIn;
 import com.giorgimode.spotmystatus.model.modals.SlackModalOut;
@@ -39,6 +41,9 @@ public class SpotMyStatusController {
 
     @Autowired
     private UserInteractionService userInteractionService;
+
+    @Autowired
+    private SpotMyStatusProperties configProperties;
 
     @RequestMapping("/start")
     public void startNewUser(HttpServletResponse httpServletResponse) {
@@ -96,6 +101,10 @@ public class SpotMyStatusController {
 
         log.trace("Received a slack command {}", bodyString);
         slackPollingClient.validateSignature(timestamp, signature, bodyString);
+        if (!userInteractionService.userExists(userId)) {
+            return "User not found. Please sign up at " + baseUri(configProperties.getRedirectUriScheme()) + "/start";
+        }
+
         if (isBlank(command)) {
             userInteractionService.handleTrigger(userId, triggerId);
             return null;
@@ -114,7 +123,8 @@ public class SpotMyStatusController {
         }
 
         return "- `pause`/`play` to temporarily pause or resume status updates"
-            + "\n- `purge` to purge all user data. Fresh signup will be needed to use the app again";
+            + "\n- `purge` to purge all user data. Fresh signup will be needed to use the app again"
+            + "\n- visit the app home page at " + baseUri(configProperties.getRedirectUriScheme());
     }
 
     @PostMapping(value = "/slack/events", consumes = MediaType.APPLICATION_JSON_VALUE)

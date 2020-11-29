@@ -267,7 +267,7 @@ public class SlackClient {
     }
 
     private String createNotificationText() {
-        return "Spotify token has been invalidated. Please authorize again <" + configProperties.getSignUpUri() + "|here>";
+        return "Spotify token has been invalidated. Please authorize again";
     }
 
     public boolean statusHasBeenManuallyChanged(CachedUser user) {
