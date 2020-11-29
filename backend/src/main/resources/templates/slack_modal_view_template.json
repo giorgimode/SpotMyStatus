@@ -99,13 +99,13 @@
       }
     },
     {
-      "type": "section",
+      "type": "input",
       "block_id": "emoji_list_block",
-      "text": {
-        "type": "mrkdwn",
+      "label": {
+        "type": "plain_text",
         "text": " "
       },
-      "accessory": {
+      "element": {
         "type": "multi_static_select",
         "placeholder": {
           "type": "plain_text",

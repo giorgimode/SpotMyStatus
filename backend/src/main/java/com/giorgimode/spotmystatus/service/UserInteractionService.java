@@ -95,13 +95,12 @@ public class UserInteractionService {
         CachedUser cachedUser = getCachedUser(userId);
         ModalView modalViewTemplate = getModalViewTemplate();
         modalViewTemplate.getBlocks().forEach(block -> {
-            Accessory accessory = block.getAccessory();
             if (BLOCK_ID_SPOTIFY_ITEMS.equals(block.getBlockId())) {
                 prepareSpotifyItemsBlock(cachedUser, block);
             } else if (BLOCK_ID_EMOJI_LIST.equals(block.getBlockId())) {
-                prepareEmojiListBlock(cachedUser, accessory);
+                prepareEmojiListBlock(cachedUser, block.getElement());
             } else if (BLOCK_ID_SYNC_TOGGLE.equals(block.getBlockId())) {
-                prepareSyncToggleBlock(cachedUser, accessory);
+                prepareSyncToggleBlock(cachedUser, block.getAccessory());
             } else if (BLOCK_ID_HOURS_INPUT.equals(block.getBlockId())) {
                 prepareHoursBlock(cachedUser, block);
             } else if (BLOCK_ID_SPOTIFY_DEVICES.equals(block.getBlockId())) {
@@ -160,13 +159,13 @@ public class UserInteractionService {
         }
     }
 
-    private void prepareEmojiListBlock(CachedUser cachedUser, Accessory accessory) {
+    private void prepareEmojiListBlock(CachedUser cachedUser, Element element) {
         List<Option> emojiOptions = getUserEmojis(cachedUser)
             .stream()
             .map(emoji -> createOption(emoji, ":" + emoji + ":"))
             .collect(toList());
-        accessory.setOptions(emojiOptions);
-        accessory.setInitialOptions(emojiOptions);
+        element.setOptions(emojiOptions);
+        element.setInitialOptions(emojiOptions);
     }
 
     private void prepareSpotifyItemsBlock(CachedUser cachedUser, Block block) {
@@ -235,7 +234,7 @@ public class UserInteractionService {
                 if (isNotBlank(emojiStateValue.getType())) {
                     updateEmojis(cachedUser, emojiStateValue.getSelectedOptions());
                 } else {
-                    updateEmojis(cachedUser, block.getAccessory().getInitialOptions());
+                    updateEmojis(cachedUser, block.getElement().getInitialOptions());
                 }
             }
         }
@@ -409,17 +408,17 @@ public class UserInteractionService {
             // if state doesn't change in emoji list block, slack delivers empty block
             // 'type' field should be present even if user removes all emojis.
             // That's how we can differentiate user removing all emojis from a no input and set previously present initial options
-            selectedOptions = block.getAccessory().getInitialOptions();
+            selectedOptions = block.getElement().getInitialOptions();
         } else {
             selectedOptions = selectedEmojiBlock.getSelectedOptions();
         }
 
-        block.getAccessory().setInitialOptions(selectedOptions);
+        block.getElement().setInitialOptions(selectedOptions);
         if (validationError.isEmpty()) {
             updateEmojiList(newEmojiInput, block);
         }
         // resetting action id forces Slack to recreate the accessory
-        block.getAccessory().setActionId(null);
+        block.getElement().setActionId(null);
     }
 
     Optional<String> getValidationError(String newEmojiInput) {
@@ -437,11 +436,11 @@ public class UserInteractionService {
               .map(emoji -> emoji.trim().replace(":", ""))
               .map(emoji -> createOption(emoji, ":" + emoji + ":"))
               .forEach(emojiOption -> {
-                  if (!block.getAccessory().getOptions().contains(emojiOption)) {
-                      block.getAccessory().getOptions().add(emojiOption);
+                  if (!block.getElement().getOptions().contains(emojiOption)) {
+                      block.getElement().getOptions().add(emojiOption);
                   }
-                  if (!block.getAccessory().getInitialOptions().contains(emojiOption)) {
-                      block.getAccessory().getInitialOptions().add(emojiOption);
+                  if (!block.getElement().getInitialOptions().contains(emojiOption)) {
+                      block.getElement().getInitialOptions().add(emojiOption);
                   }
               });
     }
