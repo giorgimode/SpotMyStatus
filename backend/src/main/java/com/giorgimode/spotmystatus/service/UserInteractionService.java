@@ -22,7 +22,6 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
-import com.giorgimode.spotmystatus.exceptions.UserNotFoundException;
 import com.giorgimode.spotmystatus.helpers.PropertyVault;
 import com.giorgimode.spotmystatus.helpers.SpotMyStatusProperties;
 import com.giorgimode.spotmystatus.model.CachedUser;
@@ -220,6 +219,9 @@ public class UserInteractionService {
 
     private InteractionModal handleSubmission(InvocationModal payload) {
         CachedUser cachedUser = getCachedUser(getUserId(payload));
+        if (cachedUser == null) {
+            return null;
+        }
         List<Block> blocks = payload.getView().getBlocks();
         log.debug("User {} submitted the form", cachedUser.getId());
         boolean disableSync = getStateValue(payload, BLOCK_ID_SYNC_TOGGLE).getSelectedOptions().isEmpty();
@@ -357,11 +359,7 @@ public class UserInteractionService {
     }
 
     private CachedUser getCachedUser(String userId) {
-        CachedUser cachedUser = userCache.getIfPresent(userId);
-        if (cachedUser == null) {
-            throw new UserNotFoundException("No user found in cache");
-        }
-        return cachedUser;
+        return userCache.getIfPresent(userId);
     }
 
     public void updateSpotifyItems(CachedUser cachedUser, List<Option> selectedSpotifyOptions) {
