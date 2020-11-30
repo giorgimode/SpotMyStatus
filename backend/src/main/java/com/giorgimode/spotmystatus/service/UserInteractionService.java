@@ -11,6 +11,7 @@ import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_SPOTIFY
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_SPOTIFY_ITEMS;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_SYNC_TOGGLE;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.EMOJI_REGEX;
+import static com.giorgimode.spotmystatus.helpers.SpotConstants.MODAL_FOOTER_MESSAGE;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.PAYLOAD_TYPE_BLOCK_ACTIONS;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.PAYLOAD_TYPE_SUBMISSION;
 import static com.giorgimode.spotmystatus.helpers.SpotUtil.OBJECT_MAPPER;
@@ -108,7 +109,7 @@ public class UserInteractionService {
             } else if (BLOCK_ID_SPOTIFY_DEVICES.equals(block.getBlockId())) {
                 prepareSpotifyDevicesBlock(cachedUser, block);
             } else if (BLOCK_ID_APP_URI.equals(block.getBlockId())) {
-                block.getText().setTextValue(String.format("<%s/|_*SpotMyStatus Home*_>", baseUri(spotMyStatusProperties.getRedirectUriScheme())));
+                block.getElements().get(0).setText(String.format(MODAL_FOOTER_MESSAGE, baseUri(spotMyStatusProperties.getRedirectUriScheme())));
             }
         });
 
@@ -123,7 +124,7 @@ public class UserInteractionService {
         if (PAYLOAD_TYPE_BLOCK_ACTIONS.equals(payload.getType())) {
             getUserAction(payload).ifPresent(userAction -> handleUserAction(payload, userAction));
         } else if (PAYLOAD_TYPE_SUBMISSION.equals(payload.getType())) {
-            return handleSubmission(payload); //todo return message
+            return handleSubmission(payload);
         }
         return null;
     }

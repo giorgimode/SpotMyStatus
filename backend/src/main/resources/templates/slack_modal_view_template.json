@@ -264,12 +264,14 @@
       "type": "divider"
     },
     {
-      "type": "section",
+      "type": "context",
       "block_id": "spotmystatus_uri_block",
-      "text": {
-        "type": "mrkdwn",
-        "text": "<http://spotmystatus.giomo.de/|_*SpotMyStatus Home*_>"
-      }
+      "elements": [
+        {
+          "type": "mrkdwn",
+          "text": "<http://spotmystatus.giomo.de/|_*SpotMyStatus Home*_>"
+        }
+      ]
     }
   ]
 }
