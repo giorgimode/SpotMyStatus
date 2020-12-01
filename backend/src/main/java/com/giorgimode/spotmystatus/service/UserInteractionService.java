@@ -3,10 +3,12 @@ package com.giorgimode.spotmystatus.service;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_APP_URI;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_EMOJI_INPUT;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_EMOJI_LIST;
+import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_FIRST_DIVIDER;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_HOURS_INPUT;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_INVALID_EMOJI;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_INVALID_HOURS;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_PURGE;
+import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_SAVE_CHANGES;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_SPOTIFY_DEVICES;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_SPOTIFY_ITEMS;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_SYNC_TOGGLE;
@@ -29,6 +31,7 @@ import com.giorgimode.spotmystatus.model.SpotifyItem;
 import com.giorgimode.spotmystatus.model.modals.Accessory;
 import com.giorgimode.spotmystatus.model.modals.Action;
 import com.giorgimode.spotmystatus.model.modals.Block;
+import com.giorgimode.spotmystatus.model.modals.ConfirmDialog;
 import com.giorgimode.spotmystatus.model.modals.Element;
 import com.giorgimode.spotmystatus.model.modals.InteractionModal;
 import com.giorgimode.spotmystatus.model.modals.InvocationModal;
@@ -66,6 +69,8 @@ import org.springframework.web.server.ResponseStatusException;
 public class UserInteractionService {
 
     private static final String SHA_256_ALGORITHM = "HmacSHA256";
+    private static final String SLACK_VIEW_UPDATE_URI = "/api/views.update";
+    private static final String PLAIN_TEXT = "plain_text";
 
     private final UserRepository userRepository;
     private final SpotMyStatusProperties spotMyStatusProperties;
@@ -208,7 +213,7 @@ public class UserInteractionService {
         Option option = new Option();
         option.setValue(itemValue);
         Text text = new Text();
-        text.setType("plain_text");
+        text.setType(PLAIN_TEXT);
         text.setTextValue(itemText);
         option.setText(text);
         return option;
@@ -286,6 +291,8 @@ public class UserInteractionService {
             slackClient.purge(userId);
         } else if (BLOCK_ID_HOURS_INPUT.equals(userAction.getBlockId())) {
             handleHoursInput(payload, blocks);
+        } else if (BLOCK_ID_SAVE_CHANGES.equals(userAction.getBlockId())) {
+            //todo save changes or add warning
         }
     }
 
@@ -303,7 +310,7 @@ public class UserInteractionService {
     private void removeWarningBlock(List<Block> blocks, InteractionModal slackModal) {
         boolean removed = blocks.removeIf(block -> BLOCK_ID_INVALID_HOURS.equals(block.getBlockId()));
         if (removed) {
-            String response = slackClient.notifyUser("/api/views.update", slackModal);
+            String response = slackClient.notifyUser(SLACK_VIEW_UPDATE_URI, slackModal);
             log.trace("Received warning update response: {}", response);
         }
     }
@@ -315,7 +322,7 @@ public class UserInteractionService {
                 blocks.add(i + 1, block);
             }
         }
-        String response = slackClient.notifyUser("/api/views.update", slackModal);
+        String response = slackClient.notifyUser(SLACK_VIEW_UPDATE_URI, slackModal);
         log.trace("Received response on warning block: {}", response);
     }
 
@@ -404,7 +411,7 @@ public class UserInteractionService {
             }
         }
         InteractionModal slackModal = createModalResponse(payload);
-        String response = slackClient.notifyUser("/api/views.update", slackModal);
+        String response = slackClient.notifyUser(SLACK_VIEW_UPDATE_URI, slackModal);
         log.trace("Received response on emoji add: {}", response);
     }
 
@@ -515,13 +522,47 @@ public class UserInteractionService {
     }
 
     public void updateHomeTab(String userId) {
-        List<Block> viewBlocks = createModalView(userId).getBlocks();
+        //todo add view if user is not in the system
+        List<Block> blocks = createModalView(userId).getBlocks();
+        addSubmitButton(blocks);
         ModalView modalView = new ModalView();
-        modalView.setBlocks(viewBlocks);
+        modalView.setBlocks(blocks);
         modalView.setType("home");
         InteractionModal homeModal = new InteractionModal();
         homeModal.setUserId(userId);
         homeModal.setView(modalView);
         slackClient.notifyUser("/api/views.publish", homeModal);
+    }
+
+    private void addSubmitButton(List<Block> blocks) {
+        for (int i = 0; i < blocks.size(); i++) {
+            if (BLOCK_ID_FIRST_DIVIDER.equals(blocks.get(i).getBlockId())) {
+                Block saveBlock = new Block();
+                saveBlock.setType("actions");
+                saveBlock.setBlockId(BLOCK_ID_APP_URI);
+                Element button = new Element();
+                button.setType("button");
+                button.setStyle("primary");
+                Text buttonText = new Text();
+                buttonText.setType(PLAIN_TEXT);
+                buttonText.setTextValue("Save Changes");
+                ConfirmDialog confirmDialog = new ConfirmDialog();
+                Text confirmText = new Text();
+                confirmText.setType(PLAIN_TEXT);
+                confirmText.setTextValue("Would you like to submit changes?");
+                confirmDialog.setText(confirmText);
+                Text confirmButtonText = new Text();
+                confirmButtonText.setType(PLAIN_TEXT);
+                confirmButtonText.setTextValue("Submit");
+                confirmDialog.setConfirm(confirmButtonText);
+                button.setConfirm(confirmDialog);
+                button.setText(buttonText);
+                saveBlock.setElements(List.of(button));
+                blocks.add(i + 1, saveBlock);
+                Block divider = new Block();
+                divider.setType("divider");
+                blocks.add(i + 2, divider);
+            }
+        }
     }
 }

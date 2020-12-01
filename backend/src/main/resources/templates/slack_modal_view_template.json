@@ -215,6 +215,7 @@
       }
     },
     {
+      "block_id": "first_divider_block",
       "type": "divider"
     },
     {
