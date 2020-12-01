@@ -94,6 +94,15 @@ public class UserInteractionService {
     }
 
     public void handleTrigger(String userId, String triggerId) {
+        ModalView modalViewTemplate = createModalView(userId);
+        InvocationModal invocationModal = new InvocationModal();
+        invocationModal.setTriggerId(triggerId);
+        invocationModal.setView(modalViewTemplate);
+        String response = slackClient.notifyUser("/api/views.open", invocationModal);
+        log.trace("Received response on trigger handle: {}", response);
+    }
+
+    private ModalView createModalView(String userId) {
         CachedUser cachedUser = getCachedUser(userId);
         ModalView modalViewTemplate = getModalViewTemplate();
         modalViewTemplate.getBlocks().forEach(block -> {
@@ -111,12 +120,7 @@ public class UserInteractionService {
                 block.getElements().get(0).setText(String.format(MODAL_FOOTER_MESSAGE, baseUri(spotMyStatusProperties.getRedirectUriScheme())));
             }
         });
-
-        InvocationModal invocationModal = new InvocationModal();
-        invocationModal.setTriggerId(triggerId);
-        invocationModal.setView(modalViewTemplate);
-        String response = slackClient.createModal(invocationModal);
-        log.trace("Received response on trigger handle: {}", response);
+        return modalViewTemplate;
     }
 
     public InteractionModal handleUserInteraction(InvocationModal payload) {
@@ -299,7 +303,7 @@ public class UserInteractionService {
     private void removeWarningBlock(List<Block> blocks, InteractionModal slackModal) {
         boolean removed = blocks.removeIf(block -> BLOCK_ID_INVALID_HOURS.equals(block.getBlockId()));
         if (removed) {
-            String response = slackClient.updateModal(slackModal);
+            String response = slackClient.notifyUser("/api/views.update", slackModal);
             log.trace("Received warning update response: {}", response);
         }
     }
@@ -311,7 +315,7 @@ public class UserInteractionService {
                 blocks.add(i + 1, block);
             }
         }
-        String response = slackClient.updateModal(slackModal);
+        String response = slackClient.notifyUser("/api/views.update", slackModal);
         log.trace("Received response on warning block: {}", response);
     }
 
@@ -400,7 +404,7 @@ public class UserInteractionService {
             }
         }
         InteractionModal slackModal = createModalResponse(payload);
-        String response = slackClient.updateModal(slackModal);
+        String response = slackClient.notifyUser("/api/views.update", slackModal);
         log.trace("Received response on emoji add: {}", response);
     }
 
@@ -508,5 +512,16 @@ public class UserInteractionService {
 
     public String purge(String userId) {
         return slackClient.purge(userId);
+    }
+
+    public void updateHomeTab(String userId) {
+        List<Block> viewBlocks = createModalView(userId).getBlocks();
+        ModalView modalView = new ModalView();
+        modalView.setBlocks(viewBlocks);
+        modalView.setType("home");
+        InteractionModal homeModal = new InteractionModal();
+        homeModal.setUserId(userId);
+        homeModal.setView(modalView);
+        slackClient.notifyUser("/api/views.publish", homeModal);
     }
 }

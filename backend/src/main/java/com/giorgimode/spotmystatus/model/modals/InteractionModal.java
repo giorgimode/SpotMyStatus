@@ -16,6 +16,9 @@ public class InteractionModal {
     private String hash;
     private ModalView view;
 
+    @JsonProperty("user_id")
+    private String userId;
+
     @JsonProperty("response_action")
     private String responseAction;
 }

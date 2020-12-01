@@ -2,6 +2,8 @@ package com.giorgimode.spotmystatus.controller;
 
 import static com.giorgimode.spotmystatus.helpers.SpotUtil.baseUri;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.giorgimode.spotmystatus.helpers.SlackModalConverter;
 import com.giorgimode.spotmystatus.helpers.SpotMyStatusProperties;
 import com.giorgimode.spotmystatus.model.SlackEvent;
@@ -73,9 +75,16 @@ public class UserInteractionController {
     }
 
     @PostMapping(value = "/slack/events", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public String receiveSlackEvent(@RequestBody SlackEvent slackEvent) {
+    public String receiveSlackEvent(@RequestBody String rawBody) throws JsonProcessingException {
+        log.debug("Received a raw slack event {}", rawBody);
+        SlackEvent slackEvent = new ObjectMapper().readValue(rawBody, SlackEvent.class);
         log.debug("Received a slack event {}", slackEvent);
-        return slackEvent.getChallenge();
+        if ("url_verification".equals(slackEvent.getEventType())) {
+            return slackEvent.getChallenge();
+        } else if ("app_home_opened".equals(slackEvent.getEventType())) {
+            userInteractionService.updateHomeTab(slackEvent.getUser());
+        }
+        return null;
     }
 
     @PostMapping(value = "/slack/interaction", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)

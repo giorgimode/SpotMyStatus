@@ -10,5 +10,22 @@ public class SlackEvent {
     private String token;
     private String challenge;
     private String type;
-    private String event;
+    private Event event;
+
+    public String getEventType() {
+        return event == null ? null : event.getType();
+    }
+
+    public String getUser() {
+        return event == null ? null : event.getUser();
+    }
+
+    @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    private static class Event {
+
+        private String type;
+        private String user;
+
+    }
 }

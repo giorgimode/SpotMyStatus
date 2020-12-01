@@ -244,12 +244,7 @@ public class SlackClient {
             log.error("User's Slack token has been invalidated. Cleaning up user {}", userId);
             userCache.invalidate(userId);
             userRepository.deleteById(userId);
-            RestHelper.builder()
-                      .withBaseUrl(configProperties.getSlackUri() + "/api/chat.postMessage")
-                      .withBearer(propertyVault.getSlack().getBotToken())
-                      .withContentType(MediaType.APPLICATION_JSON_VALUE)
-                      .withBody(new SlackMessage(userId, SPOTIFY_INVALIDATED_MESSAGE))
-                      .post(restTemplate, String.class);
+            notifyUser("/api/chat.postMessage", new SlackMessage(userId, SPOTIFY_INVALIDATED_MESSAGE));
         } catch (Exception e) {
             log.error("Failed to clean up user properly", e);
         }
@@ -282,18 +277,10 @@ public class SlackClient {
         return statusHasBeenManuallyChanged;
     }
 
-    public String createModal(Object body) {
-        return notifyUser(body, "open");
-    }
-
-    public String updateModal(Object body) {
-        return notifyUser(body, "update");
-    }
-
-    private String notifyUser(Object body, final String viewAction) {
+    public String notifyUser(String endpoint, Object body) {
         //noinspection deprecation: Slack issues warning on missing charset
         return RestHelper.builder()
-                         .withBaseUrl(configProperties.getSlackUri() + "/api/views." + viewAction)
+                         .withBaseUrl(configProperties.getSlackUri() + endpoint)
                          .withBearer(propertyVault.getSlack().getBotToken())
                          .withContentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
                          .withBody(body)
