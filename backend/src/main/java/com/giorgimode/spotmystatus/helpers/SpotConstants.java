@@ -23,7 +23,6 @@ public final class SpotConstants {
     public static final String BLOCK_ID_APP_URI = "spotmystatus_uri_block";
     public static final String BLOCK_ID_SUBMIT = "submit_block";
     public static final String BLOCK_ID_FIRST_DIVIDER = "first_divider_block";
-    public static final String BLOCK_ID_SAVE_CHANGES = "save_changes_block";
     public static final String EMOJI_REGEX = "^[a-z0-9-_]+$";
     public static final String SLACK_REDIRECT_PATH = "/slack/redirect";
     public static final String SPOTIFY_REDIRECT_PATH = "/spotify/redirect";

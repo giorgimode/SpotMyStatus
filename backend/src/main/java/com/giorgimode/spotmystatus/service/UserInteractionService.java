@@ -8,7 +8,6 @@ import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_HOURS_I
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_INVALID_EMOJI;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_INVALID_HOURS;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_PURGE;
-import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_SAVE_CHANGES;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_SPOTIFY_DEVICES;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_SPOTIFY_ITEMS;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_SUBMIT;
@@ -97,8 +96,8 @@ public class UserInteractionService {
         this.propertyVault = propertyVault;
     }
 
-    public boolean userExists(String userId) {
-        return userCache.getIfPresent(userId) != null;
+    public boolean userMissing(String userId) {
+        return userCache.getIfPresent(userId) == null;
     }
 
     public void handleTrigger(String userId, String triggerId) {
@@ -149,7 +148,7 @@ public class UserInteractionService {
         List<Option> selectedDevices = spotifyDevices.stream()
                                                      .filter(device -> cachedUser.getSpotifyDeviceIds().contains(device.getValue()))
                                                      .collect(toList());
-        block.getElement().setInitialOptions(selectedDevices.isEmpty() ? spotifyDevices : selectedDevices);
+        block.getElement().setInitialOptions(CollectionUtils.isEmpty(selectedDevices) ? spotifyDevices : selectedDevices);
     }
 
     private void prepareHoursBlock(CachedUser cachedUser, Block block) {
@@ -196,7 +195,7 @@ public class UserInteractionService {
                                                           spotMyStatusProperties.getDefaultSpotifyItems().get(spotifyItem.title())))
                                                       .collect(toList());
         block.getElement().setOptions(defaultItemOptions);
-        if (selectedItemsOptions.isEmpty()) {
+        if (CollectionUtils.isEmpty(selectedItemsOptions)) {
             block.getElement().setInitialOptions(defaultItemOptions);
         } else {
             block.getElement().setInitialOptions(selectedItemsOptions);
@@ -223,7 +222,7 @@ public class UserInteractionService {
     }
 
     private List<String> getUserEmojis(CachedUser cachedUser) {
-        if (cachedUser.getEmojis().isEmpty()) {
+        if (CollectionUtils.isEmpty(cachedUser.getEmojis())) {
             return spotMyStatusProperties.getDefaultEmojis();
         }
         return cachedUser.getEmojis();
@@ -255,8 +254,8 @@ public class UserInteractionService {
             }
         }
 
-        updateSpotifyItems(cachedUser, getStateValue(payload, BLOCK_ID_SYNC_TOGGLE).getSelectedOptions());
-        updateSpotifyDevices(cachedUser, getStateValue(payload, BLOCK_ID_SYNC_TOGGLE).getSelectedOptions());
+        updateSpotifyItems(cachedUser, getStateValue(payload, BLOCK_ID_SPOTIFY_ITEMS).getSelectedOptions());
+        updateSpotifyDevices(cachedUser, getStateValue(payload, BLOCK_ID_SPOTIFY_DEVICES).getSelectedOptions());
         updateSync(cachedUser.getId(), getStateValue(payload, BLOCK_ID_SYNC_TOGGLE).getSelectedOptions().isEmpty());
         persistChanges(cachedUser);
         return null;
@@ -290,10 +289,11 @@ public class UserInteractionService {
             handleEmojiAdd(payload, userAction.getValue());
         } else if (BLOCK_ID_PURGE.equals(userAction.getBlockId())) {
             slackClient.purge(userId);
+            updateHomeTab(userId);
         } else if (BLOCK_ID_HOURS_INPUT.equals(userAction.getBlockId())) {
             handleHoursInput(payload, blocks);
-        } else if (BLOCK_ID_SAVE_CHANGES.equals(userAction.getBlockId())) {
-            //todo save changes or add warning
+        } else if (BLOCK_ID_SUBMIT.equals(userAction.getBlockId())) {
+            handleSubmission(payload);
         }
     }
 
@@ -348,7 +348,7 @@ public class UserInteractionService {
 
     public void updateEmojis(CachedUser cachedUser, List<Option> selectedEmojiOptions) {
         List<String> selectedEmojis = getOptionValues(selectedEmojiOptions);
-        if (selectedEmojis.isEmpty()) {
+        if (CollectionUtils.isEmpty(selectedEmojis)) {
             cachedUser.setEmojis(List.of());
         } else {
             cachedUser.setEmojis(selectedEmojis);
@@ -375,7 +375,7 @@ public class UserInteractionService {
     }
 
     public void updateSpotifyItems(CachedUser cachedUser, List<Option> selectedSpotifyItems) {
-        if (selectedSpotifyItems.isEmpty()) {
+        if (CollectionUtils.isEmpty(selectedSpotifyItems)) {
             cachedUser.setSpotifyItems(List.of());
         } else {
             Collection<String> spotifyItemsList = getOptionValues(selectedSpotifyItems);
@@ -385,7 +385,7 @@ public class UserInteractionService {
     }
 
     public void updateSpotifyDevices(CachedUser cachedUser, List<Option> spotifyDevices) {
-        if (spotifyDevices.isEmpty()) {
+        if (CollectionUtils.isEmpty(spotifyDevices)) {
             cachedUser.setSpotifyDeviceIds(List.of());
         } else {
             List<String> spotifyDevicesList = getOptionValues(spotifyDevices);
@@ -398,19 +398,23 @@ public class UserInteractionService {
     }
 
     private void handleEmojiAdd(InvocationModal payload, String newEmojiInput) {
-        if (isBlank(newEmojiInput)) {
+        List<String> emojiList = Arrays.stream(newEmojiInput.split(","))
+                                       .filter(StringUtils::isNotBlank)
+                                       .map(String::trim)
+                                       .collect(toList());
+        if (CollectionUtils.isEmpty(emojiList)) {
             return;
         }
-        Optional<String> validationError = getValidationError(newEmojiInput);
+        List<String> validationErrors = emojiList.stream().map(this::getValidationError).flatMap(Optional::stream).collect(toList());
         List<Block> blocks = payload.getView().getBlocks();
         blocks.removeIf(warningBlock -> BLOCK_ID_INVALID_EMOJI.equals(warningBlock.getBlockId()));
         for (int i = 0, blocksSize = blocks.size(); i < blocksSize; i++) {
             Block block = blocks.get(i);
             if (BLOCK_ID_EMOJI_LIST.equals(block.getBlockId())) {
-                validateAndAddEmoji(payload, newEmojiInput, validationError, block);
+                validateAndAddEmoji(payload, emojiList, validationErrors, block);
             } else if (BLOCK_ID_EMOJI_INPUT.equals(block.getBlockId())) {
-                if (validationError.isPresent()) {
-                    Block warningBlock = createWarningBlock(BLOCK_ID_INVALID_EMOJI, validationError.get());
+                if (!validationErrors.isEmpty()) {
+                    Block warningBlock = createWarningBlock(BLOCK_ID_INVALID_EMOJI, validationErrors.get(0));
                     blocks.add(i + 1, warningBlock);
                     break;
                 } else {
@@ -424,7 +428,7 @@ public class UserInteractionService {
         log.trace("Received response on emoji add: {}", response);
     }
 
-    private void validateAndAddEmoji(InvocationModal payload, String newEmojiInput, Optional<String> validationError, Block block) {
+    private void validateAndAddEmoji(InvocationModal payload, List<String> newEmojis, List<String> validationErrors, Block block) {
         StateValue selectedEmojiBlock = getStateValue(payload, BLOCK_ID_EMOJI_LIST);
         List<Option> selectedOptions;
         if (isBlank(selectedEmojiBlock.getType())) {
@@ -437,8 +441,8 @@ public class UserInteractionService {
         }
 
         block.getElement().setInitialOptions(selectedOptions);
-        if (validationError.isEmpty()) {
-            updateEmojiList(newEmojiInput, block);
+        if (validationErrors.isEmpty()) {
+            updateEmojiList(newEmojis, block);
         }
         // resetting action id forces Slack to recreate the element
         block.getElement().setActionId(null);
@@ -453,19 +457,18 @@ public class UserInteractionService {
         return Optional.empty();
     }
 
-    private void updateEmojiList(String newEmojiInput, Block block) {
-        Arrays.stream(newEmojiInput.split(","))
-              .filter(StringUtils::isNotBlank)
-              .map(emoji -> emoji.trim().replace(":", ""))
-              .map(emoji -> createOption(emoji, ":" + emoji + ":"))
-              .forEach(emojiOption -> {
-                  if (!block.getElement().getOptions().contains(emojiOption)) {
-                      block.getElement().getOptions().add(emojiOption);
-                  }
-                  if (!block.getElement().getInitialOptions().contains(emojiOption)) {
-                      block.getElement().getInitialOptions().add(emojiOption);
-                  }
-              });
+    private void updateEmojiList(List<String> newEmojis, Block block) {
+        newEmojis.stream()
+                 .map(emoji -> emoji.trim().replace(":", ""))
+                 .map(emoji -> createOption(emoji, ":" + emoji + ":"))
+                 .forEach(emojiOption -> {
+                     if (!block.getElement().getOptions().contains(emojiOption)) {
+                         block.getElement().getOptions().add(emojiOption);
+                     }
+                     if (!block.getElement().getInitialOptions().contains(emojiOption)) {
+                         block.getElement().getInitialOptions().add(emojiOption);
+                     }
+                 });
     }
 
     InteractionModal createModalResponse(InvocationModal payload) {
@@ -531,17 +534,44 @@ public class UserInteractionService {
     }
 
     public void updateHomeTab(String userId) {
-        //todo add view if user is not in the system
-        List<Block> blocks = createModalView(userId).getBlocks();
-        updateBlocks(blocks);
-        ModalView modalView = new ModalView();
-        modalView.setBlocks(blocks);
-        modalView.setType("home");
         InteractionModal homeModal = new InteractionModal();
         homeModal.setUserId(userId);
+        ModalView modalView = new ModalView();
+        modalView.setType("home");
         homeModal.setView(modalView);
+        if (userMissing(userId)) {
+            Block noUserHeader = createHeaderForMissingUser();
+            Block signupBlock = createSignupBlockForMissingUser();
+            modalView.setBlocks(List.of(noUserHeader, signupBlock));
+        } else {
+            List<Block> blocks = createModalView(userId).getBlocks();
+            updateBlocks(blocks);
+            modalView.setBlocks(blocks);
+        }
+
         String response = slackClient.notifyUser("/api/views.publish", homeModal);
         log.trace("Slack returned response when updating home tab {}", response);
+    }
+
+    private Block createSignupBlockForMissingUser() {
+        Block signupBlock = new Block();
+        signupBlock.setType("section");
+        Text signupText = new Text();
+        signupText.setType("mrkdwn");
+        signupText.setTextValue(String.format("You can sign up <%s|here>", baseUri(spotMyStatusProperties.getRedirectUriScheme()) + "/start"));
+        signupBlock.setText(signupText);
+        return signupBlock;
+    }
+
+    private Block createHeaderForMissingUser() {
+        Block noUserBlock = new Block();
+        noUserBlock.setType("header");
+        Text text = new Text();
+        text.setTextValue(":no_entry_sign: User not found");
+        text.setType(PLAIN_TEXT);
+        text.setEmoji(true);
+        noUserBlock.setText(text);
+        return noUserBlock;
     }
 
     private void updateBlocks(List<Block> blocks) {

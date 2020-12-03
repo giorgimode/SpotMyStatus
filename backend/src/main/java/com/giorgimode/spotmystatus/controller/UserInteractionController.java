@@ -44,7 +44,7 @@ public class UserInteractionController {
 
         log.trace("Received a slack command {}", bodyString);
         userInteractionService.validateSignature(timestamp, signature, bodyString);
-        if (!userInteractionService.userExists(userId)) {
+        if (userInteractionService.userMissing(userId)) {
             return "User not found. Please sign up at " + baseUri(configProperties.getRedirectUriScheme()) + "/start";
         }
 
