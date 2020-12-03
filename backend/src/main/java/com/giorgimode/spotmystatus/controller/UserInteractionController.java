@@ -79,7 +79,7 @@ public class UserInteractionController {
         log.debug("Received a raw slack event {}", rawBody);
         SlackEvent slackEvent = new ObjectMapper().readValue(rawBody, SlackEvent.class);
         log.debug("Received a slack event {}", slackEvent);
-        if ("url_verification".equals(slackEvent.getEventType())) {
+        if ("url_verification".equals(slackEvent.getType())) {
             return slackEvent.getChallenge();
         } else if ("app_home_opened".equals(slackEvent.getEventType())) {
             userInteractionService.updateHomeTab(slackEvent.getUser());

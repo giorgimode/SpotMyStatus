@@ -11,6 +11,7 @@ import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_PURGE;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_SAVE_CHANGES;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_SPOTIFY_DEVICES;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_SPOTIFY_ITEMS;
+import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_SUBMIT;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_SYNC_TOGGLE;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.EMOJI_REGEX;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.MODAL_FOOTER_MESSAGE;
@@ -23,6 +24,7 @@ import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.trimToNull;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import com.giorgimode.spotmystatus.helpers.PropertyVault;
 import com.giorgimode.spotmystatus.helpers.SpotMyStatusProperties;
@@ -49,6 +51,7 @@ import java.time.OffsetTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -233,9 +236,6 @@ public class UserInteractionService {
         }
         List<Block> blocks = payload.getView().getBlocks();
         log.debug("User {} submitted the form", cachedUser.getId());
-        boolean disableSync = getStateValue(payload, BLOCK_ID_SYNC_TOGGLE).getSelectedOptions().isEmpty();
-        List<Option> spotifyItems = getStateValue(payload, BLOCK_ID_SPOTIFY_ITEMS).getSelectedOptions();
-        List<Option> spotifyDevices = getStateValue(payload, BLOCK_ID_SPOTIFY_DEVICES).getSelectedOptions();
         for (Block block : blocks) {
             if (BLOCK_ID_HOURS_INPUT.equals(block.getBlockId())) {
                 String startHour = getStateValue(payload, BLOCK_ID_HOURS_INPUT).getStartHour();
@@ -254,20 +254,21 @@ public class UserInteractionService {
                 }
             }
         }
-        updateSpotifyItems(cachedUser, spotifyItems);
-        updateSpotifyDevices(cachedUser, spotifyDevices);
-        updateSync(cachedUser.getId(), disableSync);
+
+        updateSpotifyItems(cachedUser, getStateValue(payload, BLOCK_ID_SYNC_TOGGLE).getSelectedOptions());
+        updateSpotifyDevices(cachedUser, getStateValue(payload, BLOCK_ID_SYNC_TOGGLE).getSelectedOptions());
+        updateSync(cachedUser.getId(), getStateValue(payload, BLOCK_ID_SYNC_TOGGLE).getSelectedOptions().isEmpty());
         persistChanges(cachedUser);
         return null;
     }
 
     private void persistChanges(CachedUser cachedUser) {
         userRepository.findById(cachedUser.getId()).ifPresent(user -> {
-            user.setEmojis(String.join(",", cachedUser.getEmojis()));
-            user.setSpotifyItems(cachedUser.getSpotifyItems().stream().map(SpotifyItem::title).collect(Collectors.joining(",")));
+            user.setEmojis(trimToNull(String.join(",", cachedUser.getEmojis())));
+            user.setSpotifyItems(trimToNull(cachedUser.getSpotifyItems().stream().map(SpotifyItem::title).collect(Collectors.joining(","))));
             user.setSyncFrom(cachedUser.getSyncStartHour());
             user.setSyncTo(cachedUser.getSyncEndHour());
-            user.setSpotifyDevices(String.join(",", cachedUser.getSpotifyDeviceIds()));
+            user.setSpotifyDevices(trimToNull(String.join(",", cachedUser.getSpotifyDeviceIds())));
             userRepository.save(user);
         });
     }
@@ -348,10 +349,10 @@ public class UserInteractionService {
     public void updateEmojis(CachedUser cachedUser, List<Option> selectedEmojiOptions) {
         List<String> selectedEmojis = getOptionValues(selectedEmojiOptions);
         if (selectedEmojis.isEmpty()) {
-            selectedEmojis.addAll(spotMyStatusProperties.getDefaultEmojis());
+            cachedUser.setEmojis(List.of());
+        } else {
+            cachedUser.setEmojis(selectedEmojis);
         }
-
-        cachedUser.setEmojis(selectedEmojis);
     }
 
 
@@ -373,15 +374,23 @@ public class UserInteractionService {
         return userCache.getIfPresent(userId);
     }
 
-    public void updateSpotifyItems(CachedUser cachedUser, List<Option> selectedSpotifyOptions) {
-        List<String> spotifyItemsList = getOptionValues(selectedSpotifyOptions);
-        List<SpotifyItem> spotifyItems = spotifyItemsList.stream().map(SpotifyItem::from).collect(toList());
-        cachedUser.setSpotifyItems(spotifyItems);
+    public void updateSpotifyItems(CachedUser cachedUser, List<Option> selectedSpotifyItems) {
+        if (selectedSpotifyItems.isEmpty()) {
+            cachedUser.setSpotifyItems(List.of());
+        } else {
+            Collection<String> spotifyItemsList = getOptionValues(selectedSpotifyItems);
+            List<SpotifyItem> spotifyItems = spotifyItemsList.stream().map(SpotifyItem::from).collect(toList());
+            cachedUser.setSpotifyItems(spotifyItems);
+        }
     }
 
     public void updateSpotifyDevices(CachedUser cachedUser, List<Option> spotifyDevices) {
-        List<String> spotifyDevicesList = getOptionValues(spotifyDevices);
-        cachedUser.setSpotifyDeviceIds(spotifyDevicesList);
+        if (spotifyDevices.isEmpty()) {
+            cachedUser.setSpotifyDeviceIds(List.of());
+        } else {
+            List<String> spotifyDevicesList = getOptionValues(spotifyDevices);
+            cachedUser.setSpotifyDeviceIds(spotifyDevicesList);
+        }
     }
 
     private List<String> getOptionValues(List<Option> options) {
@@ -405,7 +414,7 @@ public class UserInteractionService {
                     blocks.add(i + 1, warningBlock);
                     break;
                 } else {
-                    // resetting action id forces Slack to recreate the element
+                    // resetting action id forces Slack to recreate the element making it clean
                     block.getElement().setActionId(null);
                 }
             }
@@ -524,45 +533,57 @@ public class UserInteractionService {
     public void updateHomeTab(String userId) {
         //todo add view if user is not in the system
         List<Block> blocks = createModalView(userId).getBlocks();
-        addSubmitButton(blocks);
+        updateBlocks(blocks);
         ModalView modalView = new ModalView();
         modalView.setBlocks(blocks);
         modalView.setType("home");
         InteractionModal homeModal = new InteractionModal();
         homeModal.setUserId(userId);
         homeModal.setView(modalView);
-        slackClient.notifyUser("/api/views.publish", homeModal);
+        String response = slackClient.notifyUser("/api/views.publish", homeModal);
+        log.trace("Slack returned response when updating home tab {}", response);
     }
 
-    private void addSubmitButton(List<Block> blocks) {
+    private void updateBlocks(List<Block> blocks) {
         for (int i = 0; i < blocks.size(); i++) {
             if (BLOCK_ID_FIRST_DIVIDER.equals(blocks.get(i).getBlockId())) {
-                Block saveBlock = new Block();
-                saveBlock.setType("actions");
-                saveBlock.setBlockId(BLOCK_ID_APP_URI);
-                Element button = new Element();
-                button.setType("button");
-                button.setStyle("primary");
-                Text buttonText = new Text();
-                buttonText.setType(PLAIN_TEXT);
-                buttonText.setTextValue("Save Changes");
-                ConfirmDialog confirmDialog = new ConfirmDialog();
-                Text confirmText = new Text();
-                confirmText.setType(PLAIN_TEXT);
-                confirmText.setTextValue("Would you like to submit changes?");
-                confirmDialog.setText(confirmText);
-                Text confirmButtonText = new Text();
-                confirmButtonText.setType(PLAIN_TEXT);
-                confirmButtonText.setTextValue("Submit");
-                confirmDialog.setConfirm(confirmButtonText);
-                button.setConfirm(confirmDialog);
-                button.setText(buttonText);
-                saveBlock.setElements(List.of(button));
-                blocks.add(i + 1, saveBlock);
-                Block divider = new Block();
-                divider.setType("divider");
-                blocks.add(i + 2, divider);
+                addSubmitButton(blocks, i);
+            } else if (BLOCK_ID_SPOTIFY_ITEMS.equals(blocks.get(i).getBlockId())) {
+                Text label = blocks.get(i).getLabel();
+                label.setTextValue(label.getTextValue() + ". All items will be included if none selected");
+            } else if (BLOCK_ID_EMOJI_LIST.equals(blocks.get(i).getBlockId())) {
+                blocks.get(i).getElement().getPlaceholder().setTextValue("Your emojis. Default emojis will be set if none selected");
+            } else if (BLOCK_ID_SPOTIFY_DEVICES.equals(blocks.get(i).getBlockId())) {
+                blocks.get(i).getElement().getPlaceholder().setTextValue("Select devices. All devices will be included if none selected");
             }
         }
+    }
+
+    private void addSubmitButton(List<Block> blocks, int index) {
+        Block saveBlock = new Block();
+        saveBlock.setType("actions");
+        saveBlock.setBlockId(BLOCK_ID_SUBMIT);
+        Element button = new Element();
+        button.setType("button");
+        button.setStyle("primary");
+        Text buttonText = new Text();
+        buttonText.setType(PLAIN_TEXT);
+        buttonText.setTextValue("Save Changes");
+        ConfirmDialog confirmDialog = new ConfirmDialog();
+        Text confirmText = new Text();
+        confirmText.setType(PLAIN_TEXT);
+        confirmText.setTextValue("Would you like to submit changes?");
+        confirmDialog.setText(confirmText);
+        Text confirmButtonText = new Text();
+        confirmButtonText.setType(PLAIN_TEXT);
+        confirmButtonText.setTextValue("Submit");
+        confirmDialog.setConfirm(confirmButtonText);
+        button.setConfirm(confirmDialog);
+        button.setText(buttonText);
+        saveBlock.setElements(List.of(button));
+        blocks.add(index + 1, saveBlock);
+        Block divider = new Block();
+        divider.setType("divider");
+        blocks.add(index + 2, divider);
     }
 }
