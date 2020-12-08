@@ -39,7 +39,7 @@ jobs:
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           application_name: SpotMyStatus
-          environment_name: Spotmystatus-env-1
+          environment_name: spotmystatus-env
           version_label: ${{ steps.read_artifact_version.outputs.value }}-${{ github.run_id }}-${{ github.run_number }}
           use_existing_version_if_available: false
           wait_for_environment_recovery: 180
