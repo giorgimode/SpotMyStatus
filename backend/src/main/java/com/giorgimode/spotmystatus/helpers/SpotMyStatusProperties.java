@@ -17,7 +17,6 @@ public class SpotMyStatusProperties {
     private String slackUri;
     private String spotifyAccountUri;
     private String spotifyApiUri;
-    private String signUpUri;
     private String corePoolSize;
     private String pollingRate;
     private Integer passivePollingProbability;

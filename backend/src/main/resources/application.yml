@@ -13,7 +13,6 @@ spotmystatus:
   slack_uri: https://slack.com
   spotify_account_uri: https://accounts.spotify.com
   spotify_api_uri: https://api.spotify.com
-  sign_up_uri: ${SIGN_UP_URI}
   core_pool_size: ${CORE_POOL_SIZE:0}
   polling_rate: ${SLACK_POLLING_RATE:10000}
   passive_polling_probability: ${PASSIVE_POLLING_PROBABILITY:30}
