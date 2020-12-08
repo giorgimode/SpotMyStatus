@@ -1,10 +1,3 @@
-redirect_uri_scheme: ${REDIRECT_URI_SCHEME:https}
-slack_uri: https://slack.com
-spotify_account_uri: https://accounts.spotify.com
-spotify_api_uri: https://api.spotify.com
-sign_up_uri: ${SIGN_UP_URI}
-core_pool_size: ${CORE_POOL_SIZE:0}
-
 secret:
   spotify:
     client_id: ${SPOTIFY_CLIENT_ID}
@@ -16,17 +9,26 @@ secret:
     signing_secret: ${SIGNING_SECRET}
 
 spotmystatus:
+  redirect_uri_scheme: ${REDIRECT_URI_SCHEME:https}
+  slack_uri: https://slack.com
+  spotify_account_uri: https://accounts.spotify.com
+  spotify_api_uri: https://api.spotify.com
+  core_pool_size: ${CORE_POOL_SIZE:0}
   polling_rate: ${SLACK_POLLING_RATE:10000}
   passive_polling_probability: ${PASSIVE_POLLING_PROBABILITY:30}
   passivate_after_min: ${PASSIVATE_AFTER:60}
-  passivate_start_hr: ${PASSIVATE_START:21}
-  passivate_end_hr: ${PASSIVATE_END:6}
+  sync_start_hr: ${PASSIVATE_START:21}
+  sync_end_hr: ${PASSIVATE_END:6}
   timeout: ${POLLING_TIMEOUT:2000}
   expiration_overhead: ${EXPIRATION_OVERHEAD:120000}
-  emojis:
-    - ":headphones:"
-    - ":musical_note:"
-    - ":notes:"
+  default_emojis:
+    - "headphones"
+    - "musical_note"
+    - "notes"
+  podcast_emoji: "headphones"
+  default_spotify_items:
+    track: "Music"
+    episode: "Podcast"
 
 spring:
   liquibase:

@@ -1,0 +1,278 @@
+{
+  "type": "modal",
+  "callback_id": "modal-identifier",
+  "title": {
+    "type": "plain_text",
+    "text": "Customize SpotMyStatus"
+  },
+  "submit": {
+    "type": "plain_text",
+    "text": "Submit"
+  },
+  "blocks": [
+    {
+      "type": "section",
+      "block_id": "sync_toggle_block",
+      "text": {
+        "type": "mrkdwn",
+        "text": " "
+      },
+      "accessory": {
+        "type": "checkboxes",
+        "options": [
+          {
+            "text": {
+              "type": "mrkdwn",
+              "text": "Toggle Status Syncing On/Off"
+            },
+            "value": "sync_on"
+          }
+        ],
+        "action_id": "checkboxes-action",
+        "initial_options": [
+          {
+            "value": "sync_on",
+            "text": {
+              "type": "mrkdwn",
+              "text": "Toggle Status Syncing On/Off"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "input",
+      "block_id": "spotify_items_block",
+      "label": {
+        "type": "plain_text",
+        "text": "Pick at least one of these Spotify items to sync"
+      },
+      "element": {
+        "type": "checkboxes",
+        "initial_options": [
+          {
+            "text": {
+              "type": "plain_text",
+              "text": "Music"
+            },
+            "value": "track"
+          }
+        ],
+        "options": [
+          {
+            "text": {
+              "type": "plain_text",
+              "text": "Music"
+            },
+            "value": "track"
+          },
+          {
+            "text": {
+              "type": "plain_text",
+              "text": "Podcast"
+            },
+            "value": "episode"
+          }
+        ]
+      }
+    },
+    {
+      "type": "divider"
+    },
+    {
+      "type": "input",
+      "dispatch_action": true,
+      "block_id": "emoji_input_block",
+      "optional": true,
+      "element": {
+        "type": "plain_text_input",
+        "placeholder": {
+          "type": "plain_text",
+          "text": "guitar, the_horns",
+          "emoji": true
+        }
+      },
+      "label": {
+        "type": "plain_text",
+        "text": "Add new emojis to rotate through",
+        "emoji": true
+      }
+    },
+    {
+      "type": "input",
+      "block_id": "emoji_list_block",
+      "label": {
+        "type": "plain_text",
+        "text": " "
+      },
+      "element": {
+        "type": "multi_static_select",
+        "placeholder": {
+          "type": "plain_text",
+          "text": "Your emojis"
+        },
+        "initial_options": [
+          {
+            "value": "musical_note",
+            "text": {
+              "type": "plain_text",
+              "text": ":musical_note:"
+            }
+          },
+          {
+            "value": "headphones",
+            "text": {
+              "type": "plain_text",
+              "text": ":headphones:"
+            }
+          },
+          {
+            "text": {
+              "type": "plain_text",
+              "text": ":notes:"
+            },
+            "value": "notes"
+          }
+        ],
+        "options": [
+          {
+            "text": {
+              "type": "plain_text",
+              "text": ":musical_note:"
+            },
+            "value": "musical_note"
+          },
+          {
+            "text": {
+              "type": "plain_text",
+              "text": ":headphones:"
+            },
+            "value": "headphones"
+          },
+          {
+            "text": {
+              "type": "plain_text",
+              "text": ":notes:"
+            },
+            "value": "notes"
+          }
+        ]
+      }
+    },
+    {
+      "type": "divider"
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*Sync status between these hours*"
+      }
+    },
+    {
+      "type": "actions",
+      "block_id": "hours_input_block",
+      "elements": [
+        {
+          "type": "timepicker",
+          "initial_time": "07:00",
+          "placeholder": {
+            "type": "plain_text",
+            "text": "Start time",
+            "emoji": true
+          },
+          "action_id": "start_hour-action"
+        },
+        {
+          "type": "timepicker",
+          "initial_time": "20:00",
+          "placeholder": {
+            "type": "plain_text",
+            "text": "End time",
+            "emoji": true
+          },
+          "action_id": "end_hour-action"
+        }
+      ]
+    },
+    {
+      "type": "divider"
+    },
+    {
+      "type": "input",
+      "block_id": "spotify_devices_block",
+      "label": {
+        "type": "plain_text",
+        "text": "Choose Spotify devices to sync from"
+      },
+      "element": {
+        "type": "multi_static_select",
+        "placeholder": {
+          "type": "plain_text",
+          "text": "Select devices"
+        },
+        "options": []
+      }
+    },
+    {
+      "block_id": "first_divider_block",
+      "type": "divider"
+    },
+    {
+      "type": "divider"
+    },
+    {
+      "type": "divider"
+    },
+    {
+      "type": "header",
+      "text": {
+        "type": "plain_text",
+        "text": "Danger Zone",
+        "emoji": true
+      }
+    },
+    {
+      "type": "actions",
+      "block_id": "purge_block",
+      "elements": [
+        {
+          "type": "button",
+          "action_id": "purge_action",
+          "text": {
+            "type": "plain_text",
+            "text": "Purge"
+          },
+          "confirm": {
+            "title": {
+              "type": "plain_text",
+              "text": "Are you sure?"
+            },
+            "text": {
+              "type": "mrkdwn",
+              "text": "Access tokens granted by you will be revoked. You'll have to sign up again to use the app"
+            },
+            "confirm": {
+              "type": "plain_text",
+              "text": "Purge"
+            }
+          },
+          "style": "danger"
+        }
+      ]
+    },
+    {
+      "type": "divider"
+    },
+    {
+      "type": "context",
+      "block_id": "spotmystatus_uri_block",
+      "elements": [
+        {
+          "type": "mrkdwn",
+          "text": "<http://spotmystatus.giomo.de/|_*SpotMyStatus Home*_>"
+        }
+      ]
+    }
+  ]
+}
