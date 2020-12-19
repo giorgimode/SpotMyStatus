@@ -30,6 +30,8 @@ spotmystatus:
     track: "Music"
     episode: "Podcast"
 
+signature_verification_enabled: ${SIGNATURE_VERIFICATION_ENABLED:false}
+
 spring:
   liquibase:
     change-log: classpath:/db/changelog/liquibase-changelog-master.xml

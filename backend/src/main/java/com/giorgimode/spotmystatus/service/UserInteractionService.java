@@ -56,8 +56,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import javax.xml.bind.DatatypeConverter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
@@ -83,6 +83,9 @@ public class UserInteractionService {
 
     @Value("classpath:templates/slack_modal_view_template.json")
     private Resource resourceFile;
+
+    @Value("${signature_verification_enabled}")
+    private boolean shouldVerifySignature;
 
     public UserInteractionService(UserRepository userRepository,
         SpotMyStatusProperties spotMyStatusProperties, LoadingCache<String, CachedUser> userCache,
@@ -501,11 +504,14 @@ public class UserInteractionService {
     }
 
     public void validateSignature(Long timestamp, String signature, String bodyString) {
+        if (!shouldVerifySignature) {
+            return;
+        }
         boolean isValid = calculateSha256("v0:" + timestamp + ":" + bodyString)
             .map(hashedString -> ("v0=" + hashedString).equalsIgnoreCase(signature))
             .orElse(false);
 
-        if (isValid) {
+        if (!isValid) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
     }
@@ -514,7 +520,9 @@ public class UserInteractionService {
         try {
             Mac mac = Mac.getInstance(SHA_256_ALGORITHM);
             mac.init(new SecretKeySpec(propertyVault.getSlack().getSigningSecret().getBytes(UTF_8), SHA_256_ALGORITHM));
-            return Optional.of(DatatypeConverter.printHexBinary(mac.doFinal(message.getBytes(UTF_8))));
+            byte[] macBytes = mac.doFinal(message.getBytes(UTF_8));
+            String hexString = Hex.encodeHexString(macBytes);
+            return Optional.of(hexString);
         } catch (Exception e) {
             log.error("Failed to calculate hmac-sha256", e);
             return Optional.empty();
