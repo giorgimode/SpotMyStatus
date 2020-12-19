@@ -30,7 +30,7 @@ spotmystatus:
     track: "Music"
     episode: "Podcast"
 
-signature_verification_enabled: ${SIGNATURE_VERIFICATION_ENABLED:false}
+signature_verification_enabled: ${SIGNATURE_VERIFICATION_ENABLED:true}
 
 spring:
   liquibase:

@@ -43,7 +43,12 @@ public class UserInteractionController {
         @RequestBody String bodyString) {
 
         log.trace("Received a slack command {}", bodyString);
-        userInteractionService.validateSignature(timestamp, signature, bodyString);
+        boolean isValidSignature = userInteractionService.isValidSignature(timestamp, signature, bodyString);
+        if (!isValidSignature) {
+            log.error("Provided signature is not valid");
+            return "Failed to validate signature. If the issue persists, please contact support at " +
+                baseUri(configProperties.getRedirectUriScheme()) + "/support";
+        }
         if (userInteractionService.userMissing(userId)) {
             return "User not found. Please sign up at " + baseUri(configProperties.getRedirectUriScheme()) + "/start";
         }

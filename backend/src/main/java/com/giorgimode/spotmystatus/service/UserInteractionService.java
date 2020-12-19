@@ -61,7 +61,6 @@ import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.server.ResponseStatusException;
@@ -503,17 +502,14 @@ public class UserInteractionService {
                        .map(actions -> actions.get(0));
     }
 
-    public void validateSignature(Long timestamp, String signature, String bodyString) {
+    public boolean isValidSignature(Long timestamp, String signature, String bodyString) {
         if (!shouldVerifySignature) {
-            return;
+            return true;
         }
-        boolean isValid = calculateSha256("v0:" + timestamp + ":" + bodyString)
+
+        return calculateSha256("v0:" + timestamp + ":" + bodyString)
             .map(hashedString -> ("v0=" + hashedString).equalsIgnoreCase(signature))
             .orElse(false);
-
-        if (!isValid) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
     }
 
     private Optional<String> calculateSha256(String message) {
