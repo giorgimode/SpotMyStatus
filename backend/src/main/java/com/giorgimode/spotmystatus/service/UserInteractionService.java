@@ -56,8 +56,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import javax.xml.bind.DatatypeConverter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
@@ -516,9 +516,8 @@ public class UserInteractionService {
         try {
             Mac mac = Mac.getInstance(SHA_256_ALGORITHM);
             mac.init(new SecretKeySpec(propertyVault.getSlack().getSigningSecret().getBytes(UTF_8), SHA_256_ALGORITHM));
-            byte[] macBytes = mac.doFinal(message.getBytes(UTF_8));
-            String hexString = Hex.encodeHexString(macBytes);
-            return Optional.of(hexString);
+            byte[] hashedMessage = mac.doFinal(message.getBytes(UTF_8));
+            return Optional.of(DatatypeConverter.printHexBinary(hashedMessage));
         } catch (Exception e) {
             log.error("Failed to calculate hmac-sha256", e);
             return Optional.empty();
