@@ -278,6 +278,7 @@ public class SlackClient {
     }
 
     public String notifyUser(String endpoint, Object body) {
+        log.trace("Notifying user at endpoint {} with body {}", endpoint, body);
         //noinspection deprecation: Slack issues warning on missing charset
         return RestHelper.builder()
                          .withBaseUrl(configProperties.getSlackUri() + endpoint)

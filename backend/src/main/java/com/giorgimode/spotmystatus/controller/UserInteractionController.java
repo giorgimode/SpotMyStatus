@@ -49,6 +49,7 @@ public class UserInteractionController {
         }
 
         if (isBlank(command)) {
+            log.debug("Generating modal view for user {}", userId);
             userInteractionService.handleTrigger(userId, triggerId);
             return null;
         }
