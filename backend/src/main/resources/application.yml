@@ -50,3 +50,24 @@ server:
     whitelabel:
       enabled: false
     path: "/dummy"
+
+management:
+  endpoints:
+    web:
+      base-path: /admin
+      exposure:
+        include: ${ACTUATOR_ENDPOINTS:env,health,info,metrics,mappings,prometheus,heapdump,threaddump,loggers}
+  endpoint:
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    web:
+      server:
+        request:
+          autotime:
+            enabled: true

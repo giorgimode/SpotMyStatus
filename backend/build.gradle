@@ -44,6 +44,7 @@ dependencies {
             'org.springframework.boot:spring-boot-starter-actuator',
             'org.springframework.boot:spring-boot-starter-data-rest',
             'org.apache.commons:commons-lang3:3.11',
+            'org.springframework.boot:spring-boot-starter-actuator',
     )
 
     compileOnly 'org.projectlombok:lombok'
