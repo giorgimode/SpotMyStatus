@@ -44,6 +44,9 @@ dependencies {
             'org.springframework.boot:spring-boot-starter-actuator',
             'org.springframework.boot:spring-boot-starter-data-rest',
             'org.apache.commons:commons-lang3:3.11',
+            'org.springframework.boot:spring-boot-starter-actuator',
+            'org.springframework.boot:spring-boot-starter-security',
+            'org.springframework.boot:spring-boot-starter-oauth2-client',
     )
 
     compileOnly 'org.projectlombok:lombok'
@@ -66,8 +69,4 @@ task copyTask(type: Copy) {
 bootJar {
     dependsOn copyTask
 }
-
-jar.baseName = 'spotmystatus';
-jar {
-    baseName = 'spotmystatus'
-}
+project.archivesBaseName = 'spotmystatus'
