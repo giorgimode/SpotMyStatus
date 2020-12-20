@@ -69,8 +69,4 @@ task copyTask(type: Copy) {
 bootJar {
     dependsOn copyTask
 }
-
-jar.baseName = 'spotmystatus';
-jar {
-    baseName = 'spotmystatus'
-}
+project.archivesBaseName = 'spotmystatus'
