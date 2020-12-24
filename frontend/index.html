@@ -25,36 +25,8 @@
 <body>
 
 <!-- navigator -->
-<nav class="navbar navbar-light bg-light fixed-top navbar-expand-md">
-  <div class="container">
-    <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar1,#navbar2" aria-expanded="false" aria-controls="navbar1,navbar2"><span
-        class="sr-only">Toggle navigation</span> ☰
-    </button>
-    <div class="navbar-collapse collapse" id="navbar1">
-      <ul class="navbar-nav mr-auto">
-        <li class="nav-item active">
-          <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="support.html">Support</a>
-        </li>
-      </ul>
-    </div>
-    <div id="navbar2" class="navbar-collapse collapse">
-      <ul class="nav navbar-nav ml-auto">
-        <li class="nav-item">
-          <a href="https://github.com/giorgimode/SpotMyStatus/" target="_blank" class="nav-link"><i class="fab fa-github fa-2x"></i></a>
-        </li>
-        <li class="nav-item">
-          <a href="https://giorgimode.myjetbrains.com/youtrack/issues?q=project:%20SMS" target="_blank" class="nav-link"><i
-              class="fas fa-bug fa-2x"></i></a>
-        </li>
-      </ul>
-    </div>
-    <!--/.nav-collapse -->
-  </div>
-</nav>
-
+<div id="tabs_navbar">
+</div>
 
 <!-- Masthead -->
 <header class="masthead text-white text-center">
@@ -120,6 +92,11 @@
 <!-- Bootstrap core JavaScript -->
 <script src="vendor/jquery/jquery.min.js"></script>
 <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script type="text/javascript">
+  $(function(){
+    $("#tabs_navbar").load("navbar.html");
+  });
+</script>
 </body>
 
 </html>
