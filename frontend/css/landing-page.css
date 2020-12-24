@@ -2,6 +2,11 @@ body {
   font-family: 'Lato', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
+html, header, body {
+  margin: 0;
+  height: 100%;
+}
+
 h1,
 h2,
 h3,
