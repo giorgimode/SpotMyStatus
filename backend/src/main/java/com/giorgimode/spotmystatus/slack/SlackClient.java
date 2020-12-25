@@ -5,8 +5,10 @@ import static com.giorgimode.spotmystatus.helpers.SpotConstants.SLACK_PROFILE_SC
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.SLACK_REDIRECT_PATH;
 import static com.giorgimode.spotmystatus.helpers.SpotUtil.baseUri;
 import static com.giorgimode.spotmystatus.model.SpotifyItem.EPISODE;
+import static java.util.function.Predicate.not;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.trimToNull;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 import com.giorgimode.spotmystatus.helpers.PropertyVault;
@@ -27,6 +29,7 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import javax.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -179,17 +182,31 @@ public class SlackClient {
         return ":" + emojis.get(RANDOM.nextInt(emojis.size())) + ":";
     }
 
-    private boolean updateStatus(CachedUser user, SlackStatusPayload statusPayload) {
+    private boolean updateStatus(CachedUser cachedUser, SlackStatusPayload statusPayload) {
         //noinspection deprecation: Slack issues warning on missing charset
         SlackResponse response = RestHelper.builder()
                                            .withBaseUrl(configProperties.getSlackUri() + "/api/users.profile.set")
-                                           .withBearer(user.getSlackAccessToken())
+                                           .withBearer(cachedUser.getSlackAccessToken())
                                            .withContentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
                                            .withBody(statusPayload)
                                            .postAndGetBody(restTemplate, SlackResponse.class);
 
         log.trace("Slack response to status update {}", response);
+        validateSlackResult(cachedUser, statusPayload, response);
         return response.isOk();
+    }
+
+    private void validateSlackResult(CachedUser cachedUser, SlackStatusPayload statusPayload, SlackResponse response) {
+        if ("profile_status_set_failed_not_valid_emoji".equals(response.getError())) {
+            String emojiToRemove = statusPayload.getProfile().getStatusEmoji().replace(":", "");
+            log.warn("Removing invalid emoji {} from user {}", emojiToRemove, cachedUser.getId());
+            List<String> validEmojis = cachedUser.getEmojis().stream().filter(not(emojiToRemove::equals)).collect(Collectors.toList());
+            cachedUser.setEmojis(validEmojis);
+            userRepository.findById(cachedUser.getId()).ifPresent(user -> {
+                user.setEmojis(trimToNull(String.join(",", cachedUser.getEmojis())));
+                userRepository.save(user);
+            });
+        }
     }
 
     public void cleanStatus(CachedUser user) {
