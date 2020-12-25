@@ -66,6 +66,11 @@ spring:
             required: true
         transport:
           protocol: smtp
+  thymeleaf:
+    cache: false
+    enabled: true
+    suffix: .html
+    prefix: "classpath:/static/"
 
 email:
   sender: ${SMTP_MAIL_SENDER}

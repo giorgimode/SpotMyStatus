@@ -1,24 +1,25 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <link rel="icon" href="img/spotify-slack-icon.png" type="image/png" sizes="32x32">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <meta name="description" content="">
   <meta name="author" content="">
+  <link rel="icon" href="img/spotify-slack-icon.png" type="image/png" sizes="32x32">
 
   <title>Support - SpotMyStatus</title>
 
   <!-- Bootstrap core CSS -->
-  <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" th:href="@{/vendor/bootstrap/css/bootstrap.min.css}"/>
+  <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" th:href="@{/vendor/fontawesome-free/css/all.min.css}"/>
+  <link href="vendor/simple-line-icons/css/simple-line-icons.css" rel="stylesheet" type="text/css"
+        th:href="@{/vendor/simple-line-icons/css/simple-line-icons.css}"/>
 
   <!-- Custom fonts for this template -->
-  <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
-  <link href="vendor/simple-line-icons/css/simple-line-icons.css" rel="stylesheet" type="text/css">
   <link href="https://fonts.googleapis.com/css?family=Lato:300,400,700,300italic,400italic,700italic" rel="stylesheet" type="text/css">
 
   <!-- Custom styles for this template -->
-  <link href="css/landing-page.min.css" rel="stylesheet">
+  <link href="css/landing-page.min.css" rel="stylesheet" th:href="@{/css/landing-page.min.css}"/>
 
 </head>
 
@@ -34,8 +35,15 @@
   <div class="container">
     <div class="row">
       <div class="col-md-6 col-md-offset-3">
+        <input id="formResult" type="hidden" th:value="${formResult}" disabled="disabled"/>
+        <div id="successMessage" class="alert alert-success d-none" role="alert">
+         Submission successful
+        </div>
+        <div id="failMessage" class="alert alert-danger d-none" role="alert">
+          Something went wrong. Please try again
+        </div>
         <div class="well well-sm">
-          <form class="form-horizontal" action="/api/support" method="post">
+          <form class="form-horizontal" action="/support" method="post">
             <fieldset>
               <legend class="text-center">Contact us</legend>
 
@@ -88,11 +96,22 @@
 </header>
 
 <!-- Bootstrap core JavaScript -->
-<script src="vendor/jquery/jquery.min.js"></script>
-<script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="/vendor/jquery/jquery.min.js" th:href="@{/vendor/jquery/jquery.min.js}"></script>
+<script src="/vendor/bootstrap/js/bootstrap.bundle.min.js" th:href="@{/vendor/bootstrap/js/bootstrap.bundle.min.js}"></script>
 <script type="text/javascript">
   $(function () {
-    $("#tabs_navbar").load("navbar.html");
+    $("#tabs_navbar").load("/navbar.html");
+  });
+</script>
+<script type="text/javascript">
+  $(document).ready(function () {
+    if ($("#formResult").val() === "success") {
+      $("#successMessage").removeClass('d-none');
+      $("#failMessage").addClass('d-none');
+    } else if ($("#formResult").val() === "fail") {
+      $("#successMessage").addClass('d-none');
+      $("#failMessage").removeClass('d-none');
+    }
   });
 </script>
 </body>
