@@ -91,7 +91,7 @@ public class SlackClient {
     }
 
     private String getRedirectUri() {
-        return baseUri(configProperties.getRedirectUriScheme()) + SLACK_REDIRECT_PATH;
+        return baseUri(configProperties.getRedirectUriScheme()) + "/api" + SLACK_REDIRECT_PATH;
     }
 
     private void persistNewUser(SlackToken slackToken, UUID state) {
