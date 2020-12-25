@@ -24,8 +24,8 @@ public final class SpotConstants {
     public static final String BLOCK_ID_SUBMIT = "submit_block";
     public static final String BLOCK_ID_FIRST_DIVIDER = "first_divider_block";
     public static final String EMOJI_REGEX = "^[a-z0-9-_]+$";
-    public static final String SLACK_REDIRECT_PATH = "/slack/redirect";
-    public static final String SPOTIFY_REDIRECT_PATH = "/spotify/redirect";
+    public static final String SLACK_REDIRECT_PATH = "/api/slack/redirect";
+    public static final String SPOTIFY_REDIRECT_PATH = "/api/spotify/redirect";
     public static final String SPOTIFY_SCOPE_USER_PLAYBACK = "user-read-playback-state";
     public static final List<String> SLACK_PROFILE_SCOPES = List.of("users:read", "users.profile:read", "users.profile:write");
     public static final List<String> SLACK_BOT_SCOPES = List.of("chat:write", "commands");
