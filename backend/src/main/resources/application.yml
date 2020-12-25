@@ -69,7 +69,7 @@ spring:
   thymeleaf:
     cache: false
     enabled: true
-    suffix: .html
+    suffix: ".html"
     prefix: "classpath:/static/"
 
 email:

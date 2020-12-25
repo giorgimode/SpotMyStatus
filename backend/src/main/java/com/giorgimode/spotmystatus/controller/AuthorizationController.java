@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 public class AuthorizationController {
 
-    private static final String ERROR_PAGE = "/error.html";
+    private static final String ERROR_PAGE = "/error";
 
     private final SpotifyClient spotifyClient;
     private final SlackClient slackClient;
@@ -71,11 +71,6 @@ public class AuthorizationController {
 
         log.info("User has granted permission on Spotify. Received code {} for state {}", spotifyCode, state);
         spotifyClient.updateAuthToken(spotifyCode, state);
-        httpServletResponse.sendRedirect("/success.html");
-    }
-
-    @RequestMapping("/error")
-    public void handleError(HttpServletResponse httpServletResponse) throws IOException {
-        httpServletResponse.sendRedirect(ERROR_PAGE);
+        httpServletResponse.sendRedirect("/success");
     }
 }

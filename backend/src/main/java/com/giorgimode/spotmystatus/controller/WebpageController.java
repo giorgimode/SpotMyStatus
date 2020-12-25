@@ -8,6 +8,7 @@ import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
 @Slf4j
@@ -28,11 +29,21 @@ public class WebpageController {
         } catch (Exception e) {
             model.addAttribute("formResult", "fail");
         }
-        return "support.html";
+        return "support";
     }
 
     @GetMapping("/support")
-    public String getSupportPage(@ModelAttribute SubmissionForm supportSubmission) {
-        return "support.html";
+    public String getSupportPage() {
+        return "support";
+    }
+
+    @GetMapping("/success")
+    public String getSuccessPage() {
+        return "success";
+    }
+
+    @RequestMapping("/error")
+    public String handleError() {
+        return "error";
     }
 }
