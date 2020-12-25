@@ -79,7 +79,7 @@ public class SpotifyAuthClient {
     }
 
     private String getRedirectUri() {
-        return baseUri(configProperties.getRedirectUriScheme()) + SPOTIFY_REDIRECT_PATH;
+        return baseUri(configProperties.getRedirectUriScheme()) + "/api" + SPOTIFY_REDIRECT_PATH;
     }
 
     public SpotifyTokenResponse getNewAccessToken(String refreshToken) {
