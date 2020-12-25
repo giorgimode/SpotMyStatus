@@ -25,27 +25,8 @@
 <body>
 
 <!-- navigator -->
-<nav class="navbar navbar-light bg-light fixed-top navbar-expand-md">
-  <div class="container">
-    <a href="/"><button class="btn"><i class="fa fa-home fa-2x"></i></button></a>
-    <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar"><span
-        class="sr-only">Toggle navigation</span> ☰
-    </button>
-    <div id="navbar" class="navbar-collapse collapse">
-      <ul class="nav navbar-nav ml-auto">
-        <li class="nav-item">
-          <a href="https://github.com/giorgimode/SpotMyStatus/" target="_blank" class="nav-link"><i class="fab fa-github fa-2x"></i></a>
-        </li>
-        <li class="nav-item">
-          <a href="https://giorgimode.myjetbrains.com/youtrack/issues?q=project:%20SMS" target="_blank" class="nav-link"><i
-              class="fas fa-bug fa-2x"></i></a>
-        </li>
-      </ul>
-    </div>
-    <!--/.nav-collapse -->
-  </div>
-</nav>
-
+<div id="tabs_navbar">
+</div>
 
 <!-- Masthead -->
 <header class="masthead text-white text-center">
@@ -59,7 +40,7 @@
         <h1>Sync Your Spotify Music to Your Slack Status</h1>
       </div>
       <div class="col-12 my-auto">
-        <a href="/start" class="round-button"></a>
+        <a href="/api/start" class="round-button"></a>
         </div>
       </div>
     </div>
@@ -111,6 +92,11 @@
 <!-- Bootstrap core JavaScript -->
 <script src="vendor/jquery/jquery.min.js"></script>
 <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script type="text/javascript">
+  $(function(){
+    $("#tabs_navbar").load("navbar.html");
+  });
+</script>
 </body>
 
 </html>

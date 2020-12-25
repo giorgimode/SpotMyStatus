@@ -28,6 +28,7 @@ public class SpotMyStatusSecurityConfiguration extends WebSecurityConfigurerAdap
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
+            .csrf().disable()
             .addFilterAfter(googleFilter(), OAuth2LoginAuthenticationFilter.class)
             .authorizeRequests()
             .antMatchers("/admin/**")

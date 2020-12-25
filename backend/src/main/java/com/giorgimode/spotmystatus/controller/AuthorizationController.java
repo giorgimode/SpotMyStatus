@@ -9,15 +9,17 @@ import java.io.IOException;
 import java.util.UUID;
 import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequestMapping("api")
 @Slf4j
 public class AuthorizationController {
 
-    private static final String ERROR_PAGE = "/error.html";
+    private static final String ERROR_PAGE = "/error";
 
     private final SpotifyClient spotifyClient;
     private final SlackClient slackClient;
@@ -27,7 +29,7 @@ public class AuthorizationController {
         this.slackClient = slackClient;
     }
 
-    @RequestMapping("/start")
+    @GetMapping("/start")
     public void startNewUser(HttpServletResponse httpServletResponse) {
         log.info("Starting authorization for a new user...");
         String authorization = slackClient.requestAuthorization();
@@ -69,11 +71,6 @@ public class AuthorizationController {
 
         log.info("User has granted permission on Spotify. Received code {} for state {}", spotifyCode, state);
         spotifyClient.updateAuthToken(spotifyCode, state);
-        httpServletResponse.sendRedirect("/success.html");
-    }
-
-    @RequestMapping("/error")
-    public void handleError(HttpServletResponse httpServletResponse) throws IOException {
-        httpServletResponse.sendRedirect(ERROR_PAGE);
+        httpServletResponse.sendRedirect("/success");
     }
 }
