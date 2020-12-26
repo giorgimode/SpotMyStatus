@@ -91,13 +91,21 @@ header.masthead h1, header.masthead-fail h1 {
 
 .testimonials .testimonial-item img {
   max-width: 12rem;
-  box-shadow: 0px 5px 5px 0px #adb5bd;
+  box-shadow: 0 5px 5px 0 #adb5bd;
 }
 
 .spotify-slack {
   width: 30%;
   height: 30%;
   background-size: cover;
+}
+a {
+  color: #ffffff;
+  text-decoration: underline
+}
+
+a:hover {
+  color: #343232;
 }
 
 .footer a {
