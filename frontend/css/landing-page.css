@@ -94,28 +94,6 @@ header.masthead h1, header.masthead-fail h1 {
   box-shadow: 0px 5px 5px 0px #adb5bd;
 }
 
-.round-button {
-  box-sizing: border-box;
-  display: inline-grid;
-  width: 120px;
-  height: 120px;
-  padding-top: 50px;
-  font-size: 2rem;
-  padding-left: 8px;
-  line-height: 20px;
-  border-radius: 50%;
-  color: #f5f5f5;
-  /*background: url("../img/play-button.png") no-repeat center center;*/
-  background-color: #4CAF50;
-  background-size: cover;
-  transition: all 0.3s ease;
-  max-width: 100%;
-}
-.round-button:hover {
-  transform: scale(1.2);
-  background-size: 120% 120%;
-}
-
 .spotify-slack {
   width: 30%;
   height: 30%;
@@ -127,8 +105,7 @@ header.masthead h1, header.masthead-fail h1 {
   text-decoration-line: underline;
 }
 
-
-.hover-button-icon {
+.sync-button-icon {
   display: inline-grid;
   width: 150px;
   height: 74px;
@@ -144,7 +121,7 @@ header.masthead h1, header.masthead-fail h1 {
   max-width: 100%;
 }
 
-.hover-button {
+.sync-button {
   transition: all 450ms cubic-bezier(.4, .25, .3, 1.3);
   width: 130px;
   height: 90px;
@@ -163,7 +140,7 @@ header.masthead h1, header.masthead-fail h1 {
   overflow: hidden;
 }
 
-.hover-button a {
+.sync-button a {
   color: #ffffff;
   transition: all 400ms cubic-bezier(.4, .25, .3, 1.3) 100ms;
   position: absolute;
@@ -177,40 +154,40 @@ header.masthead h1, header.masthead-fail h1 {
   text-decoration: none;
 }
 
-.hover-button a:first-of-type {
+.sync-button a:first-of-type {
   font-size: 4.5rem;
   transform: translate(-50%, -50%);
 }
 
-.hover-button a:last-of-type {
+.sync-button a:last-of-type {
   transform: translate(-50%, 50%);
   font-size: 1.1rem;
   text-transform: uppercase;
   white-space: nowrap;
 }
 
-.hover-button:hover {
+.sync-button:hover {
   width: 200px;
   border-radius: 80px;
 }
 
-.hover-button:hover a:first-of-type {
+.sync-button:hover a:first-of-type {
   transform: translate(-50%, -150%)
 }
 
-.hover-button:hover a:last-of-type {
+.sync-button:hover a:last-of-type {
   transform: translate(-50%, -50%);
   line-height: 30px;
 }
 
-.hover-button a.offset-1 {
+.sync-button a.offset-1 {
   margin-top: -1px
 }
 
-.hover-button a.offset-3 {
+.sync-button a.offset-3 {
   margin-top: -3px
 }
 
-.hover-button a.offset-10 {
+.sync-button a.offset-10 {
   margin-top: -10px
 }
