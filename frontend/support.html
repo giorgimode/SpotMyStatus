@@ -44,7 +44,7 @@
         <div class="well well-sm">
           <form class="form-horizontal" action="/support" method="post">
             <fieldset>
-              <legend class="text-center">Contact us</legend>
+              <legend class="text-center">Support</legend>
 
               <!-- Name input-->
               <div class="form-group">
@@ -94,12 +94,17 @@
   </div>
 </header>
 
+<!-- Footer -->
+<div id="footer">
+</div>
+
 <!-- Bootstrap core JavaScript -->
 <script src="/vendor/jquery/jquery.min.js" th:href="@{/vendor/jquery/jquery.min.js}"></script>
 <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js" th:href="@{/vendor/bootstrap/js/bootstrap.bundle.min.js}"></script>
 <script type="text/javascript">
   $(function () {
     $("#tabs_navbar").load("/navbar.html");
+    $("#footer").load("/footer.html");
   });
 </script>
 </body>

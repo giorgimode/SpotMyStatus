@@ -119,3 +119,8 @@ header.masthead h1, header.masthead-fail h1 {
   height:30%;
   background-size:cover;
 }
+
+.footer a {
+  color:#f5f5f5;
+  text-decoration-line: underline;
+}

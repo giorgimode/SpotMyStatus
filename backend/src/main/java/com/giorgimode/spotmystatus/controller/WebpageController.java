@@ -42,6 +42,11 @@ public class WebpageController {
         return "success";
     }
 
+    @GetMapping("/privacy")
+    public String getPrivacyPage() {
+        return "privacy";
+    }
+
     @RequestMapping("/error")
     public String handleError() {
         return "error";
