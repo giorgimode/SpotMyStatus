@@ -96,16 +96,18 @@ header.masthead h1, header.masthead-fail h1 {
 
 .round-button {
   box-sizing: border-box;
-  display:inline-grid;
-  width:120px;
-  height:120px;
-  padding-top: 8px;
+  display: inline-grid;
+  width: 120px;
+  height: 120px;
+  padding-top: 50px;
+  font-size: 2rem;
   padding-left: 8px;
   line-height: 20px;
   border-radius: 50%;
-  color:#f5f5f5;
-  background: url("../img/play-button.png") no-repeat center center;
-  background-size:cover;
+  color: #f5f5f5;
+  /*background: url("../img/play-button.png") no-repeat center center;*/
+  background-color: #4CAF50;
+  background-size: cover;
   transition: all 0.3s ease;
   max-width: 100%;
 }
@@ -115,12 +117,100 @@ header.masthead h1, header.masthead-fail h1 {
 }
 
 .spotify-slack {
-  width:30%;
-  height:30%;
-  background-size:cover;
+  width: 30%;
+  height: 30%;
+  background-size: cover;
 }
 
 .footer a {
-  color:#f5f5f5;
+  color: #f5f5f5;
   text-decoration-line: underline;
+}
+
+
+.hover-button-icon {
+  display: inline-grid;
+  width: 150px;
+  height: 74px;
+  padding-top: 50px;
+  font-size: 2rem;
+  padding-left: 8px;
+  border-radius: 180px;
+  color: #f5f5f5;
+  background: url("../img/spotify-slack.png") no-repeat center;
+  background-size: 70%;
+  background-position: center 10px;
+  transition: all 0.3s ease;
+  max-width: 100%;
+}
+
+.hover-button {
+  transition: all 450ms cubic-bezier(.4, .25, .3, 1.3);
+  width: 130px;
+  height: 90px;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #2c2c2c ;
+  background-color: rgba(0, 0, 0, 0.3);
+  border: 5px solid #1db954;
+  border-radius: 180px;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.hover-button a {
+  color: #ffffff;
+  transition: all 400ms cubic-bezier(.4, .25, .3, 1.3) 100ms;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  font-size: 1.5rem;
+  font-weight: bold;
+  font-family: 'Lato', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  line-height: 90px;
+  vertical-align: middle;
+  text-decoration: none;
+}
+
+.hover-button a:first-of-type {
+  font-size: 4.5rem;
+  transform: translate(-50%, -50%);
+}
+
+.hover-button a:last-of-type {
+  transform: translate(-50%, 50%);
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.hover-button:hover {
+  width: 200px;
+  border-radius: 80px;
+}
+
+.hover-button:hover a:first-of-type {
+  transform: translate(-50%, -150%)
+}
+
+.hover-button:hover a:last-of-type {
+  transform: translate(-50%, -50%);
+  line-height: 30px;
+}
+
+.hover-button a.offset-1 {
+  margin-top: -1px
+}
+
+.hover-button a.offset-3 {
+  margin-top: -3px
+}
+
+.hover-button a.offset-10 {
+  margin-top: -10px
 }
