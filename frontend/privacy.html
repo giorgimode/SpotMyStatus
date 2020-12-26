@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link href="/img/spotify-slack-icon.png" rel="icon" sizes="32x32" type="image/png">
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport">
+  <meta content="" name="description">
+  <meta content="" name="author">
+
+  <title>SpotMyStatus</title>
+
+  <!-- Bootstrap core CSS -->
+  <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Custom fonts for this template -->
+  <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+  <link href="/vendor/simple-line-icons/css/simple-line-icons.css" rel="stylesheet" type="text/css">
+  <link href="https://fonts.googleapis.com/css?family=Lato:300,400,700,300italic,400italic,700italic" rel="stylesheet" type="text/css">
+
+  <!-- Custom styles for this template -->
+  <link href="/css/landing-page.min.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<!-- navigator -->
+<div id="tabs_navbar">
+</div>
+
+<div class="container">
+  <div class="mw-70 mx-auto pt-3">
+    <br><br><br><br><br>
+    <h1 style="text-align:center">Privacy Policy</h1>
+    <h5>This privacy policy has been compiled to better serve those who are concerned with how their information is
+      being used. Please read our privacy policy carefully to get a
+      clear understanding of how we collect, use, protect or otherwise handle your information.</h5>
+
+    <br><br>
+    <h3><span id="what" class="about-anchor">What personal information do we collect from the users?</span></h3>
+    <p>SpotMyStatus connects your Slack and Spotify accounts and syncs them. To do so, very granular and minimal permissions are requested.</p>
+    <p>From Spotify SpotMyStatus requests <strong>user-read-playback-state</strong> scope. As a result, the app has a permission to
+    <ul>
+      <li><strong>Read user's name and username, profile picture, how many followers user has on Spotify and their public playlists</strong> - default
+        permission when
+        access token is requested
+      </li>
+      <li><strong>Read access to a user's player state</strong> - to check if user is currently playing a track</li>
+      <li><strong>Read user's currently playing content and Spotify Connect devices information</strong> - to get current track and currently
+        connected devices, so that user can pick devices to sync from
+      </li>
+    </ul>
+    </p>
+    <p>From Slack SpotMyStatus requests
+    <ul>
+      <li>
+        bot scopes
+        <ul>
+          <li><strong>chat:write</strong>: Send messages as @spotmystatus</li>
+          <li><strong>commands</strong>: Add slash commands that people can use, e.g. <i>@spotme</i></li>
+        </ul>
+      </li>
+      <li>
+        user scopes
+        <ul>
+          <li><strong>users:read</strong>: View profile details about people in a workspace. Necessary to get required information about user, e.g.
+            <i>user's presence</i>, <i>status</i> and <i>timezone</i>
+          </li>
+          <li><strong>users.profile:read</strong>: View a user's profile information, including their custom status</li>
+          <li><strong>users.profile:write</strong>: Edit a user’s profile information and status</li>
+        </ul>
+      </li>
+    </ul>
+    </p>
+
+    <h3><span id="who" class="about-anchor">How do we use your information?</span></h3>
+    <p>Information requested is purely used to synchronize status and nothing else</p>
+
+    <h3><span id="how" class="about-anchor">How do I add this to my Slack?</span></h3>
+    <p>You should visit <a href="/">SpotMyStatus home page</a> and click the large button. You will be first redirected to your Slack workspace and
+      then to your Spotify account to give SpotMyStatus necessary permissions</p>
+
+    <h3><span id="how-view" class="about-anchor">How do we protect your information?</span></h3>
+    <p>Both application and the data are hosted by Amazon Web Services. They are protected by AWS security standards. Additionally,
+      there is an extensive monitoring and alarms set in place to detect any suspicious activity</p>
+
+    <h3><span id="data" class="about-anchor">What data does SpotMyStatus store?</span></h3>
+    <p>SpotMyStatus is built to store a minimal amount of information from a Slack workspace. To make the service work, we store:<br>
+    </p>
+    <ul>
+      <li><strong>Slack access token</strong>
+      <li><strong>Spotify refresh token</strong>
+      <li><strong>User's timezone to detect user's work hours</strong>
+      <li><strong>User's spotify devices to ignore tracks playing from excluded devices</strong>
+    </ul>
+    <p></p>
+    <p>Finally, contents are not shared with any third parties in any way.</p>
+
+    <h3><span id="delete" class="about-anchor">How do I get my data deleted according to GDPR regulations?</span></h3>
+    <p>There are several ways to delete your data in your Slack workspace
+    <ul>
+      <li>Call the command <strong>@spotme purge</strong></li>
+      <li>Invoke a SpotMyStatus window via <strong>@spotme</strong> command and click the purge button</li>
+      <li>Open SpotMyStatus Home tab and click the purge button</li>
+    </ul>
+    <p>You can remove SpotMyStatus from your Slack workspace completely in Slack's <a href="https://slack.com/apps/manage">Manage Apps</a> tool.
+    </p>
+
+    <h3><span id="contact" class="about-anchor">Contact</span></h3>
+    <p>If you have any concerns, don't hesitate to contact me via <a href="/support">support page</a></p>
+  </div>
+
+</div>
+
+<!-- Footer -->
+<div id="footer">
+</div>
+
+<!-- Bootstrap core JavaScript -->
+<script src="/vendor/jquery/jquery.min.js"></script>
+<script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script type="text/javascript">
+  $(function () {
+    $("#tabs_navbar").load("/navbar.html");
+    $("#footer").load("/footer.html");
+  });
+</script>
+</body>
+
+</html>
