@@ -52,7 +52,7 @@ public class UserInteractionController {
                 baseUri(configProperties.getRedirectUriScheme()) + "/support";
         }
         if (userInteractionService.userMissing(userId)) {
-            return "User not found. Please sign up at " + baseUri(configProperties.getRedirectUriScheme()) + "/start";
+            return "User not found. Please sign up at " + baseUri(configProperties.getRedirectUriScheme()) + "/api/start";
         }
 
         if (isBlank(command)) {
@@ -79,7 +79,7 @@ public class UserInteractionController {
     }
 
     private String signupMessage() {
-        return "Visit the app home page at " + baseUri(configProperties.getRedirectUriScheme());
+        return String.format("To sign up again visit the <%s|app home page>", baseUri(configProperties.getRedirectUriScheme()));
     }
 
     @PostMapping(value = "/slack/events", consumes = MediaType.APPLICATION_JSON_VALUE)
