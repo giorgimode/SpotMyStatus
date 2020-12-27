@@ -209,3 +209,8 @@ a:hover {
 .sync-button a.offset-10 {
   margin-top: -10px
 }
+
+footer.footer {
+  padding-top: 0.7rem;
+  padding-bottom: 0.7rem;
+}
