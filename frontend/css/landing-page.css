@@ -74,6 +74,11 @@ header.masthead h1, header.masthead-fail h1 {
   }
 }
 
+.showcase .showcase-img {
+  width: 70%;
+  height: auto;
+}
+
 .features-icons {
   padding-top: 7rem;
   padding-bottom: 7rem;
