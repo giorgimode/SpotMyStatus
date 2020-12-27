@@ -64,36 +64,19 @@ header.masthead h1, header.masthead-fail h1 {
   }
 }
 
-showcase .showcase-text {
+.showcase .showcase-text {
   padding: 3rem;
-}
-
-.showcase .showcase-img1 {
-  /*min-height: 25rem;*/
-  background-size: contain;
-  /*background-size: cover;*/
-  min-height: 35rem;
-}
-
-.showcase .showcase-img2 {
-  /*min-height: 30rem;*/
-  /*width: auto;*/
-  background-size:contain;
-  /*background-size: cover;*/
-  min-height: 35rem;
-}
-
-.showcase .showcase-img3 {
-  /*min-height: 25rem;*/
-  background-size:contain;
-  /*background-size: cover;*/
-  min-height: 35rem;
 }
 
 @media (min-width: 768px) {
   .showcase .showcase-text {
-    padding: 0rem;
+    padding: 7rem;
   }
+}
+
+.features-icons {
+  padding-top: 7rem;
+  padding-bottom: 7rem;
 }
 
 .features-icons .features-icons-item {
