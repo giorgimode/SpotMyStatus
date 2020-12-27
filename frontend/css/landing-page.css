@@ -64,16 +64,6 @@ header.masthead h1, header.masthead-fail h1 {
   }
 }
 
-.showcase .showcase-text {
-  padding: 3rem;
-}
-
-@media (min-width: 768px) {
-  .showcase .showcase-text {
-    padding: 7rem;
-  }
-}
-
 .showcase .showcase-img {
   width: 70%;
   height: auto;
