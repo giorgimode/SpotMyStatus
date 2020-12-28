@@ -1,33 +1,42 @@
 # SpotMyStatus
-
 Slack App updating user's status with currently playing song from Spotify
 
+### [App Home page](https://spotmystatus.giomo.de)
+
+[![here](/frontend/img/spotify-slack.png?raw=true)](https://spotmystatus.giomo.de)
 
 ## Bugs, Feature Requests
-Feel free to add feature requests to the issue tracker
- 
-[![here](https://upload.wikimedia.org/wikipedia/commons/4/48/Icon_YouTrack.png)](https://giorgimode.myjetbrains.com/youtrack/issues/SMS)
+Feel free to create a support ticket [via home page](https://spotmystatus.giomo.de/support) 
+or to add a ticket [directly in the issue tracker](https://giorgimode.myjetbrains.com/youtrack/issues/SMS)
 
 
+## SpotMyStatus app commands
+Following parameters can be passed to `/spotme` command in Slack
+* /spotme pause
+* /spotme play
+* /spotme purge
+* /spotme help
 
-## SpotMyStatus Slack App Parameters
-Following parameters can be passed to `/spotmystatus` command in Slack
-* `pause`/`stop` to temporarily pause status updates
-* `unpause`/`play`/`resume` to resume status updates
-* `purge`/`remove` to purge all user data. Fresh signup will be needed to use the app again
+## SpotMyStatus customization
+Customize your experience by running `/spotme` command or by accessing app Home Tab
+![SpotMyStatus Home Tab Screenshot](/frontend/img/github_screenshot.png?raw=true)
+
         
 ## Features
-After the signup, SpotMyStatus polls users Spotify account(`spotmystatus.polling_rate`) in normal working hours 
-(`spotmystatus.passivate_start_hr`, `spotmystatus.passivate_end_hr`). Outside working hours polling rate is 
-decreased(`spotmystatus.passive_polling_probability`) if and only if user has been passive for a certain period 
-(`spotmystatus.passivate_after_min`). Each poll is limited to a threshold(`spotmystatus.timeout`) to avoid hanging calls. 
+* User can pause/play status syncing
+* User can choose to sync music and/or podcasts (default both)
+* User can define emojis to rotate from when app sets a status. Emojis not present in the workspace will not be added 
+(default 🎧, 🎵, 🎶)
+* Uer can define working hours, or the hours during which syncing is active (default 7AM-8PM user's local time)
+* User can define Spotify devices to sync from (default all)
+* User can purge all their data from SpotMyStatus server
 
 On each status update the status emoji is randomly picked from `:headphones:`, `:musical_note:` or `:notes:`.
 
 On each poll the application does various checks:
 * has user paused status updates
-* is it outside working hours(between 9PM and 6AM in user's timezone) and has user been passive for a certain period
+* is it outside working hours
 * is user offline
-* has user manually changed status(to avoid overwriting it)
+* has user manually changed their status(to avoid overwriting it)
 
 If any of the above conditions are true, status is not updated.
