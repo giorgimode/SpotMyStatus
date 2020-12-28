@@ -561,7 +561,7 @@ public class UserInteractionService {
         signupBlock.setType("section");
         Text signupText = new Text();
         signupText.setType("mrkdwn");
-        signupText.setTextValue(String.format("You can sign up <%s|here>", baseUri(spotMyStatusProperties.getRedirectUriScheme()) + "/start"));
+        signupText.setTextValue(String.format("You can sign up <%s|here>", baseUri(spotMyStatusProperties.getRedirectUriScheme()) + "/api/start"));
         signupBlock.setText(signupText);
         return signupBlock;
     }

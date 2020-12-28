@@ -10,15 +10,15 @@
   <title>SpotMyStatus</title>
 
   <!-- Bootstrap core CSS -->
-  <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
 
   <!-- Custom fonts for this template -->
-  <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
-  <link href="/vendor/simple-line-icons/css/simple-line-icons.css" rel="stylesheet" type="text/css">
+  <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+  <link href="vendor/simple-line-icons/css/simple-line-icons.css" rel="stylesheet" type="text/css">
   <link href="https://fonts.googleapis.com/css?family=Lato:300,400,700,300italic,400italic,700italic" rel="stylesheet" type="text/css">
 
   <!-- Custom styles for this template -->
-  <link href="/css/landing-page.min.css" rel="stylesheet">
+  <link href="css/landing-page.min.css" rel="stylesheet">
 
 </head>
 
@@ -51,32 +51,44 @@
   <section class="features-icons bg-light text-center">
     <div class="container">
       <div class="row">
-        <div class="col-lg-4">
+        <div class="col-lg-3">
+          <div class="features-icons-item mx-auto mb-5 mb-lg-0 mb-lg-3">
+            <div class="features-icons-icon d-flex">
+              <i class="fab fa-creative-commons-sampling m-auto text-primary"></i>
+            </div>
+            <h3>Reactive</h3>
+            <p class="lead mb-0">Reacts to external changes to skip updates, e.g. when user is offline or status has been manually changed</p>
+          </div>
+        </div>
+        <div class="col-lg-3">
+          <div class="features-icons-item mx-auto mb-5 mb-lg-0 mb-lg-3">
+            <div class="features-icons-icon d-flex">
+              <i class="icon-energy m-auto text-primary"></i>
+            </div>
+            <h3>Convenient</h3>
+            Easy commands for quick use:
+            <div class="lead mb-0">
+              <ul style="text-align: left">
+                <li>/spotme pause</li>
+                <li>/spotme play</li>
+                <li>/spotme purge</li>
+                <li>/spotme help</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3">
           <div class="features-icons-item mx-auto mb-5 mb-lg-0 mb-lg-3">
             <div class="features-icons-icon d-flex">
               <i class="icon-screen-desktop m-auto text-primary"></i>
             </div>
             <h3>Interactive</h3>
-            Via command <b>/spotmystatus</b>
             <p class="lead mb-0">
-            <ul style="text-align: left">
-              <li><b>pause</b>/<b>stop</b>: Pause updates</li>
-              <li><b>unpause</b>/<b>play/resume</b>: Continue</li>
-              <li><b>purge</b>/<b>remove</b>: Disable permanently</li>
-            </ul>
+              Customize your experience by running <i>/spotmystatus</i> command or by accessing app Home Tab
             </p>
           </div>
         </div>
-        <div class="col-lg-4">
-          <div class="features-icons-item mx-auto mb-5 mb-lg-0 mb-lg-3">
-            <div class="features-icons-icon d-flex">
-              <i class="icon-layers m-auto text-primary"></i>
-            </div>
-            <h3>Responsive</h3>
-            <p class="lead mb-0">Reacts to external changes to skip updates, e.g. when user is offline or status has been manually changed</p>
-          </div>
-        </div>
-        <div class="col-lg-4">
+        <div class="col-lg-3">
           <div class="features-icons-item mx-auto mb-0 mb-lg-3">
             <div class="features-icons-icon d-flex">
               <i class="icon-check m-auto text-primary"></i>
@@ -89,17 +101,64 @@
     </div>
   </section>
 
+<!-- Image Showcases -->
+<section class="showcase">
+  <div class="container">
+    <h2 style="text-align: center">Demo</h2>
+    <div class="row">
+      <img class="showcase-img center-block" src="img/slack_demo.gif" alt="SpotMyStatus app demo"/>
+    </div>
+  </div>
+</section>
+
+<!-- Testimonials -->
+<section class="testimonials text-center bg-light">
+  <div class="container">
+    <h2 class="mb-5">What people are saying...</h2>
+    <div class="row">
+      <div class="col-lg-3">
+        <div class="testimonial-item mx-auto mb-5 mb-lg-0">
+          <img class="img-fluid rounded-circle mb-3" src="img/testimonial_roll_safe.png" alt="">
+          <h5>Reece Simpson</h5>
+          <p class="font-weight-light mb-0">"If my colleagues can see I'm focusing with music, they won't interrupt me every 2 minutes "</p>
+        </div>
+      </div>
+      <div class="col-lg-3">
+        <div class="testimonial-item mx-auto mb-5 mb-lg-0">
+          <img class="img-fluid rounded-circle mb-3" src="img/testimonial_prison_mike.png" alt="">
+          <h5>Prison Mike</h5>
+          <p class="font-weight-light mb-0">"Pumped to share some cool rappers I picked up in the clink. Dinkin' Flicka!"</p>
+        </div>
+      </div>
+      <div class="col-lg-3">
+        <div class="testimonial-item mx-auto mb-5 mb-lg-0">
+          <img class="img-fluid rounded-circle mb-3" src="img/testimonial_puppet.png" alt="">
+          <h5>Anonymous</h5>
+          <p class="font-weight-light mb-0">"It's so cool I can pause syncing status in case I'm listening to Kawaii metal"</p>
+        </div>
+      </div>
+      <div class="col-lg-3">
+        <div class="testimonial-item mx-auto mb-5 mb-lg-0">
+          <img class="img-fluid rounded-circle mb-3" src="img/testimonial_harold.png" alt="">
+          <h5>Harold</h5>
+          <p class="font-weight-light mb-0">"I'm just filling the row to make these totally legit testimonials look nice"</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- Footer -->
 <div id="footer">
 </div>
 
 <!-- Bootstrap core JavaScript -->
-<script src="/vendor/jquery/jquery.min.js"></script>
-<script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="vendor/jquery/jquery.min.js"></script>
+<script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 <script type="text/javascript">
   $(function(){
-    $("#tabs_navbar").load("/navbar.html");
-    $("#footer").load("/footer.html");
+    $("#tabs_navbar").load("navbar.html");
+    $("#footer").load("footer.html");
   });
 </script>
 </body>
