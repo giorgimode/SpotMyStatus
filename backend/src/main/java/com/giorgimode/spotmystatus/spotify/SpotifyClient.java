@@ -83,13 +83,15 @@ public class SpotifyClient {
             log.info("Retrieved spotify access token expiring in {} seconds", spotifyTokens.getExpiresIn());
             user.setSpotifyAccessToken(spotifyTokens.getAccessToken());
             return tryGetSpotifyCurrentTrack(user);
-        } catch (Exception e) {
-            if (e.getMessage().contains("invalid_grant")) {
+        } catch (HttpClientErrorException ex) {
+            if (ex.getStatusCode() == HttpStatus.BAD_REQUEST && ex.getResponseBodyAsString().contains("invalid_grant")) {
+                log.error("User's Spotify token has been invalidated. Cleaning up user {}", user.getId());
                 invalidateUser(user.getId());
             }
+        } catch (Exception e) {
             log.error("Failed to retrieve current track", e);
-            return Optional.empty();
         }
+            return Optional.empty();
     }
 
     private Optional<SpotifyCurrentItem> tryGetSpotifyCurrentTrack(CachedUser user) {
