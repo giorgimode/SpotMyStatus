@@ -260,6 +260,7 @@ public class UserInteractionService {
         updateSpotifyDevices(cachedUser, getStateValue(payload, BLOCK_ID_SPOTIFY_DEVICES).getSelectedOptions());
         updateSync(cachedUser.getId(), getStateValue(payload, BLOCK_ID_SYNC_TOGGLE).getSelectedOptions().isEmpty());
         persistChanges(cachedUser);
+        updateHomeTab(cachedUser.getId());
         return null;
     }
 
