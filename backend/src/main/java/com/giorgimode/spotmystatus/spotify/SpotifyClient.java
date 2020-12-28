@@ -84,6 +84,9 @@ public class SpotifyClient {
             user.setSpotifyAccessToken(spotifyTokens.getAccessToken());
             return tryGetSpotifyCurrentTrack(user);
         } catch (Exception e) {
+            if (e.getMessage().contains("invalid_grant")) {
+                invalidateUser(user.getId());
+            }
             log.error("Failed to retrieve current track", e);
             return Optional.empty();
         }
