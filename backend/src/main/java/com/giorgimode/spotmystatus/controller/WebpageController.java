@@ -47,6 +47,11 @@ public class WebpageController {
         return "privacy";
     }
 
+    @GetMapping("/terms")
+    public String getTermsAndConditionsPage() {
+        return "terms";
+    }
+
     @RequestMapping("/error")
     public String handleError() {
         return "error";
