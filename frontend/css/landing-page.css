@@ -67,6 +67,7 @@ header.masthead h1, header.masthead-fail h1 {
 .showcase .showcase-img {
   width: 70%;
   height: auto;
+  align-self: flex-start;
   display:block;
   margin-left:auto;
   margin-right:auto;
