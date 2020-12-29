@@ -118,10 +118,9 @@ public final class RestHelper {
         return restTemplate.exchange(createUri(), HttpMethod.GET, new HttpEntity<>(createHeaders()), responseType).getBody();
     }
 
-    public ResponseEntity<Void> delete(RestTemplate restTemplate) {
-        return restTemplate.exchange(createUri(), HttpMethod.DELETE, new HttpEntity<>(createHeaders()), Void.class);
+    public void delete(RestTemplate restTemplate) {
+        restTemplate.exchange(createUri(), HttpMethod.DELETE, new HttpEntity<>(createHeaders()), Void.class);
     }
-
 
     public String createUri() {
         UriComponentsBuilder uriBuilder = fromHttpUrl(baseUrl);

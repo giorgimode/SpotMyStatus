@@ -1,0 +1,340 @@
+{
+  "type": "block_actions",
+  "user": {
+    "id": "test_user_id",
+    "username": "giorgi",
+    "name": "giorgi",
+    "team_id": "test_team_id"
+  },
+  "api_app_id": "test_api_app_id",
+  "token": "test_token",
+  "container": {
+    "type": "view",
+    "view_id": "test_view_id"
+  },
+  "trigger_id": "1532849749489.2537469034.25e364155e5fcd6f95b1d86970bd9273",
+  "team": {
+    "id": "test_team_id",
+    "domain": "test_domain"
+  },
+  "view": {
+    "id": "test_view_id",
+    "team_id": "test_team_id",
+    "type": "modal",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "sync_toggle_block",
+        "text": {
+          "type": "mrkdwn",
+          "text": " ",
+          "verbatim": false
+        },
+        "accessory": {
+          "type": "checkboxes",
+          "action_id": "checkboxes-action",
+          "initial_options": [
+            {
+              "text": {
+                "type": "mrkdwn",
+                "text": "Toggle Status Syncing On\/Off",
+                "verbatim": false
+              },
+              "value": "sync_on"
+            }
+          ],
+          "options": [
+            {
+              "text": {
+                "type": "mrkdwn",
+                "text": "Toggle Status Syncing On\/Off",
+                "verbatim": false
+              },
+              "value": "sync_on"
+            }
+          ]
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "spotify_items_block",
+        "text": {
+          "type": "mrkdwn",
+          "text": "Pick at least one of these Spotify items to sync",
+          "verbatim": false
+        },
+        "accessory": {
+          "type": "checkboxes",
+          "initial_options": [
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "Music",
+                "emoji": true
+              },
+              "value": "track"
+            }
+          ],
+          "options": [
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "Music",
+                "emoji": true
+              },
+              "value": "track"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "Podcast",
+                "emoji": true
+              },
+              "value": "episode"
+            }
+          ],
+          "action_id": "5wPy"
+        }
+      },
+      {
+        "type": "divider",
+        "block_id": "u+hX"
+      },
+      {
+        "type": "input",
+        "block_id": "emoji_input_block",
+        "label": {
+          "type": "plain_text",
+          "text": "Add new emojis to rotate through",
+          "emoji": true
+        },
+        "optional": true,
+        "dispatch_action": true,
+        "element": {
+          "type": "plain_text_input",
+          "placeholder": {
+            "type": "plain_text",
+            "text": "guitar, the_horns",
+            "emoji": true
+          },
+          "dispatch_action_config": {
+            "trigger_actions_on": [
+              "on_enter_pressed"
+            ]
+          },
+          "action_id": "9T5i2"
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "emoji_list_block",
+        "text": {
+          "type": "mrkdwn",
+          "text": " ",
+          "verbatim": false
+        },
+        "accessory": {
+          "type": "multi_static_select",
+          "placeholder": {
+            "type": "plain_text",
+            "text": "Your emojis",
+            "emoji": true
+          },
+          "initial_options": [
+            {
+              "text": {
+                "type": "plain_text",
+                "text": ":guitar:",
+                "emoji": true
+              },
+              "value": "guitar"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": ":the_horns:",
+                "emoji": true
+              },
+              "value": "the_horns"
+            }
+          ],
+          "options": [
+            {
+              "text": {
+                "type": "plain_text",
+                "text": ":guitar:",
+                "emoji": true
+              },
+              "value": "guitar"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": ":the_horns:",
+                "emoji": true
+              },
+              "value": "the_horns"
+            }
+          ],
+          "action_id": "KvG"
+        }
+      },
+      {
+        "type": "divider",
+        "block_id": "GEN"
+      },
+      {
+        "type": "section",
+        "block_id": "1mxzM",
+        "text": {
+          "type": "mrkdwn",
+          "text": "*Enter the start and end time to sync status in between*",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "actions",
+        "block_id": "391",
+        "elements": [
+          {
+            "type": "timepicker",
+            "action_id": "start_hour-action",
+            "initial_time": "06:00",
+            "placeholder": {
+              "type": "plain_text",
+              "text": "Start time",
+              "emoji": true
+            }
+          },
+          {
+            "type": "timepicker",
+            "action_id": "end_hour-action",
+            "initial_time": "20:00",
+            "placeholder": {
+              "type": "plain_text",
+              "text": "End time",
+              "emoji": true
+            }
+          }
+        ]
+      },
+      {
+        "type": "divider",
+        "block_id": "UpyT"
+      },
+      {
+        "type": "section",
+        "block_id": "gIO",
+        "text": {
+          "type": "mrkdwn",
+          "text": "<http:\/\/spotmystatus.giomo.de\/|_*SpotMyStatus Home*_>",
+          "verbatim": false
+        }
+      }
+    ],
+    "private_metadata": "",
+    "callback_id": "modal-identifier",
+    "state": {
+      "values": {
+        "391": {
+          "start_hour-action": {
+            "type": "timepicker",
+            "selected_time": "03:00"
+          },
+          "end_hour-action": {
+            "type": "timepicker",
+            "selected_time": "20:00"
+          }
+        },
+        "sync_toggle_block": {
+          "checkboxes-action": {
+            "type": "checkboxes",
+            "selected_options": [
+              {
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "Toggle Status Syncing On\/Off",
+                  "verbatim": false
+                },
+                "value": "sync_on"
+              }
+            ]
+          }
+        },
+        "spotify_items_block": {
+          "5wPy": {
+            "type": "checkboxes",
+            "selected_options": [
+              {
+                "text": {
+                  "type": "plain_text",
+                  "text": "Music",
+                  "emoji": true
+                },
+                "value": "track"
+              }
+            ]
+          }
+        },
+        "emoji_input_block": {
+          "9T5i2": {
+            "type": "plain_text_input",
+            "value": "shota,levani, :kukusha:"
+          }
+        },
+        "emoji_list_block": {
+          "KvG": {
+            "type": "multi_static_select",
+            "selected_options": [
+              {
+                "text": {
+                  "type": "plain_text",
+                  "text": ":guitar:",
+                  "emoji": true
+                },
+                "value": "guitar"
+              },
+              {
+                "text": {
+                  "type": "plain_text",
+                  "text": ":the_horns:",
+                  "emoji": true
+                },
+                "value": "the_horns"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "hash": "1606059749.eCjT6qNc",
+    "title": {
+      "type": "plain_text",
+      "text": "Customize SpotMyStatus",
+      "emoji": true
+    },
+    "clear_on_close": false,
+    "notify_on_close": false,
+    "close": null,
+    "submit": {
+      "type": "plain_text",
+      "text": "Submit",
+      "emoji": true
+    },
+    "previous_view_id": null,
+    "root_view_id": "test_root_view_id",
+    "app_id": "test_app_id",
+    "external_id": "",
+    "app_installed_team_id": "test_app_installed_team_id",
+    "bot_id": "test_B01BZFVDZJR"
+  },
+  "actions": [
+    {
+      "type": "plain_text_input",
+      "block_id": "emoji_input_block",
+      "action_id": "9T5i2",
+      "value": "guitar, violin",
+      "action_ts": "1606059979.609108"
+    }
+  ]
+}
