@@ -11,9 +11,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import lombok.Data;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class CachedUser implements Serializable {
 
     private String id;
@@ -65,7 +70,7 @@ public class CachedUser implements Serializable {
         private String slackAccessToken;
         private String spotifyAccessToken;
         private String spotifyRefreshToken;
-        private Boolean disabled;
+        private boolean disabled;
         private String emojis;
         private String spotifyItems;
         private String spotifyDeviceIds;
