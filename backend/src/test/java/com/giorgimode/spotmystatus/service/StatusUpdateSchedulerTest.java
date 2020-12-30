@@ -242,7 +242,7 @@ class StatusUpdateSchedulerTest {
                                           .withOffsetSameInstant(ZoneOffset.UTC);
         int syncStartHour = now.getHour();
         CachedUser cachedUser = CachedUser.builder()
-                                          .id("test123")
+                                          .id("user1")
                                           .slackAccessToken("testSlackToken")
                                           .spotifyRefreshToken("testSpotifyRefreshToken")
                                           .spotifyAccessToken("testSpotifyAccessToken")

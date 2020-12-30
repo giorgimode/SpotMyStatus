@@ -1,5 +1,6 @@
 package com.giorgimode.spotmystatus.controller;
 
+import static com.giorgimode.spotmystatus.helpers.SpotUtil.OBJECT_MAPPER;
 import static com.giorgimode.spotmystatus.helpers.SpotUtil.baseUri;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -51,7 +52,7 @@ public class UserInteractionController {
             return "Failed to validate signature. If the issue persists, please contact support at " +
                 baseUri(configProperties.getRedirectUriScheme()) + "/support";
         }
-        if (userInteractionService.userMissing(userId)) {
+        if (userInteractionService.isUserMissing(userId)) {
             return "User not found. Please sign up at " + baseUri(configProperties.getRedirectUriScheme()) + "/api/start";
         }
 
@@ -85,7 +86,7 @@ public class UserInteractionController {
     @PostMapping(value = "/slack/events", consumes = MediaType.APPLICATION_JSON_VALUE)
     public String receiveSlackEvent(@RequestBody String rawBody) throws JsonProcessingException {
         log.debug("Received a raw slack event {}", rawBody);
-        SlackEvent slackEvent = new ObjectMapper().readValue(rawBody, SlackEvent.class);
+        SlackEvent slackEvent = OBJECT_MAPPER.readValue(rawBody, SlackEvent.class);
         log.debug("Received a slack event {}", slackEvent);
         if ("url_verification".equals(slackEvent.getType())) {
             return slackEvent.getChallenge();

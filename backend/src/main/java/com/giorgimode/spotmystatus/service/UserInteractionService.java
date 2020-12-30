@@ -70,7 +70,9 @@ import org.springframework.web.server.ResponseStatusException;
 public class UserInteractionService {
 
     private static final String SHA_256_ALGORITHM = "HmacSHA256";
-    private static final String SLACK_VIEW_UPDATE_URI = "/api/views.update";
+    static final String SLACK_VIEW_UPDATE_URI = "/api/views.update";
+    static final String SLACK_VIEW_OPEN_URI = "/api/views.open";
+    static final String SLACK_VIEW_PUBLISH = "/api/views.publish";
     private static final String PLAIN_TEXT = "plain_text";
 
     private final UserRepository userRepository;
@@ -98,7 +100,7 @@ public class UserInteractionService {
         this.propertyVault = propertyVault;
     }
 
-    public boolean userMissing(String userId) {
+    public boolean isUserMissing(String userId) {
         return userCache.getIfPresent(userId) == null;
     }
 
@@ -107,7 +109,7 @@ public class UserInteractionService {
         InvocationModal invocationModal = new InvocationModal();
         invocationModal.setTriggerId(triggerId);
         invocationModal.setView(modalViewTemplate);
-        String response = slackClient.notifyUser("/api/views.open", invocationModal);
+        String response = slackClient.notifyUser(SLACK_VIEW_OPEN_URI, invocationModal);
         log.trace("Received response on trigger handle: {}", response);
     }
 
@@ -349,7 +351,7 @@ public class UserInteractionService {
         }
     }
 
-    public void updateEmojis(CachedUser cachedUser, List<Option> selectedEmojiOptions) {
+    private void updateEmojis(CachedUser cachedUser, List<Option> selectedEmojiOptions) {
         List<String> selectedEmojis = getOptionValues(selectedEmojiOptions);
         if (CollectionUtils.isEmpty(selectedEmojis)) {
             cachedUser.setEmojis(List.of());
@@ -377,7 +379,7 @@ public class UserInteractionService {
         return userCache.getIfPresent(userId);
     }
 
-    public void updateSpotifyItems(CachedUser cachedUser, List<Option> selectedSpotifyItems) {
+    private void updateSpotifyItems(CachedUser cachedUser, List<Option> selectedSpotifyItems) {
         if (CollectionUtils.isEmpty(selectedSpotifyItems)) {
             cachedUser.setSpotifyItems(List.of());
         } else {
@@ -387,7 +389,7 @@ public class UserInteractionService {
         }
     }
 
-    public void updateSpotifyDevices(CachedUser cachedUser, List<Option> spotifyDevices) {
+    private void updateSpotifyDevices(CachedUser cachedUser, List<Option> spotifyDevices) {
         if (CollectionUtils.isEmpty(spotifyDevices)) {
             cachedUser.setSpotifyDeviceIds(List.of());
         } else {
@@ -451,7 +453,7 @@ public class UserInteractionService {
         block.getElement().setActionId(null);
     }
 
-    Optional<String> getValidationError(String newEmojiInput) {
+    private Optional<String> getValidationError(String newEmojiInput) {
         if (newEmojiInput.length() > 100) {
             return Optional.of("Emoji cannot be longer than 100 characters");
         } else if (!StringUtils.strip(newEmojiInput, ":").matches(EMOJI_REGEX)) {
@@ -474,7 +476,7 @@ public class UserInteractionService {
                  });
     }
 
-    InteractionModal createModalResponse(InvocationModal payload) {
+    private InteractionModal createModalResponse(InvocationModal payload) {
         InteractionModal slackModal = new InteractionModal();
         slackModal.setViewId(payload.getView().getId());
         slackModal.setHash(payload.getView().getHash());
@@ -543,7 +545,7 @@ public class UserInteractionService {
         ModalView modalView = new ModalView();
         modalView.setType("home");
         homeModal.setView(modalView);
-        if (userMissing(userId)) {
+        if (isUserMissing(userId)) {
             Block noUserHeader = createHeaderForMissingUser();
             Block signupBlock = createSignupBlockForMissingUser();
             modalView.setBlocks(List.of(noUserHeader, signupBlock));
@@ -553,7 +555,7 @@ public class UserInteractionService {
             modalView.setBlocks(blocks);
         }
 
-        String response = slackClient.notifyUser("/api/views.publish", homeModal);
+        String response = slackClient.notifyUser(SLACK_VIEW_PUBLISH, homeModal);
         log.trace("Slack returned response when updating home tab {}", response);
     }
 

@@ -1,24 +1,20 @@
 {
-  "type": "block_actions",
+  "type": "view_submission",
+  "team": {
+    "id": "test_team_id",
+    "domain": "test_domain"
+  },
   "user": {
-    "id": "test_user_id",
+    "id": "user1",
     "username": "giorgi",
     "name": "giorgi",
     "team_id": "test_team_id"
   },
   "api_app_id": "test_api_app_id",
   "token": "test_token",
-  "container": {
-    "type": "view",
-    "view_id": "test_view_id"
-  },
   "trigger_id": "test_trigger_id",
-  "team": {
-    "id": "test_team_id",
-    "domain": "test_domain"
-  },
   "view": {
-    "id": "test_view_id",
+    "id": "V01GX7CRC4B",
     "team_id": "test_team_id",
     "type": "modal",
     "blocks": [
@@ -67,6 +63,7 @@
         "dispatch_action": false,
         "element": {
           "type": "checkboxes",
+          "action_id": "NmM",
           "initial_options": [
             {
               "text": {
@@ -102,13 +99,12 @@
               },
               "value": "episode"
             }
-          ],
-          "action_id": "2SdB"
+          ]
         }
       },
       {
         "type": "divider",
-        "block_id": "B6N"
+        "block_id": "4as+K"
       },
       {
         "type": "input",
@@ -132,7 +128,7 @@
               "on_enter_pressed"
             ]
           },
-          "action_id": "Um0zU"
+          "action_id": "aiG"
         }
       },
       {
@@ -176,6 +172,14 @@
                 "emoji": true
               },
               "value": "notes"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": ":guitar:",
+                "emoji": true
+              },
+              "value": "guitar"
             }
           ],
           "options": [
@@ -202,18 +206,26 @@
                 "emoji": true
               },
               "value": "notes"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": ":guitar:",
+                "emoji": true
+              },
+              "value": "guitar"
             }
           ],
-          "action_id": "PqDvx"
+          "action_id": "UMcBr"
         }
       },
       {
         "type": "divider",
-        "block_id": "yK2ot"
+        "block_id": "brG"
       },
       {
         "type": "section",
-        "block_id": "LLAm",
+        "block_id": "A4oE",
         "text": {
           "type": "mrkdwn",
           "text": "*Sync status between these hours*",
@@ -248,7 +260,7 @@
       },
       {
         "type": "divider",
-        "block_id": "+dT"
+        "block_id": "FuZ4"
       },
       {
         "type": "input",
@@ -262,6 +274,7 @@
         "dispatch_action": false,
         "element": {
           "type": "multi_static_select",
+          "action_id": "pBs=D",
           "placeholder": {
             "type": "plain_text",
             "text": "Select devices",
@@ -274,7 +287,7 @@
                 "text": "Giorgi\u2019s MacBook Pro",
                 "emoji": true
               },
-              "value": "031b6118fc92921880dc89fb643bd3085bcf8cf5"
+              "value": "macbookDeviceId123"
             },
             {
               "text": {
@@ -282,7 +295,7 @@
                 "text": "Giorgis Echo Dot",
                 "emoji": true
               },
-              "value": "0e6ac70f-2c7a-49a9-99e8-062d9e86f5e5"
+              "value": "echoDotId123"
             }
           ],
           "options": [
@@ -292,7 +305,7 @@
                 "text": "Giorgi\u2019s MacBook Pro",
                 "emoji": true
               },
-              "value": "031b6118fc92921880dc89fb643bd3085bcf8cf5"
+              "value": "macbookDeviceId123"
             },
             {
               "text": {
@@ -300,27 +313,26 @@
                 "text": "Giorgis Echo Dot",
                 "emoji": true
               },
-              "value": "0e6ac70f-2c7a-49a9-99e8-062d9e86f5e5"
+              "value": "echoDotId123"
             }
-          ],
-          "action_id": "fIz"
+          ]
         }
       },
       {
         "type": "divider",
-        "block_id": "first_divider_block"
+        "block_id": "16u8P"
       },
       {
         "type": "divider",
-        "block_id": "vJpt"
+        "block_id": "di4"
       },
       {
         "type": "divider",
-        "block_id": "nQL"
+        "block_id": "SMS"
       },
       {
         "type": "header",
-        "block_id": "kA\/",
+        "block_id": "w93lk",
         "text": {
           "type": "plain_text",
           "text": "Danger Zone",
@@ -362,7 +374,7 @@
       },
       {
         "type": "divider",
-        "block_id": "t7vVC"
+        "block_id": "FjVsW"
       },
       {
         "type": "context",
@@ -370,7 +382,7 @@
         "elements": [
           {
             "type": "mrkdwn",
-            "text": ":house: <https:\/\/sharp-gecko-91.loca.lt|_*SpotMyStatus Home*_> | :male-mechanic: <https:\/\/sharp-gecko-91.loca.lt\/support|_*SpotMyStatus Support*_>",
+            "text": ":house: <https:\/\/average-sloth-74.loca.lt|_*SpotMyStatus Home*_> | :male-mechanic: <https:\/\/average-sloth-74.loca.lt\/support|_*SpotMyStatus Support*_>",
             "verbatim": false
           }
         ]
@@ -396,7 +408,7 @@
           }
         },
         "spotify_items_block": {
-          "2SdB": {
+          "NmM": {
             "type": "checkboxes",
             "selected_options": [
               {
@@ -406,51 +418,22 @@
                   "emoji": true
                 },
                 "value": "track"
-              },
-              {
-                "text": {
-                  "type": "plain_text",
-                  "text": "Podcast",
-                  "emoji": true
-                },
-                "value": "episode"
               }
             ]
           }
         },
-        "emoji_input_block": {
-          "Um0zU": {
-            "type": "plain_text_input",
-            "value": "tutuci."
-          }
-        },
+        "emoji_input_block": {},
         "emoji_list_block": {
-          "PqDvx": {
+          "UMcBr": {
             "type": "multi_static_select",
             "selected_options": [
               {
                 "text": {
                   "type": "plain_text",
-                  "text": ":headphones:",
+                  "text": ":guitar:",
                   "emoji": true
                 },
-                "value": "headphones"
-              },
-              {
-                "text": {
-                  "type": "plain_text",
-                  "text": ":musical_note:",
-                  "emoji": true
-                },
-                "value": "musical_note"
-              },
-              {
-                "text": {
-                  "type": "plain_text",
-                  "text": ":notes:",
-                  "emoji": true
-                },
-                "value": "notes"
+                "value": "guitar"
               }
             ]
           }
@@ -466,7 +449,7 @@
           }
         },
         "spotify_devices_block": {
-          "fIz": {
+          "pBs=D": {
             "type": "multi_static_select",
             "selected_options": [
               {
@@ -475,7 +458,7 @@
                   "text": "Giorgi\u2019s MacBook Pro",
                   "emoji": true
                 },
-                "value": "031b6118fc92921880dc89fb643bd3085bcf8cf5"
+                "value": "macbookDeviceId123"
               },
               {
                 "text": {
@@ -483,14 +466,14 @@
                   "text": "Giorgis Echo Dot",
                   "emoji": true
                 },
-                "value": "0e6ac70f-2c7a-49a9-99e8-062d9e86f5e5"
+                "value": "echoDotId123"
               }
             ]
           }
         }
       }
     },
-    "hash": "1607021997.CFImpVAt",
+    "hash": "1606845296.0ULSwrf8",
     "title": {
       "type": "plain_text",
       "text": "Customize SpotMyStatus",
@@ -511,13 +494,5 @@
     "app_installed_team_id": "test_app_installed_team_id",
     "bot_id": "test_bot_id"
   },
-  "actions": [
-    {
-      "type": "plain_text_input",
-      "block_id": "emoji_input_block",
-      "action_id": "9T5i2",
-      "value": "guitar, violin",
-      "action_ts": "1606059979.609108"
-    }
-  ]
+  "response_urls": []
 }
