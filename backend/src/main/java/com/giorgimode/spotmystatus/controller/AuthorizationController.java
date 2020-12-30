@@ -38,7 +38,8 @@ public class AuthorizationController {
     }
 
     @RequestMapping(SLACK_REDIRECT_PATH)
-    public void slackRedirect(@RequestParam(value = "code", required = false) String slackCode,
+    public void slackRedirect(
+        @RequestParam(value = "code", required = false) String slackCode,
         @RequestParam(value = "error", required = false) String error,
         HttpServletResponse httpServletResponse) throws IOException {
 

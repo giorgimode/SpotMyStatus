@@ -8,7 +8,10 @@ spring:
     url: jdbc:h2:mem:testdb
     password: password
     username: sa
+    continue-on-error: true
   liquibase:
+    enabled: false
+  thymeleaf:
     enabled: false
 
 secret:

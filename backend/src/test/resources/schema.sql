@@ -1,4 +1,4 @@
-create table users
+create table if not exists users
 (
     id varchar(255) primary key,
     slack_access_token text not null,
