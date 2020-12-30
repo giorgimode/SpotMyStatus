@@ -22,7 +22,7 @@ public class SlackEvent {
 
     @Data
     @JsonIgnoreProperties(ignoreUnknown = true)
-    private static class Event {
+    public static class Event {
 
         private String type;
         private String user;

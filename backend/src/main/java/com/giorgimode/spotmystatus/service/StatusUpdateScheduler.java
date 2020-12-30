@@ -23,20 +23,18 @@ import org.springframework.stereotype.Component;
 public class StatusUpdateScheduler {
 
     private final ExecutorService executor;
-
     private final LoadingCache<String, CachedUser> userCache;
     private final SlackClient slackClient;
     private final SpotifyClient spotifyClient;
     private final SpotMyStatusProperties spotMyStatusProperties;
 
-    public StatusUpdateScheduler(LoadingCache<String, CachedUser> userCache,
-        SlackClient slackClient,
-        SpotifyClient spotifyClient, SpotMyStatusProperties spotMyStatusProperties) {
+    public StatusUpdateScheduler(LoadingCache<String, CachedUser> userCache, SlackClient slackClient,
+        SpotifyClient spotifyClient, SpotMyStatusProperties spotMyStatusProperties, ExecutorService executor) {
         this.userCache = userCache;
         this.slackClient = slackClient;
         this.spotifyClient = spotifyClient;
         this.spotMyStatusProperties = spotMyStatusProperties;
-        executor = Executors.newCachedThreadPool();
+        this.executor = executor;
     }
 
     @Scheduled(fixedDelayString = "${spotmystatus.polling_rate}")

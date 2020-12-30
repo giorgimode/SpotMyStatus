@@ -29,10 +29,7 @@ public class CacheConfiguration {
     }
 
 
-    private void populateCache(LoadingCache<String, CachedUser> cache,
-        SpotifyAuthClient spotifyAuthClient,
-        UserRepository userRepository) {
-
+    private void populateCache(LoadingCache<String, CachedUser> cache, SpotifyAuthClient spotifyAuthClient, UserRepository userRepository) {
         userRepository.findAll()
                       .stream()
                       .map(user -> cacheUser(spotifyAuthClient, user, userRepository))
@@ -55,10 +52,7 @@ public class CacheConfiguration {
                              .orElse(null);
     }
 
-    private CachedUser cacheUser(SpotifyAuthClient spotifyAuthClient,
-        User user,
-        UserRepository userRepository) {
-
+    private CachedUser cacheUser(SpotifyAuthClient spotifyAuthClient, User user, UserRepository userRepository) {
         try {
             return SpotUtil.toCachedUser(user, getAccessToken(spotifyAuthClient, user));
         } catch (HttpClientErrorException ex) {

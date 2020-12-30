@@ -1,0 +1,58 @@
+spring:
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: none
+  datasource:
+    driverClassName: org.h2.Driver
+    url: jdbc:h2:mem:testdb
+    password: password
+    username: sa
+    continue-on-error: true
+  liquibase:
+    enabled: false
+  thymeleaf:
+    enabled: false
+
+secret:
+  spotify:
+    client_id: spotify_client123
+    client_secret: spotify_client_secret123
+  slack:
+    client_id: slack_client123
+    client_secret: slack_client_secret123
+    bot_token: slack_bot_token123
+    signing_secret: slack_signing_secret123
+
+spotmystatus:
+  redirect_uri_scheme: https
+  slack_uri: https://fake-slack.com
+  spotify_account_uri: https://fake-spotify.com
+  spotify_api_uri: https://fake-api.spotify.com
+  core_pool_size: 0
+  polling_rate: 10000
+  sync_start_hr: 7
+  sync_end_hr: 20
+  timeout: 2000
+  expiration_overhead: 120000
+  default_emojis:
+    - "headphones"
+    - "musical_note"
+    - "notes"
+  podcast_emoji: "headphones"
+  default_spotify_items:
+    track: "Music"
+    episode: "Podcast"
+
+signature_verification_enabled: false
+admin_users: "some_admin@test.com"
+
+email:
+  sender: "sender@test.com"
+  recipient: "recipient@test.com"
+
+server:
+  error:
+    whitelabel:
+      enabled: false
+    path: "/dummy"

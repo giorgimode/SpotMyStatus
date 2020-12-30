@@ -1,0 +1,523 @@
+{
+  "type": "block_actions",
+  "user": {
+    "id": "test_user_id",
+    "username": "giorgi",
+    "name": "giorgi",
+    "team_id": "test_team_id"
+  },
+  "api_app_id": "test_api_app_id",
+  "token": "test_token",
+  "container": {
+    "type": "view",
+    "view_id": "test_view_id"
+  },
+  "trigger_id": "test_trigger_id",
+  "team": {
+    "id": "test_team_id",
+    "domain": "test_domain"
+  },
+  "view": {
+    "id": "test_view_id",
+    "team_id": "test_team_id",
+    "type": "modal",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "sync_toggle_block",
+        "text": {
+          "type": "mrkdwn",
+          "text": " ",
+          "verbatim": false
+        },
+        "accessory": {
+          "type": "checkboxes",
+          "action_id": "checkboxes-action",
+          "initial_options": [
+            {
+              "text": {
+                "type": "mrkdwn",
+                "text": "Toggle Status Syncing On\/Off",
+                "verbatim": false
+              },
+              "value": "sync_on"
+            }
+          ],
+          "options": [
+            {
+              "text": {
+                "type": "mrkdwn",
+                "text": "Toggle Status Syncing On\/Off",
+                "verbatim": false
+              },
+              "value": "sync_on"
+            }
+          ]
+        }
+      },
+      {
+        "type": "input",
+        "block_id": "spotify_items_block",
+        "label": {
+          "type": "plain_text",
+          "text": "Pick at least one of these Spotify items to sync",
+          "emoji": true
+        },
+        "optional": false,
+        "dispatch_action": false,
+        "element": {
+          "type": "checkboxes",
+          "initial_options": [
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "Music",
+                "emoji": true
+              },
+              "value": "track"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "Podcast",
+                "emoji": true
+              },
+              "value": "episode"
+            }
+          ],
+          "options": [
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "Music",
+                "emoji": true
+              },
+              "value": "track"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "Podcast",
+                "emoji": true
+              },
+              "value": "episode"
+            }
+          ],
+          "action_id": "2SdB"
+        }
+      },
+      {
+        "type": "divider",
+        "block_id": "B6N"
+      },
+      {
+        "type": "input",
+        "block_id": "emoji_input_block",
+        "label": {
+          "type": "plain_text",
+          "text": "Add new emojis to rotate through",
+          "emoji": true
+        },
+        "optional": true,
+        "dispatch_action": true,
+        "element": {
+          "type": "plain_text_input",
+          "placeholder": {
+            "type": "plain_text",
+            "text": "guitar, the_horns",
+            "emoji": true
+          },
+          "dispatch_action_config": {
+            "trigger_actions_on": [
+              "on_enter_pressed"
+            ]
+          },
+          "action_id": "Um0zU"
+        }
+      },
+      {
+        "type": "input",
+        "block_id": "emoji_list_block",
+        "label": {
+          "type": "plain_text",
+          "text": " ",
+          "emoji": true
+        },
+        "optional": false,
+        "dispatch_action": false,
+        "element": {
+          "type": "multi_static_select",
+          "placeholder": {
+            "type": "plain_text",
+            "text": "Your emojis",
+            "emoji": true
+          },
+          "initial_options": [
+            {
+              "text": {
+                "type": "plain_text",
+                "text": ":headphones:",
+                "emoji": true
+              },
+              "value": "headphones"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": ":musical_note:",
+                "emoji": true
+              },
+              "value": "musical_note"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": ":notes:",
+                "emoji": true
+              },
+              "value": "notes"
+            }
+          ],
+          "options": [
+            {
+              "text": {
+                "type": "plain_text",
+                "text": ":headphones:",
+                "emoji": true
+              },
+              "value": "headphones"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": ":musical_note:",
+                "emoji": true
+              },
+              "value": "musical_note"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": ":notes:",
+                "emoji": true
+              },
+              "value": "notes"
+            }
+          ],
+          "action_id": "PqDvx"
+        }
+      },
+      {
+        "type": "divider",
+        "block_id": "yK2ot"
+      },
+      {
+        "type": "section",
+        "block_id": "LLAm",
+        "text": {
+          "type": "mrkdwn",
+          "text": "*Sync status between these hours*",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "actions",
+        "block_id": "hours_input_block",
+        "elements": [
+          {
+            "type": "timepicker",
+            "action_id": "start_hour-action",
+            "initial_time": "07:00",
+            "placeholder": {
+              "type": "plain_text",
+              "text": "Start time",
+              "emoji": true
+            }
+          },
+          {
+            "type": "timepicker",
+            "action_id": "end_hour-action",
+            "initial_time": "20:00",
+            "placeholder": {
+              "type": "plain_text",
+              "text": "End time",
+              "emoji": true
+            }
+          }
+        ]
+      },
+      {
+        "type": "divider",
+        "block_id": "+dT"
+      },
+      {
+        "type": "input",
+        "block_id": "spotify_devices_block",
+        "label": {
+          "type": "plain_text",
+          "text": "Choose Spotify devices to sync from",
+          "emoji": true
+        },
+        "optional": false,
+        "dispatch_action": false,
+        "element": {
+          "type": "multi_static_select",
+          "placeholder": {
+            "type": "plain_text",
+            "text": "Select devices",
+            "emoji": true
+          },
+          "initial_options": [
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "Giorgi\u2019s MacBook Pro",
+                "emoji": true
+              },
+              "value": "031b6118fc92921880dc89fb643bd3085bcf8cf5"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "Giorgis Echo Dot",
+                "emoji": true
+              },
+              "value": "0e6ac70f-2c7a-49a9-99e8-062d9e86f5e5"
+            }
+          ],
+          "options": [
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "Giorgi\u2019s MacBook Pro",
+                "emoji": true
+              },
+              "value": "031b6118fc92921880dc89fb643bd3085bcf8cf5"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "Giorgis Echo Dot",
+                "emoji": true
+              },
+              "value": "0e6ac70f-2c7a-49a9-99e8-062d9e86f5e5"
+            }
+          ],
+          "action_id": "fIz"
+        }
+      },
+      {
+        "type": "divider",
+        "block_id": "first_divider_block"
+      },
+      {
+        "type": "divider",
+        "block_id": "vJpt"
+      },
+      {
+        "type": "divider",
+        "block_id": "nQL"
+      },
+      {
+        "type": "header",
+        "block_id": "kA\/",
+        "text": {
+          "type": "plain_text",
+          "text": "Danger Zone",
+          "emoji": true
+        }
+      },
+      {
+        "type": "actions",
+        "block_id": "purge_block",
+        "elements": [
+          {
+            "type": "button",
+            "action_id": "purge_action",
+            "text": {
+              "type": "plain_text",
+              "text": "Purge",
+              "emoji": true
+            },
+            "style": "danger",
+            "confirm": {
+              "title": {
+                "type": "plain_text",
+                "text": "Are you sure?",
+                "emoji": true
+              },
+              "text": {
+                "type": "mrkdwn",
+                "text": "Access tokens granted by you will be revoked. You'll have to sign up again to use the app",
+                "verbatim": false
+              },
+              "confirm": {
+                "type": "plain_text",
+                "text": "Purge",
+                "emoji": true
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "divider",
+        "block_id": "t7vVC"
+      },
+      {
+        "type": "context",
+        "block_id": "spotmystatus_uri_block",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": ":house: <https:\/\/sharp-gecko-91.loca.lt|_*SpotMyStatus Home*_> | :male-mechanic: <https:\/\/sharp-gecko-91.loca.lt\/support|_*SpotMyStatus Support*_>",
+            "verbatim": false
+          }
+        ]
+      }
+    ],
+    "private_metadata": "",
+    "callback_id": "modal-identifier",
+    "state": {
+      "values": {
+        "sync_toggle_block": {
+          "checkboxes-action": {
+            "type": "checkboxes",
+            "selected_options": [
+              {
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "Toggle Status Syncing On\/Off",
+                  "verbatim": false
+                },
+                "value": "sync_on"
+              }
+            ]
+          }
+        },
+        "spotify_items_block": {
+          "2SdB": {
+            "type": "checkboxes",
+            "selected_options": [
+              {
+                "text": {
+                  "type": "plain_text",
+                  "text": "Music",
+                  "emoji": true
+                },
+                "value": "track"
+              },
+              {
+                "text": {
+                  "type": "plain_text",
+                  "text": "Podcast",
+                  "emoji": true
+                },
+                "value": "episode"
+              }
+            ]
+          }
+        },
+        "emoji_input_block": {
+          "Um0zU": {
+            "type": "plain_text_input",
+            "value": "tutuci."
+          }
+        },
+        "emoji_list_block": {
+          "PqDvx": {
+            "type": "multi_static_select",
+            "selected_options": [
+              {
+                "text": {
+                  "type": "plain_text",
+                  "text": ":headphones:",
+                  "emoji": true
+                },
+                "value": "headphones"
+              },
+              {
+                "text": {
+                  "type": "plain_text",
+                  "text": ":musical_note:",
+                  "emoji": true
+                },
+                "value": "musical_note"
+              },
+              {
+                "text": {
+                  "type": "plain_text",
+                  "text": ":notes:",
+                  "emoji": true
+                },
+                "value": "notes"
+              }
+            ]
+          }
+        },
+        "hours_input_block": {
+          "start_hour-action": {
+            "type": "timepicker",
+            "selected_time": "07:00"
+          },
+          "end_hour-action": {
+            "type": "timepicker",
+            "selected_time": "20:00"
+          }
+        },
+        "spotify_devices_block": {
+          "fIz": {
+            "type": "multi_static_select",
+            "selected_options": [
+              {
+                "text": {
+                  "type": "plain_text",
+                  "text": "Giorgi\u2019s MacBook Pro",
+                  "emoji": true
+                },
+                "value": "031b6118fc92921880dc89fb643bd3085bcf8cf5"
+              },
+              {
+                "text": {
+                  "type": "plain_text",
+                  "text": "Giorgis Echo Dot",
+                  "emoji": true
+                },
+                "value": "0e6ac70f-2c7a-49a9-99e8-062d9e86f5e5"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "hash": "1607021997.CFImpVAt",
+    "title": {
+      "type": "plain_text",
+      "text": "Customize SpotMyStatus",
+      "emoji": true
+    },
+    "clear_on_close": false,
+    "notify_on_close": false,
+    "close": null,
+    "submit": {
+      "type": "plain_text",
+      "text": "Submit",
+      "emoji": true
+    },
+    "previous_view_id": null,
+    "root_view_id": "test_root_view_id",
+    "app_id": "test_app_id",
+    "external_id": "",
+    "app_installed_team_id": "test_app_installed_team_id",
+    "bot_id": "test_bot_id"
+  },
+  "actions": [
+    {
+      "type": "plain_text_input",
+      "block_id": "emoji_input_block",
+      "action_id": "9T5i2",
+      "value": "guitar, violin",
+      "action_ts": "1606059979.609108"
+    }
+  ]
+}
