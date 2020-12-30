@@ -4,7 +4,7 @@ import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_HOURS_I
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_INVALID_HOURS;
 import static com.giorgimode.spotmystatus.helpers.SpotUtil.OBJECT_MAPPER;
 import static com.giorgimode.spotmystatus.service.UserInteractionService.SLACK_VIEW_OPEN_URI;
-import static com.giorgimode.spotmystatus.service.UserInteractionService.SLACK_VIEW_PUBLISH;
+import static com.giorgimode.spotmystatus.service.UserInteractionService.SLACK_VIEW_PUBLISH_URI;
 import static com.giorgimode.spotmystatus.service.UserInteractionService.SLACK_VIEW_UPDATE_URI;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -217,7 +217,7 @@ class UserInteractionServiceTest {
         InvocationModal invocationModal = OBJECT_MAPPER.readValue(modalContent, InvocationModal.class);
         InteractionModal modal = userInteractionService.handleUserInteraction(invocationModal);
         assertNull(modal);
-        verify(slackClient).notifyUser(eq(SLACK_VIEW_PUBLISH), interactionModalCaptor.capture());
+        verify(slackClient).notifyUser(eq(SLACK_VIEW_PUBLISH_URI), interactionModalCaptor.capture());
         InteractionModal sentHomeTab = interactionModalCaptor.getValue();
         assertEquals(TEST_USER_ID, sentHomeTab.getUserId());
         assertNotNull(sentHomeTab.getView());
@@ -291,7 +291,7 @@ class UserInteractionServiceTest {
     @Test
     void shouldUpdateHomeTabForUnknownUser() {
         userInteractionService.updateHomeTab("unknown_user");
-        verify(slackClient).notifyUser(eq(SLACK_VIEW_PUBLISH), interactionModalCaptor.capture());
+        verify(slackClient).notifyUser(eq(SLACK_VIEW_PUBLISH_URI), interactionModalCaptor.capture());
         InteractionModal homeTabModal = interactionModalCaptor.getValue();
         assertEquals("unknown_user", homeTabModal.getUserId());
         assertNull(homeTabModal.getViewId());

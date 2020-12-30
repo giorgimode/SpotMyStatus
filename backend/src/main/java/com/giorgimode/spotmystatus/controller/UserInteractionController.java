@@ -4,7 +4,6 @@ import static com.giorgimode.spotmystatus.helpers.SpotUtil.OBJECT_MAPPER;
 import static com.giorgimode.spotmystatus.helpers.SpotUtil.baseUri;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.giorgimode.spotmystatus.helpers.SlackModalConverter;
 import com.giorgimode.spotmystatus.helpers.SpotMyStatusProperties;
 import com.giorgimode.spotmystatus.model.SlackEvent;
@@ -97,8 +96,8 @@ public class UserInteractionController {
     }
 
     @PostMapping(value = "/slack/interaction", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-    public InteractionModal handleInteraction(@RequestParam("payload") InvocationModal payload, @RequestParam("payload") String payloadRaw) {
-        log.debug("Received interaction: {}", payloadRaw);
+    public InteractionModal handleInteraction(@RequestParam("payload") InvocationModal payload) {
+        log.trace("Received interaction: {}", payload);
         return userInteractionService.handleUserInteraction(payload);
     }
 

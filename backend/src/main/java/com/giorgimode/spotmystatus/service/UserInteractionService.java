@@ -70,9 +70,9 @@ import org.springframework.web.server.ResponseStatusException;
 public class UserInteractionService {
 
     private static final String SHA_256_ALGORITHM = "HmacSHA256";
-    static final String SLACK_VIEW_UPDATE_URI = "/api/views.update";
-    static final String SLACK_VIEW_OPEN_URI = "/api/views.open";
-    static final String SLACK_VIEW_PUBLISH = "/api/views.publish";
+    public  static final String SLACK_VIEW_UPDATE_URI = "/api/views.update";
+    public  static final String SLACK_VIEW_OPEN_URI = "/api/views.open";
+    public static final String SLACK_VIEW_PUBLISH_URI = "/api/views.publish";
     private static final String PLAIN_TEXT = "plain_text";
 
     private final UserRepository userRepository;
@@ -555,7 +555,7 @@ public class UserInteractionService {
             modalView.setBlocks(blocks);
         }
 
-        String response = slackClient.notifyUser(SLACK_VIEW_PUBLISH, homeModal);
+        String response = slackClient.notifyUser(SLACK_VIEW_PUBLISH_URI, homeModal);
         log.trace("Slack returned response when updating home tab {}", response);
     }
 
