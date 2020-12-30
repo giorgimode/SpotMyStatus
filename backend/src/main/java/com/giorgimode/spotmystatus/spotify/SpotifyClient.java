@@ -80,7 +80,7 @@ public class SpotifyClient {
     private Optional<SpotifyCurrentItem> refreshSpotifyAccessToken(CachedUser user) {
         try {
             SpotifyTokenResponse spotifyTokens = spotifyAuthClient.getNewAccessToken(user.getSpotifyRefreshToken());
-            log.info("Retrieved spotify access token expiring in {} seconds", spotifyTokens.getExpiresIn());
+            log.debug("Retrieved spotify access token expiring in {} seconds", spotifyTokens.getExpiresIn());
             user.setSpotifyAccessToken(spotifyTokens.getAccessToken());
             return tryGetSpotifyCurrentTrack(user);
         } catch (HttpClientErrorException ex) {

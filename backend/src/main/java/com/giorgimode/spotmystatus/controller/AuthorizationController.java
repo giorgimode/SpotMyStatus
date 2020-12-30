@@ -44,7 +44,7 @@ public class AuthorizationController {
         HttpServletResponse httpServletResponse) throws IOException {
 
         if (slackCode == null) {
-            log.info("User failed to grant permission on Slack. Received error {}", error);
+            log.warn("User failed to grant permission on Slack. Received error {}", error);
             httpServletResponse.sendRedirect(ERROR_PAGE);
             return;
         }
@@ -65,7 +65,7 @@ public class AuthorizationController {
         HttpServletResponse httpServletResponse) throws IOException {
 
         if (state == null || isBlank(spotifyCode)) {
-            log.info("User failed to grant permission on Spotify. Received code {}, state {} with error {}", spotifyCode, state, error);
+            log.warn("User failed to grant permission on Spotify. Received code {}, state {} with error {}", spotifyCode, state, error);
             httpServletResponse.sendRedirect(ERROR_PAGE);
             return;
         }

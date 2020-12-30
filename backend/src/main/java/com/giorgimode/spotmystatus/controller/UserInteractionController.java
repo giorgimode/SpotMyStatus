@@ -84,9 +84,8 @@ public class UserInteractionController {
 
     @PostMapping(value = "/slack/events", consumes = MediaType.APPLICATION_JSON_VALUE)
     public String receiveSlackEvent(@RequestBody String rawBody) throws JsonProcessingException {
-        log.debug("Received a raw slack event {}", rawBody);
+        log.trace("Received a slack event {}", rawBody);
         SlackEvent slackEvent = OBJECT_MAPPER.readValue(rawBody, SlackEvent.class);
-        log.debug("Received a slack event {}", slackEvent);
         if ("url_verification".equals(slackEvent.getType())) {
             return slackEvent.getChallenge();
         } else if ("app_home_opened".equals(slackEvent.getEventType())) {

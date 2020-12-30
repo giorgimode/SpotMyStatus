@@ -146,7 +146,7 @@ public class SlackClient {
         SlackStatusPayload statusPayload = new SlackStatusPayload(newStatus, getEmoji(currentTrack, user), expiringOnUnixTime);
         if (!newStatus.equalsIgnoreCase(user.getSlackStatus())) {
             if (updateStatus(user, statusPayload)) {
-                log.info("Track: \"{}\" expiring in {} seconds", newStatus, expiringInMs / 1000);
+                log.debug("Track: \"{}\" expiring in {} seconds", newStatus, expiringInMs / 1000);
                 user.setSlackStatus(newStatus);
             }
         } else {
@@ -213,7 +213,7 @@ public class SlackClient {
         if (user.isManualStatus()) {
             return;
         }
-        log.info("Cleaning status for user {} ", user.getId());
+        log.debug("Cleaning status for user {} ", user.getId());
         try {
             SlackStatusPayload statusPayload = new SlackStatusPayload();
             user.setSlackStatus("");
@@ -250,7 +250,7 @@ public class SlackClient {
         }
         boolean isUserActive = "active".equalsIgnoreCase(response.getPresence());
         if (!isUserActive && !user.isCleaned()) {
-            log.info("User {} is away.", user.getId());
+            log.debug("User {} is away.", user.getId());
             cleanStatus(user);
         }
         return !isUserActive;
