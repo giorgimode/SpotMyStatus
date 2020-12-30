@@ -56,6 +56,7 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
 
     testCompile 'org.junit.jupiter:junit-jupiter:5.7.0'
+    testImplementation 'com.h2database:h2'
     testImplementation 'org.mockito:mockito-junit-jupiter:3.5.15'
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
         exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'

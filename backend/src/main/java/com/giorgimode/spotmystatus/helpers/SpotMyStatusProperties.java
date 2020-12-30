@@ -19,8 +19,6 @@ public class SpotMyStatusProperties {
     private String spotifyApiUri;
     private String corePoolSize;
     private String pollingRate;
-    private Integer passivePollingProbability;
-    private Integer passivateAfterMin;
     private Integer syncStartHr;
     private Integer syncEndHr;
     private Integer timeout;
