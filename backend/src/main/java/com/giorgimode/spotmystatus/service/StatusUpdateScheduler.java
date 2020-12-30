@@ -7,12 +7,10 @@ import com.giorgimode.spotmystatus.model.SpotifyItem;
 import com.giorgimode.spotmystatus.slack.SlackClient;
 import com.giorgimode.spotmystatus.spotify.SpotifyClient;
 import com.github.benmanes.caffeine.cache.LoadingCache;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -81,9 +79,7 @@ public class StatusUpdateScheduler {
 
 
     private boolean isInOfflineHours(CachedUser user) {
-        OffsetDateTime now = LocalDateTime.now()
-                                          .atOffset(ZoneOffset.ofTotalSeconds(user.getTimezoneOffsetSeconds()))
-                                          .withOffsetSameInstant(ZoneOffset.UTC);
+        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
         int currentTime = now.getHour() * 100 + now.getMinute();
         Integer offlineStart = user.getSyncEndHour();
         Integer offlineEnd = user.getSyncStartHour();

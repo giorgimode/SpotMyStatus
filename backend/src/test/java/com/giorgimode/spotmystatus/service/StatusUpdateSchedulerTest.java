@@ -237,9 +237,7 @@ class StatusUpdateSchedulerTest {
     }
 
     private CachedUser createCachedUser() {
-        OffsetDateTime now = LocalDateTime.now()
-                                          .atOffset(ZoneOffset.ofTotalSeconds(0))
-                                          .withOffsetSameInstant(ZoneOffset.UTC);
+        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
         int syncStartHour = now.getHour();
         CachedUser cachedUser = CachedUser.builder()
                                           .id("user1")
