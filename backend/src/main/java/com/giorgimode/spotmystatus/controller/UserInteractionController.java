@@ -95,8 +95,8 @@ public class UserInteractionController {
     }
 
     @PostMapping(value = "/slack/interaction", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-    public InteractionModal handleInteraction(@RequestParam("payload") InvocationModal payload) {
-        log.trace("Received interaction: {}", payload);
+    public InteractionModal handleInteraction(@RequestParam("payload") InvocationModal payload, @RequestParam("payload") String payloadRaw) {
+        log.trace("Received interaction: {}", payloadRaw);
         return userInteractionService.handleUserInteraction(payload);
     }
 
