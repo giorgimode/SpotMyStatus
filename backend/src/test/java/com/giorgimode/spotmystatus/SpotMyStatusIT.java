@@ -47,7 +47,6 @@ class SpotMyStatusIT extends SpotMyStatusITBase {
 
     @BeforeEach
     void setUp() {
-        mockSlackPresenceCall();
         mockSlackProfileCall();
         mockSpotifyCall();
         mockSlackUpdateCall();
@@ -86,7 +85,6 @@ class SpotMyStatusIT extends SpotMyStatusITBase {
         verify(restTemplate).postForEntity(eq("https://fake-slack.com/api/users.profile.set"), any(HttpEntity.class), eq(
             SlackResponse.class));
         verify(restTemplate).setMessageConverters(any());
-        //noinspection ResultOfMethodCallIgnored
         verify(restTemplate).getMessageConverters();
         verifyNoMoreInteractions(restTemplate);
         verifyNoInteractions(mailSender);
@@ -94,12 +92,7 @@ class SpotMyStatusIT extends SpotMyStatusITBase {
     }
 
 
-    private void mockSlackPresenceCall() {
-        SlackResponse slackPresenceResponse = new SlackResponse();
-        slackPresenceResponse.setPresence("active");
-        when(restTemplate.exchange(eq("https://fake-slack.com/api/users.getPresence"), eq(HttpMethod.GET), any(HttpEntity.class), eq(
-            SlackResponse.class))).thenReturn(new ResponseEntity<>(slackPresenceResponse, HttpStatus.OK));
-    }
+
 
     private void mockSlackProfileCall() {
         SlackResponse slackProfileResponse = new SlackResponse();

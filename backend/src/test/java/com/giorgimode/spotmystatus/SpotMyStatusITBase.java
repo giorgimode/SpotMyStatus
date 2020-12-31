@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import com.giorgimode.spotmystatus.model.SlackResponse;
 import com.giorgimode.spotmystatus.model.SpotifyTokenResponse;
 import java.util.concurrent.ExecutorService;
 import org.mockito.invocation.InvocationOnMock;
@@ -13,6 +14,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -38,11 +40,16 @@ public abstract class SpotMyStatusITBase {
         @Bean
         public RestTemplate restTemplate() {
             RestTemplate restTemplate = mock(RestTemplate.class);
-            SpotifyTokenResponse spotifyTokenResponse = new SpotifyTokenResponse("test", 0, "spotify_refresh_token123");
-            spotifyTokenResponse.setAccessToken("spotify_access_token123");
-            when(restTemplate.postForEntity(eq("https://fake-spotify.com/api/token"), any(HttpEntity.class), eq(SpotifyTokenResponse.class)))
-                .thenReturn(new ResponseEntity<>(spotifyTokenResponse, HttpStatus.OK));
+            mockSpotifyAuthCall(restTemplate);
+            mockSlackPresenceCall(restTemplate);
             return restTemplate;
+        }
+
+        private void mockSlackPresenceCall(RestTemplate restTemplate) {
+            SlackResponse slackPresenceResponse = new SlackResponse();
+            slackPresenceResponse.setPresence("active");
+            when(restTemplate.exchange(eq("https://fake-slack.com/api/users.getPresence"), eq(HttpMethod.GET), any(HttpEntity.class), eq(
+                SlackResponse.class))).thenReturn(new ResponseEntity<>(slackPresenceResponse, HttpStatus.OK));
         }
 
         @Bean
@@ -56,5 +63,12 @@ public abstract class SpotMyStatusITBase {
             ).when(executor).execute(any(Runnable.class));
             return executor;
         }
+    }
+
+    private static void mockSpotifyAuthCall(RestTemplate restTemplate) {
+        SpotifyTokenResponse spotifyTokenResponse = new SpotifyTokenResponse("test", 0, "spotify_refresh_token123");
+        spotifyTokenResponse.setAccessToken("spotify_access_token123");
+        when(restTemplate.postForEntity(eq("https://fake-spotify.com/api/token"), any(HttpEntity.class), eq(SpotifyTokenResponse.class)))
+            .thenReturn(new ResponseEntity<>(spotifyTokenResponse, HttpStatus.OK));
     }
 }
