@@ -159,6 +159,10 @@ class UserInteractionControllerIT extends SpotMyStatusITBase {
 
     @Test
     void shouldHandlePurgeCommand() throws Exception {
+        SlackResponse slackStatusUpdateResponse = new SlackResponse();
+        slackStatusUpdateResponse.setOk(true);
+        when(restTemplate.postForEntity(eq("https://fake-slack.com/api/users.profile.set"), any(HttpEntity.class), eq(
+            SlackResponse.class))).thenReturn(new ResponseEntity<>(slackStatusUpdateResponse, HttpStatus.OK));
         String testUserId = "user123";
         mockMvc.perform(post("/api/slack/command")
             .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)

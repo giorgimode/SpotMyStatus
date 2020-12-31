@@ -48,8 +48,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 import org.springframework.core.io.Resource;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -58,7 +56,6 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.server.ResponseStatusException;
 
 @ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
 class UserInteractionServiceTest {
 
 
@@ -88,7 +85,7 @@ class UserInteractionServiceTest {
 
 
     @BeforeEach
-    void setUp() throws IOException {
+    void setUp() {
         userCache = Caffeine.newBuilder()
                             .maximumSize(10_000)
                             .build(key -> createCachedUser());
@@ -107,8 +104,6 @@ class UserInteractionServiceTest {
             propertyVault);
 
         cachedUser = createCachedUser();
-        String fileContent = TestUtils.getFileContent("templates/slack_modal_view_template.json");
-        when(resourceFile.getInputStream()).thenReturn(new ByteArrayInputStream(fileContent.getBytes(StandardCharsets.UTF_8)));
         ReflectionTestUtils.setField(userInteractionService, "resourceFile", resourceFile);
         ReflectionTestUtils.setField(userInteractionService, "shouldVerifySignature", true);
     }
@@ -125,7 +120,8 @@ class UserInteractionServiceTest {
     }
 
     @Test
-    void shouldHandleTrigger() {
+    void shouldHandleTrigger() throws IOException {
+        mockTemplateResource();
         cachedUser.setDisabled(true);
         cachedUser.setSpotifyItems(List.of(SpotifyItem.TRACK));
         userInteractionService.handleTrigger(TEST_USER_ID, "trigger123");
@@ -210,6 +206,7 @@ class UserInteractionServiceTest {
 
     @Test
     void shouldHandleSubmission() throws IOException {
+        mockTemplateResource();
         User storedUser = new User();
         storedUser.setId(TEST_USER_ID);
         when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(storedUser));
@@ -319,5 +316,10 @@ class UserInteractionServiceTest {
                                           .build();
         userCache.put(TEST_USER_ID, cachedUser);
         return cachedUser;
+    }
+
+    private void mockTemplateResource() throws IOException {
+        String fileContent = TestUtils.getFileContent("templates/slack_modal_view_template.json");
+        when(resourceFile.getInputStream()).thenReturn(new ByteArrayInputStream(fileContent.getBytes(StandardCharsets.UTF_8)));
     }
 }
