@@ -13,6 +13,7 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -60,29 +61,15 @@ public class SpotifyClient {
     }
 
     public Optional<SpotifyCurrentItem> getCurrentTrack(CachedUser user) {
-        try {
-            return tryGetSpotifyCurrentTrack(user);
-        } catch (HttpClientErrorException ex) {
-            if (ex.getStatusCode() == HttpStatus.UNAUTHORIZED) {
-                return refreshSpotifyAccessToken(user);
-            } else if (ex.getStatusCode() == HttpStatus.BAD_REQUEST && ex.getResponseBodyAsString().contains("invalid_grant")) {
-                log.error("User's Spotify token has been invalidated. Cleaning up user {}", user.getId());
-                invalidateUser(user.getId());
-            } else {
-                log.error("Failed to retrieve current track for user {}", user.getId(), ex);
-            }
-        } catch (Exception e) {
-            log.error("Failed to retrieve current track for user {}", user.getId(), e);
-        }
-        return Optional.empty();
+        return tryCallSpotify(user, this::tryGetSpotifyCurrentTrack, Optional.empty());
     }
 
-    private Optional<SpotifyCurrentItem> refreshSpotifyAccessToken(CachedUser user) {
+    private boolean refreshSpotifyAccessToken(CachedUser user) {
         try {
             SpotifyTokenResponse spotifyTokens = spotifyAuthClient.getNewAccessToken(user.getSpotifyRefreshToken());
             log.debug("Retrieved spotify access token expiring in {} seconds", spotifyTokens.getExpiresIn());
             user.setSpotifyAccessToken(spotifyTokens.getAccessToken());
-            return tryGetSpotifyCurrentTrack(user);
+            return true;
         } catch (HttpClientErrorException ex) {
             if (ex.getStatusCode() == HttpStatus.BAD_REQUEST && ex.getResponseBodyAsString().contains("invalid_grant")) {
                 log.error("User's Spotify token has been invalidated. Cleaning up user {}", user.getId());
@@ -91,7 +78,7 @@ public class SpotifyClient {
         } catch (Exception e) {
             log.error("Failed to retrieve current track", e);
         }
-            return Optional.empty();
+        return false;
     }
 
     private Optional<SpotifyCurrentItem> tryGetSpotifyCurrentTrack(CachedUser user) {
@@ -116,19 +103,39 @@ public class SpotifyClient {
     }
 
     public List<SpotifyDevice> getSpotifyDevices(CachedUser user) {
-        try {
-            SpotifyDevices spotifyDevices = RestHelper.builder()
-                                                      .withBaseUrl(spotifyApiUri + "/v1/me/player/devices")
-                                                      .withBearer(user.getSpotifyAccessToken())
-                                                      .getBody(restTemplate, SpotifyDevices.class);
-            if (spotifyDevices == null || spotifyDevices.getDevices() == null) {
-                return List.of();
-            }
-            return spotifyDevices.getDevices();
-        } catch (Exception e) {
-            log.error("Failed to retrieve Spotify devices for user {}", user.getId(), e);
+        return tryCallSpotify(user, this::tryGetSpotifyDevices, List.of());
+    }
+
+    private List<SpotifyDevice> tryGetSpotifyDevices(CachedUser user) {
+        SpotifyDevices spotifyDevices = RestHelper.builder()
+                                                  .withBaseUrl(spotifyApiUri + "/v1/me/player/devices")
+                                                  .withBearer(user.getSpotifyAccessToken())
+                                                  .getBody(restTemplate, SpotifyDevices.class);
+        if (spotifyDevices == null || spotifyDevices.getDevices() == null) {
             return List.of();
         }
+        return spotifyDevices.getDevices();
+    }
+
+    public <T> T tryCallSpotify(CachedUser user, Function<CachedUser, T> function, T defaultValue) {
+        try {
+            return function.apply(user);
+        } catch (HttpClientErrorException ex) {
+            if (ex.getStatusCode() == HttpStatus.UNAUTHORIZED) {
+                boolean refreshedToken = refreshSpotifyAccessToken(user);
+                if (refreshedToken) {
+                    return function.apply(user);
+                }
+            } else if (ex.getStatusCode() == HttpStatus.BAD_REQUEST && ex.getResponseBodyAsString().contains("invalid_grant")) {
+                log.error("User's Spotify token has been invalidated. Cleaning up user {}", user.getId());
+                invalidateUser(user.getId());
+            } else {
+                log.error("Failed to call spotify for user {}", user.getId(), ex);
+            }
+        } catch (Exception e) {
+            log.error("Failed to call spotify for user {}", user.getId(), e);
+        }
+        return defaultValue;
     }
 
     public void invalidateUser(String userId) {

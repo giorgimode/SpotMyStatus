@@ -73,7 +73,7 @@ public class StatusUpdateScheduler {
             }
             updateSlackStatus(cachedUser);
         } catch (Exception e) {
-            log.error("Failed offlineEnd poll user {}", cachedUser.getId(), e);
+            log.error("Failed to poll user {}", cachedUser.getId(), e);
         }
     }
 
