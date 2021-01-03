@@ -25,7 +25,6 @@ repositories {
 }
 
 
-
 test {
     environment "artifact.version", "$version"
     useJUnitPlatform()
