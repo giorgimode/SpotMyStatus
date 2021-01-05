@@ -19,8 +19,11 @@
                         <a href="https://github.com/giorgimode/SpotMyStatus/releases" target="_blank">Releases</a>
                     </li>
                 </ul>
-                <p class="text-muted small mb-4 mb-lg-0">&copy; SpotMyStatus 2020. All Rights Reserved.</p>
+                <p class="text-muted small mb-4 mb-lg-0">&copy; SpotMyStatus <span id="year"></span>. All Rights Reserved.</p>
             </div>
         </div>
     </div>
+    <script>
+        document.getElementById("year").innerHTML = new Date().getFullYear().toString();
+    </script>
 </footer>
