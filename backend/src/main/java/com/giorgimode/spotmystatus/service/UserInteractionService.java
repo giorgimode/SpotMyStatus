@@ -70,8 +70,8 @@ import org.springframework.web.server.ResponseStatusException;
 public class UserInteractionService {
 
     private static final String SHA_256_ALGORITHM = "HmacSHA256";
-    public  static final String SLACK_VIEW_UPDATE_URI = "/api/views.update";
-    public  static final String SLACK_VIEW_OPEN_URI = "/api/views.open";
+    public static final String SLACK_VIEW_UPDATE_URI = "/api/views.update";
+    public static final String SLACK_VIEW_OPEN_URI = "/api/views.open";
     public static final String SLACK_VIEW_PUBLISH_URI = "/api/views.publish";
     private static final String PLAIN_TEXT = "plain_text";
 
@@ -109,7 +109,7 @@ public class UserInteractionService {
         InvocationModal invocationModal = new InvocationModal();
         invocationModal.setTriggerId(triggerId);
         invocationModal.setView(modalViewTemplate);
-        String response = slackClient.notifyUser(SLACK_VIEW_OPEN_URI, invocationModal);
+        String response = slackClient.notifyUser(SLACK_VIEW_OPEN_URI, invocationModal, userId);
         log.trace("Received response on trigger handle: {}", response);
     }
 
@@ -307,28 +307,28 @@ public class UserInteractionService {
         String endHour = getStateValue(payload, BLOCK_ID_HOURS_INPUT).getEndHour();
         InteractionModal slackModal = createModalResponse(payload);
         if (startHour != null && startHour.equals(endHour)) {
-            addWarningBlock(blocks, slackModal);
+            addWarningBlock(blocks, slackModal, getUserId(payload));
         } else {
-            removeWarningBlock(blocks, slackModal);
+            removeWarningBlock(blocks, slackModal, getUserId(payload));
         }
     }
 
-    private void removeWarningBlock(List<Block> blocks, InteractionModal slackModal) {
+    private void removeWarningBlock(List<Block> blocks, InteractionModal slackModal, String userId) {
         boolean removed = blocks.removeIf(block -> BLOCK_ID_INVALID_HOURS.equals(block.getBlockId()));
         if (removed) {
-            String response = slackClient.notifyUser(SLACK_VIEW_UPDATE_URI, slackModal);
+            String response = slackClient.notifyUser(SLACK_VIEW_UPDATE_URI, slackModal, userId);
             log.trace("Received warning update response: {}", response);
         }
     }
 
-    private void addWarningBlock(List<Block> blocks, InteractionModal slackModal) {
+    private void addWarningBlock(List<Block> blocks, InteractionModal slackModal, String userId) {
         Block block = createWarningBlock(BLOCK_ID_INVALID_HOURS, "start and end time cannot identical");
         for (int i = 0; i < blocks.size(); i++) {
             if (BLOCK_ID_HOURS_INPUT.equals(blocks.get(i).getBlockId())) {
                 blocks.add(i + 1, block);
             }
         }
-        String response = slackClient.notifyUser(SLACK_VIEW_UPDATE_URI, slackModal);
+        String response = slackClient.notifyUser(SLACK_VIEW_UPDATE_URI, slackModal, userId);
         log.trace("Received response on warning block: {}", response);
     }
 
@@ -429,7 +429,7 @@ public class UserInteractionService {
             }
         }
         InteractionModal slackModal = createModalResponse(payload);
-        String response = slackClient.notifyUser(SLACK_VIEW_UPDATE_URI, slackModal);
+        String response = slackClient.notifyUser(SLACK_VIEW_UPDATE_URI, slackModal, getUserId(payload));
         log.trace("Received response on emoji add: {}", response);
     }
 
@@ -555,7 +555,7 @@ public class UserInteractionService {
             modalView.setBlocks(blocks);
         }
 
-        String response = slackClient.notifyUser(SLACK_VIEW_PUBLISH_URI, homeModal);
+        String response = slackClient.notifyUser(SLACK_VIEW_PUBLISH_URI, homeModal, userId);
         log.trace("Slack returned response when updating home tab {}", response);
     }
 

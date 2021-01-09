@@ -12,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -125,7 +126,7 @@ class UserInteractionServiceTest {
         cachedUser.setDisabled(true);
         cachedUser.setSpotifyItems(List.of(SpotifyItem.TRACK));
         userInteractionService.handleTrigger(TEST_USER_ID, "trigger123");
-        verify(slackClient).notifyUser(eq(SLACK_VIEW_OPEN_URI), invocationModalCaptor.capture());
+        verify(slackClient).notifyUser(eq(SLACK_VIEW_OPEN_URI), invocationModalCaptor.capture(), eq(TEST_USER_ID));
         InvocationModal sentModal = invocationModalCaptor.getValue();
         assertEquals("trigger123", sentModal.getTriggerId());
         assertNotNull(sentModal.getView());
@@ -146,7 +147,7 @@ class UserInteractionServiceTest {
         InvocationModal invocationModal = OBJECT_MAPPER.readValue(modalContent, InvocationModal.class);
         InteractionModal modal = userInteractionService.handleUserInteraction(invocationModal);
         assertNull(modal);
-        verify(slackClient).notifyUser(eq(SLACK_VIEW_UPDATE_URI), interactionModalCaptor.capture());
+        verify(slackClient).notifyUser(eq(SLACK_VIEW_UPDATE_URI), interactionModalCaptor.capture(), eq("test_user_id"));
         InteractionModal updateModal = interactionModalCaptor.getValue();
         assertNotNull(updateModal.getView());
         assertNotNull(updateModal.getViewId());
@@ -167,7 +168,7 @@ class UserInteractionServiceTest {
                        .get(BLOCK_ID_HOURS_INPUT).setEndHour("07:00");
         InteractionModal modal = userInteractionService.handleUserInteraction(invocationModal);
         assertNull(modal);
-        verify(slackClient).notifyUser(eq(SLACK_VIEW_UPDATE_URI), interactionModalCaptor.capture());
+        verify(slackClient).notifyUser(eq(SLACK_VIEW_UPDATE_URI), interactionModalCaptor.capture(), eq("test_user_id"));
         InteractionModal updateModal = interactionModalCaptor.getValue();
         assertNotNull(updateModal.getView());
         assertNotNull(updateModal.getViewId());
@@ -195,7 +196,7 @@ class UserInteractionServiceTest {
         //remove warning
         InteractionModal returnedModal = userInteractionService.handleUserInteraction(invocationModal);
         assertNull(returnedModal);
-        verify(slackClient, times(2)).notifyUser(eq(SLACK_VIEW_UPDATE_URI), interactionModalCaptor.capture());
+        verify(slackClient, times(2)).notifyUser(eq(SLACK_VIEW_UPDATE_URI), interactionModalCaptor.capture(), eq("test_user_id"));
         InteractionModal updatedModal = interactionModalCaptor.getValue();
         assertNotNull(updatedModal.getView());
         assertNotNull(updatedModal.getView().getType());
@@ -214,7 +215,7 @@ class UserInteractionServiceTest {
         InvocationModal invocationModal = OBJECT_MAPPER.readValue(modalContent, InvocationModal.class);
         InteractionModal modal = userInteractionService.handleUserInteraction(invocationModal);
         assertNull(modal);
-        verify(slackClient).notifyUser(eq(SLACK_VIEW_PUBLISH_URI), interactionModalCaptor.capture());
+        verify(slackClient).notifyUser(eq(SLACK_VIEW_PUBLISH_URI), interactionModalCaptor.capture(), eq(TEST_USER_ID));
         InteractionModal sentHomeTab = interactionModalCaptor.getValue();
         assertEquals(TEST_USER_ID, sentHomeTab.getUserId());
         assertNotNull(sentHomeTab.getView());
@@ -288,7 +289,7 @@ class UserInteractionServiceTest {
     @Test
     void shouldUpdateHomeTabForUnknownUser() {
         userInteractionService.updateHomeTab("unknown_user");
-        verify(slackClient).notifyUser(eq(SLACK_VIEW_PUBLISH_URI), interactionModalCaptor.capture());
+        verify(slackClient).notifyUser(eq(SLACK_VIEW_PUBLISH_URI), interactionModalCaptor.capture(), anyString());
         InteractionModal homeTabModal = interactionModalCaptor.getValue();
         assertEquals("unknown_user", homeTabModal.getUserId());
         assertNull(homeTabModal.getViewId());

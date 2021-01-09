@@ -196,7 +196,7 @@ class UserInteractionControllerIT extends SpotMyStatusITBase {
 
     @Test
     void shouldHandleModalTrigger() throws Exception {
-        doReturn("ok").when(slackClient).notifyUser(eq(SLACK_VIEW_OPEN_URI), any(InvocationModal.class));
+        doReturn("ok").when(slackClient).notifyUser(eq(SLACK_VIEW_OPEN_URI), any(InvocationModal.class), anyString());
         String testUserId = "user123";
         when(spotifyClient.getSpotifyDevices(any())).thenReturn(List.of());
         User user = userRepository.findById(testUserId).orElseThrow(AssertionFailedError::new);
@@ -215,7 +215,7 @@ class UserInteractionControllerIT extends SpotMyStatusITBase {
                .andExpect(content().string(is(emptyOrNullString())));
 
         verify(spotifyClient).getSpotifyDevices(any());
-        verify(slackClient).notifyUser(eq(SLACK_VIEW_OPEN_URI), any(InvocationModal.class));
+        verify(slackClient).notifyUser(eq(SLACK_VIEW_OPEN_URI), any(InvocationModal.class), anyString());
     }
 
     @Test
@@ -250,7 +250,7 @@ class UserInteractionControllerIT extends SpotMyStatusITBase {
 
     @Test
     void shouldHandleAppHomeOpened() throws Exception {
-        doReturn("ok").when(slackClient).notifyUser(eq(SLACK_VIEW_PUBLISH_URI), any(InteractionModal.class));
+        doReturn("ok").when(slackClient).notifyUser(eq(SLACK_VIEW_PUBLISH_URI), any(InteractionModal.class), anyString());
         SlackEvent slackEvent = new SlackEvent();
         Event slackInnerEvent = new Event();
         slackInnerEvent.setType("app_home_opened");
@@ -262,12 +262,12 @@ class UserInteractionControllerIT extends SpotMyStatusITBase {
                .andExpect(status().isOk())
                .andExpect(content().string(is(emptyOrNullString())));
 
-        verify(slackClient).notifyUser(eq(SLACK_VIEW_PUBLISH_URI), any(InteractionModal.class));
+        verify(slackClient).notifyUser(eq(SLACK_VIEW_PUBLISH_URI), any(InteractionModal.class), anyString());
     }
 
     @Test
     void shouldHandleUserInteraction() throws Exception {
-        doReturn("ok").when(slackClient).notifyUser(eq(SLACK_VIEW_UPDATE_URI), any(InteractionModal.class));
+        doReturn("ok").when(slackClient).notifyUser(eq(SLACK_VIEW_UPDATE_URI), any(InteractionModal.class), anyString());
         String modalContent = TestUtils.getFileContent("files/invocation_template.json");
         InvocationModal invocationModal = OBJECT_MAPPER.readValue(modalContent, InvocationModal.class);
         mockMvc.perform(post("/api/slack/interaction")
@@ -276,6 +276,6 @@ class UserInteractionControllerIT extends SpotMyStatusITBase {
                .andExpect(status().isOk())
                .andExpect(content().string(is(emptyOrNullString())));
 
-        verify(slackClient).notifyUser(eq(SLACK_VIEW_UPDATE_URI), any(InteractionModal.class));
+        verify(slackClient).notifyUser(eq(SLACK_VIEW_UPDATE_URI), any(InteractionModal.class), anyString());
     }
 }

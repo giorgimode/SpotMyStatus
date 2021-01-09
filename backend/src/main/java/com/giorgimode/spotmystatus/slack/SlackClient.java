@@ -11,6 +11,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
+import com.giorgimode.spotmystatus.exceptions.UserNotFoundException;
 import com.giorgimode.spotmystatus.helpers.PropertyVault;
 import com.giorgimode.spotmystatus.helpers.RestHelper;
 import com.giorgimode.spotmystatus.helpers.SpotMyStatusProperties;
@@ -261,7 +262,7 @@ public class SlackClient {
             log.error("User's Slack token has been invalidated. Cleaning up user {}", userId);
             userCache.invalidate(userId);
             userRepository.deleteById(userId);
-            notifyUser("/api/chat.postMessage", new SlackMessage(userId, SPOTIFY_INVALIDATED_MESSAGE));
+            notifyUser("/api/chat.postMessage", new SlackMessage(userId, SPOTIFY_INVALIDATED_MESSAGE), userId);
         } catch (Exception e) {
             log.error("Failed to clean up user properly", e);
         }
@@ -294,12 +295,12 @@ public class SlackClient {
         return statusHasBeenManuallyChanged;
     }
 
-    public String notifyUser(String endpoint, Object body) {
+    public String notifyUser(String endpoint, Object body, String userId) {
         log.trace("Notifying user at endpoint {} with body {}", endpoint, body);
         //noinspection deprecation: Slack issues warning on missing charset
         return RestHelper.builder()
                          .withBaseUrl(configProperties.getSlackUri() + endpoint)
-                         .withBearer(propertyVault.getSlack().getBotToken())
+                         .withBearer(getCachedUser(userId).getSlackAccessToken())
                          .withContentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
                          .withBody(body)
                          .postAndGetBody(restTemplate, String.class);
@@ -342,6 +343,11 @@ public class SlackClient {
                            return "User data has been purged. ";
                        })
                        .orElse(MISSING_USER_ERROR);
+    }
+
+    public CachedUser getCachedUser(String userId) {
+        return Optional.ofNullable(userCache.getIfPresent(userId))
+                       .orElseThrow(() -> new UserNotFoundException(MISSING_USER_ERROR));
     }
 
     @PreDestroy
