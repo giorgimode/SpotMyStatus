@@ -84,8 +84,8 @@ public class StatusUpdateScheduler {
         Integer offlineStart = user.getSyncEndHour();
         Integer offlineEnd = user.getSyncStartHour();
         if (offlineStart == null || offlineEnd == null) {
-            offlineStart = spotMyStatusProperties.getSyncEndHr();
-            offlineEnd = spotMyStatusProperties.getSyncStartHr();
+            offlineStart = spotMyStatusProperties.getSyncEndHr() * 100;
+            offlineEnd = spotMyStatusProperties.getSyncStartHr() * 100;
         }
 
         return offlineEnd > offlineStart && currentTime >= offlineStart && currentTime <= offlineEnd
