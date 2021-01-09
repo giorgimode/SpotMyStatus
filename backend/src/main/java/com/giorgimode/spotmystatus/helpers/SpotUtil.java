@@ -20,6 +20,7 @@ public final class SpotUtil {
         return CachedUser.builder()
                          .id(user.getId())
                          .slackAccessToken(user.getSlackAccessToken())
+                         .slackBotToken(user.getSlackBotToken())
                          .spotifyRefreshToken(user.getSpotifyRefreshToken())
                          .spotifyAccessToken(spotifyAccessToken)
                          .timezoneOffsetSeconds(user.getTimezoneOffsetSeconds())

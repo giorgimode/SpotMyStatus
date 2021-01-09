@@ -26,6 +26,7 @@ public class CachedUser implements Serializable {
     private String slackStatus;
     private boolean manualStatus;
     private String slackAccessToken;
+    private String slackBotToken;
     private String spotifyAccessToken;
     private String spotifyRefreshToken;
     private boolean disabled;
@@ -48,6 +49,7 @@ public class CachedUser implements Serializable {
             .add("spotifyAccessToken", spotifyAccessToken)
             .add("spotifyRefreshToken", spotifyRefreshToken)
             .add("slackAccessToken", slackAccessToken)
+            .add("slackBotToken", slackBotToken)
             .add("emojis", emojis)
             .add("spotifyItems", spotifyItems)
             .add("spotifyDeviceIds", spotifyDeviceIds)
@@ -68,6 +70,7 @@ public class CachedUser implements Serializable {
         private String id;
         private Integer timezoneOffsetSeconds;
         private String slackAccessToken;
+        private String slackBotToken;
         private String spotifyAccessToken;
         private String spotifyRefreshToken;
         private boolean disabled;
@@ -92,6 +95,11 @@ public class CachedUser implements Serializable {
 
         public CachedUserBuilder slackAccessToken(String slackAccessToken) {
             this.slackAccessToken = slackAccessToken;
+            return this;
+        }
+
+        public CachedUserBuilder slackBotToken(String slackBotToken) {
+            this.slackBotToken = slackBotToken;
             return this;
         }
 
@@ -140,6 +148,7 @@ public class CachedUser implements Serializable {
             cachedUser.setId(requireNonBlank(id));
             cachedUser.setTimezoneOffsetSeconds(requireNonNull(timezoneOffsetSeconds));
             cachedUser.setSlackAccessToken(requireNonBlank(slackAccessToken));
+            cachedUser.setSlackBotToken(requireNonBlank(slackBotToken));
             cachedUser.setSpotifyRefreshToken(requireNonBlank(spotifyRefreshToken));
             cachedUser.setSpotifyAccessToken(requireNonBlank(spotifyAccessToken));
             cachedUser.setEmojis(split(emojis));

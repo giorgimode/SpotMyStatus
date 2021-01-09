@@ -85,7 +85,7 @@ public class SlackClient {
                                                         .withQueryParam("code", slackCode)
                                                         .withQueryParam("redirect_uri", getRedirectUri())
                                                         .get(restTemplate, SlackToken.class));
-        if (isBlank(slackToken.getAccessToken())) {
+        if (isBlank(slackToken.getAccessToken()) || isBlank(slackToken.getBotToken())) {
             log.error("Slack access token not returned");
             throw new ResponseStatusException(UNAUTHORIZED);
         }
@@ -102,6 +102,7 @@ public class SlackClient {
         User user = new User();
         user.setId(slackToken.getId());
         user.setSlackAccessToken(slackToken.getAccessToken());
+        user.setSlackBotToken(slackToken.getBotToken());
         user.setTimezoneOffsetSeconds(getUserTimezone(slackToken));
         user.setState(state);
         userRepository.save(user);
@@ -300,7 +301,7 @@ public class SlackClient {
         //noinspection deprecation: Slack issues warning on missing charset
         return RestHelper.builder()
                          .withBaseUrl(configProperties.getSlackUri() + endpoint)
-                         .withBearer(getCachedUser(userId).getSlackAccessToken())
+                         .withBearer(getCachedUser(userId).getSlackBotToken())
                          .withContentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
                          .withBody(body)
                          .postAndGetBody(restTemplate, String.class);
