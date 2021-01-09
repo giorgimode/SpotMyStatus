@@ -309,6 +309,7 @@ class UserInteractionServiceTest {
         CachedUser cachedUser = CachedUser.builder()
                                           .id(TEST_USER_ID)
                                           .slackAccessToken("testSlackToken")
+                                          .slackBotToken("testSlackNotToken")
                                           .spotifyRefreshToken("testSpotifyRefreshToken")
                                           .spotifyAccessToken("testSpotifyAccessToken")
                                           .timezoneOffsetSeconds(0)

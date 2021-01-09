@@ -52,7 +52,7 @@ class SpotMyStatusIT extends SpotMyStatusITBase {
         mockSlackUpdateCall();
     }
 
-    @Test
+    @SuppressWarnings("ResultOfMethodCallIgnored") @Test
     void shouldUpdateUserStatus() {
         statusUpdateScheduler.scheduleFixedDelayTask();
         assertNotNull(userCache);

@@ -25,6 +25,7 @@ class SpotUtilTest {
         User user = new User();
         user.setId("test_user_id");
         user.setSlackAccessToken("test_slack_token");
+        user.setSlackBotToken("test_slack_bot_token");
         user.setSpotifyRefreshToken("test_spotify_token");
         user.setTimezoneOffsetSeconds(1000);
         user.setState(UUID.randomUUID());
