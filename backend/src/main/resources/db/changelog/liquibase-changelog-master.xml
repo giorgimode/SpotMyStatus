@@ -3,8 +3,8 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
-    <include file="/db/changelog/changes/create-users-table-1.xml"/>
-    <include file="/db/changelog/changes/add_emojis_spotify_items.xml"/>
-    <include file="/db/changelog/changes/add_sync_hours.xml"/>
-    <include file="/db/changelog/changes/add_spotify_devices.xml"/>
+    <include file="/db/changelog/changes/1-create_users_table.xml"/>
+    <include file="/db/changelog/changes/2-add_emojis_spotify_items.xml"/>
+    <include file="/db/changelog/changes/3-add_sync_hours.xml"/>
+    <include file="/db/changelog/changes/4-add_spotify_devices.xml"/>
 </databaseChangeLog>

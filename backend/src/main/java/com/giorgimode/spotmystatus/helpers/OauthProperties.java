@@ -11,6 +11,5 @@ public class OauthProperties {
 
     @NotEmpty
     private String clientSecret;
-    private String botToken;
     private String signingSecret;
 }

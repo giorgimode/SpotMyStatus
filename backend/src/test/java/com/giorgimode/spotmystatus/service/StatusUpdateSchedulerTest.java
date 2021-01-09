@@ -242,6 +242,7 @@ class StatusUpdateSchedulerTest {
         CachedUser cachedUser = CachedUser.builder()
                                           .id("user1")
                                           .slackAccessToken("testSlackToken")
+                                          .slackBotToken("testSlackBotToken")
                                           .spotifyRefreshToken("testSpotifyRefreshToken")
                                           .spotifyAccessToken("testSpotifyAccessToken")
                                           .timezoneOffsetSeconds(0)

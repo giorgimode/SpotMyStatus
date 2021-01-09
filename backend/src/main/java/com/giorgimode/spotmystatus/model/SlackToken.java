@@ -9,6 +9,9 @@ import lombok.Setter;
 @Data
 public class SlackToken {
 
+    @JsonProperty("access_token")
+    private String botToken;
+
     @JsonProperty("authed_user")
     private SlackTokenPayload authUser;
 

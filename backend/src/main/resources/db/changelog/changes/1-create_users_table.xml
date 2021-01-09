@@ -11,6 +11,9 @@
             <column name="slack_access_token" type="text">
                 <constraints unique="true" nullable="false"/>
             </column>
+            <column name="slack_bot_token" type="text">
+                <constraints nullable="false"/>
+            </column>
             <column name="spotify_refresh_token" type="text">
                 <constraints unique="true"/>
             </column>

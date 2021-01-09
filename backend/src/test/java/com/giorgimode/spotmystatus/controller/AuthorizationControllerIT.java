@@ -42,6 +42,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 class AuthorizationControllerIT extends SpotMyStatusITBase {
 
     private static final String TEST_SLACK_ACCESS_TOKEN = "slack_access_token_456";
+    private static final String TEST_SLACK_BOT_TOKEN = "slack_bot_token_456";
 
     @Autowired
     private LoadingCache<String, CachedUser> userCache;
@@ -80,6 +81,7 @@ class AuthorizationControllerIT extends SpotMyStatusITBase {
         Optional<User> createdUser = userRepository.findById(newUserId);
         assertTrue(createdUser.isPresent());
         assertEquals(TEST_SLACK_ACCESS_TOKEN, createdUser.get().getSlackAccessToken());
+        assertEquals(TEST_SLACK_BOT_TOKEN, createdUser.get().getSlackBotToken());
         assertEquals(3600, createdUser.get().getTimezoneOffsetSeconds());
         assertNotNull(createdUser.get().getState());
         assertNotNull(createdUser.get().getCreatedAt());
@@ -124,6 +126,7 @@ class AuthorizationControllerIT extends SpotMyStatusITBase {
         SlackToken slackToken = new SlackToken();
         SlackTokenPayload slackTokenPayload = new SlackTokenPayload();
         slackTokenPayload.setAccessToken(TEST_SLACK_ACCESS_TOKEN);
+        slackToken.setBotToken(TEST_SLACK_BOT_TOKEN);
         slackTokenPayload.setId(newUserId);
         slackToken.setAuthUser(slackTokenPayload);
         String slackOauthUri = "https://fake-slack.com/api/oauth.v2.access?"
@@ -149,6 +152,7 @@ class AuthorizationControllerIT extends SpotMyStatusITBase {
         CachedUser cachedUser = CachedUser.builder()
                                           .id(testUserId)
                                           .slackAccessToken("old_slack_token")
+                                          .slackBotToken("old_slack_bot_token")
                                           .spotifyRefreshToken("old_spotify_refresh_token")
                                           .spotifyAccessToken("old_spotify_access_token")
                                           .timezoneOffsetSeconds(7200)
@@ -180,6 +184,7 @@ class AuthorizationControllerIT extends SpotMyStatusITBase {
         Optional<User> createdUser = userRepository.findById(testUserId);
         assertTrue(createdUser.isPresent());
         assertEquals(TEST_SLACK_ACCESS_TOKEN, createdUser.get().getSlackAccessToken());
+        assertEquals(TEST_SLACK_BOT_TOKEN, createdUser.get().getSlackBotToken());
         assertEquals(spotifyRefreshToken, createdUser.get().getSpotifyRefreshToken());
         assertFalse(createdUser.get().isDisabled());
         assertEquals(3600, createdUser.get().getTimezoneOffsetSeconds());
@@ -192,6 +197,7 @@ class AuthorizationControllerIT extends SpotMyStatusITBase {
         assertEquals(3600, newCachedUser.getTimezoneOffsetSeconds());
         assertEquals("Swans - Power and Sacrifice", newCachedUser.getSlackStatus());
         assertEquals(TEST_SLACK_ACCESS_TOKEN, newCachedUser.getSlackAccessToken());
+        assertEquals(TEST_SLACK_BOT_TOKEN, newCachedUser.getSlackBotToken());
         assertEquals(testSpotifyAccessToken, newCachedUser.getSpotifyAccessToken());
         assertEquals(spotifyRefreshToken, newCachedUser.getSpotifyRefreshToken());
     }
