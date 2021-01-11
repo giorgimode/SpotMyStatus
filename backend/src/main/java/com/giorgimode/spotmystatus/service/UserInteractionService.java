@@ -293,8 +293,12 @@ public class UserInteractionService {
         if (BLOCK_ID_EMOJI_INPUT.equals(userAction.getBlockId())) {
             handleEmojiAdd(payload, userAction.getValue());
         } else if (BLOCK_ID_PURGE.equals(userAction.getBlockId())) {
+            try {
+                updateHomeTab(userId);
+            } catch (Exception e) {
+                log.error("Failed to update home tab");
+            }
             slackClient.purge(userId);
-            updateHomeTab(userId);
         } else if (BLOCK_ID_HOURS_INPUT.equals(userAction.getBlockId())) {
             handleHoursInput(payload, blocks);
         } else if (BLOCK_ID_SUBMIT.equals(userAction.getBlockId())) {
