@@ -52,7 +52,9 @@ public class UserInteractionController {
                 baseUri(configProperties.getRedirectUriScheme()) + "/support";
         }
         if (userInteractionService.isUserMissing(userId)) {
-            return "User not found. Please sign up at " + baseUri(configProperties.getRedirectUriScheme()) + "/api/start";
+            return "User not found. Please sign up at " + baseUri(configProperties.getRedirectUriScheme())
+                + "\nMake sure your Slack workspace admin has approved the app and try signing up again. "
+                + "\nIf the issue persists, please contact support at " + baseUri(configProperties.getRedirectUriScheme()) + "/support";
         }
 
         if (isBlank(command)) {
