@@ -294,7 +294,7 @@ public class UserInteractionService {
             handleEmojiAdd(payload, userAction.getValue());
         } else if (BLOCK_ID_PURGE.equals(userAction.getBlockId())) {
             try {
-                updateHomeTab(userId);
+                updateHomeTabForMissingUser(userId);
             } catch (Exception e) {
                 log.error("Failed to update home tab");
             }
@@ -543,24 +543,35 @@ public class UserInteractionService {
         return slackClient.purge(userId);
     }
 
-    public void updateHomeTab(String userId) {
+    public void updateHomeTabForMissingUser(String userId) {
         InteractionModal homeModal = new InteractionModal();
         homeModal.setUserId(userId);
         ModalView modalView = new ModalView();
         modalView.setType("home");
         homeModal.setView(modalView);
-        if (isUserMissing(userId)) {
-            Block noUserHeader = createHeaderForMissingUser();
-            Block signupBlock = createSignupBlockForMissingUser();
-            modalView.setBlocks(List.of(noUserHeader, signupBlock));
-        } else {
-            List<Block> blocks = createModalView(userId).getBlocks();
-            updateBlocks(blocks);
-            modalView.setBlocks(blocks);
-        }
+        Block noUserHeader = createHeaderForMissingUser();
+        Block signupBlock = createSignupBlockForMissingUser();
+        modalView.setBlocks(List.of(noUserHeader, signupBlock));
 
         String response = slackClient.notifyUser(SLACK_VIEW_PUBLISH_URI, homeModal, userId);
         log.trace("Slack returned response when updating home tab {}", response);
+    }
+
+    public void updateHomeTab(String userId) {
+        if (isUserMissing(userId)) {
+            log.trace("Skipping updating home tab. User {} not found", userId);
+        } else {
+            InteractionModal homeModal = new InteractionModal();
+            homeModal.setUserId(userId);
+            ModalView modalView = new ModalView();
+            modalView.setType("home");
+            homeModal.setView(modalView);
+            List<Block> blocks = createModalView(userId).getBlocks();
+            updateBlocks(blocks);
+            modalView.setBlocks(blocks);
+            String response = slackClient.notifyUser(SLACK_VIEW_PUBLISH_URI, homeModal, userId);
+            log.trace("Slack returned response when updating home tab {}", response);
+        }
     }
 
     private Block createSignupBlockForMissingUser() {

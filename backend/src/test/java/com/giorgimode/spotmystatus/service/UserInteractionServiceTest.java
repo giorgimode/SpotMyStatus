@@ -12,10 +12,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import com.giorgimode.spotmystatus.TestUtils;
 import com.giorgimode.spotmystatus.helpers.OauthProperties;
@@ -289,16 +289,7 @@ class UserInteractionServiceTest {
     @Test
     void shouldUpdateHomeTabForUnknownUser() {
         userInteractionService.updateHomeTab("unknown_user");
-        verify(slackClient).notifyUser(eq(SLACK_VIEW_PUBLISH_URI), interactionModalCaptor.capture(), anyString());
-        InteractionModal homeTabModal = interactionModalCaptor.getValue();
-        assertEquals("unknown_user", homeTabModal.getUserId());
-        assertNull(homeTabModal.getViewId());
-        assertNull(homeTabModal.getHash());
-        assertNull(homeTabModal.getResponseAction());
-        assertNotNull(homeTabModal.getView());
-        assertEquals("home", homeTabModal.getView().getType());
-        assertEquals(2, homeTabModal.getView().getBlocks().size());
-        assertEquals(":no_entry_sign: User not found", homeTabModal.getView().getBlocks().get(0).getText().getTextValue());
+        verifyNoInteractions(slackClient);
     }
 
     private CachedUser createCachedUser() {
