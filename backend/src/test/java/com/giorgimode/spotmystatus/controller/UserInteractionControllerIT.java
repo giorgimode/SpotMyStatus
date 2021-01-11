@@ -7,6 +7,7 @@ import static com.giorgimode.spotmystatus.service.UserInteractionService.SLACK_V
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.emptyOrNullString;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -102,7 +103,7 @@ class UserInteractionControllerIT extends SpotMyStatusITBase {
             .header("X-Slack-Signature", "v0=09bce6ebbc27ffecec7a351ce8efef94c83ba53cc3527384f589cb9daa0cd228")
             .queryParam("user_id", "unknown_user"))
                .andExpect(status().isOk())
-               .andExpect(content().string("User not found. Please sign up at https://localhost/api/start"));
+               .andExpect(content().string(startsWith("User not found.")));
     }
 
     @Test
