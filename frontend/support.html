@@ -34,7 +34,7 @@
   <div class="overlay"></div>
   <div class="container">
     <div class="row">
-      <div class="col-md-6 col-md-offset-3">
+      <div class="col-xl-9 mx-auto">
         <div id="successMessage" class="alert alert-success" role="alert" th:if="${formResult} == 'success'">
          Submission successful!
         </div>
@@ -42,10 +42,9 @@
           Something went wrong. Please try again
         </div>
         <div class="well well-sm">
-          <form class="form-horizontal" action="/support" method="post">
+          <h1 class="text-center">Contact us</h1>
+          <form class="offset-md-3" action="/support" method="post">
             <fieldset>
-              <legend class="text-center">Contact us</legend>
-
               <!-- Name input-->
               <div class="form-group">
                 <div class="col-md-9">
@@ -83,7 +82,7 @@
               <!-- Form actions -->
               <div class="form-group">
                 <div class="col-md-12">
-                  <button type="submit" class="btn btn-primary btn-lg">Submit</button>
+                  <button type="submit" class="btn btn-primary btn-lg offset-3">Submit</button>
                 </div>
               </div>
             </fieldset>
