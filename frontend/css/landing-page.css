@@ -25,7 +25,7 @@ header.masthead {
   background-image: url("../img/bg-mouse.jpg");
   background-size: cover;
   padding-top: 18rem;
-  padding-bottom: 18rem;
+  padding-bottom: 28rem;
 }
 
 header.masthead-fail {
@@ -37,7 +37,7 @@ header.masthead-fail {
   background-attachment: fixed;
   background-size: cover;
   padding-top: 18rem;
-  padding-bottom: 18rem;
+  padding-bottom: 28rem;
 }
 
 header.masthead .overlay, header.masthead-fail .overlay {
