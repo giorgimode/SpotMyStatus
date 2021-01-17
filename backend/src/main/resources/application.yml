@@ -57,7 +57,7 @@ spring:
       mail:
         smtp:
           auth: true
-          port: 25
+          port: ${SMTP_PORT:587}
           starttls:
             enable: true
             required: true
