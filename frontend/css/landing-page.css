@@ -64,6 +64,11 @@ header.masthead h1, header.masthead-fail h1 {
   }
 }
 
+.showcase {
+  padding-top: 1rem;
+  padding-bottom: 3rem;
+}
+
 .showcase .showcase-img {
   width: 70%;
   height: auto;
