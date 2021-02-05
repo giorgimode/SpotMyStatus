@@ -140,6 +140,26 @@ header.masthead h1, header.masthead-fail h1 {
   padding-bottom: 5rem;
 }
 
+.donation-widget {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  background: rgb(95, 127, 255);
+  color: white;
+  border-radius: 32px;
+  position: absolute;
+  right: 0px;
+  bottom: 0px;
+  box-shadow: rgb(0 0 0 / 40%) 0px 4px 8px;
+  z-index: 9999;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease 0s;
+  left: 45%;
+}
+
 .spotify-slack {
   width: 30%;
   height: 30%;
