@@ -66,7 +66,7 @@ header.masthead h1, header.masthead-fail h1 {
 
 .showcase {
   padding-top: 1rem;
-  padding-bottom: 3rem;
+  padding-bottom: 1rem;
 }
 
 .showcase .showcase-img {
@@ -101,7 +101,7 @@ header.masthead h1, header.masthead-fail h1 {
 }
 
 .testimonials {
-  padding-top: 5rem;
+  padding-top: 3rem;
   padding-bottom: 3rem;
 }
 
@@ -111,7 +111,6 @@ header.masthead h1, header.masthead-fail h1 {
 
 .testimonials .testimonial-item img {
   max-width: 9rem;
-  box-shadow: 0 5px 5px 0 #adb5bd;
 }
 
 .call-to-action {
@@ -135,7 +134,11 @@ header.masthead h1, header.masthead-fail h1 {
 }
 
 .call-to-action a{
- border-radius: 32px;
+  background-color: #1db954;
+  border-color: #1db954;
+  border-radius: 32px;
+  box-shadow: rgb(0 0 0 / 40%) 0px 4px 8px;
+  font-weight: bold;
 }
 
 .donation {
@@ -148,11 +151,11 @@ header.masthead h1, header.masthead-fail h1 {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 64px;
-  height: 64px;
-  background: #007bff;
+  width: 84px;
+  height: 84px;
+  background: #1db954;
   color: white;
-  border-radius: 32px;
+  border-radius: 62px;
   position: absolute;
   right: 0px;
   bottom: 0px;
@@ -164,6 +167,10 @@ header.masthead h1, header.masthead-fail h1 {
   left: 45%;
 }
 
+.donation-widget:hover, .call-to-action a:hover  {
+  background: #2aa256;
+  border-color: #2aa256;
+}
 .spotify-slack {
   width: 30%;
   height: 30%;
