@@ -102,7 +102,7 @@ header.masthead h1, header.masthead-fail h1 {
 
 .testimonials {
   padding-top: 5rem;
-  padding-bottom: 7rem;
+  padding-bottom: 3rem;
 }
 
 .testimonials .testimonial-item {
@@ -132,6 +132,12 @@ header.masthead h1, header.masthead-fail h1 {
   top: 0;
   left: 0;
   opacity: 0.3;
+}
+
+.donation {
+  background: url("../img/coffee.png") center center;
+  padding-top: 5rem;
+  padding-bottom: 5rem;
 }
 
 .spotify-slack {
