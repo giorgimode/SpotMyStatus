@@ -134,6 +134,10 @@ header.masthead h1, header.masthead-fail h1 {
   opacity: 0.3;
 }
 
+.call-to-action a{
+ border-radius: 32px;
+}
+
 .donation {
   background: url("../img/coffee.png") center center;
   padding-top: 5rem;
@@ -146,7 +150,7 @@ header.masthead h1, header.masthead-fail h1 {
   justify-content: center;
   width: 64px;
   height: 64px;
-  background: rgb(95, 127, 255);
+  background: #007bff;
   color: white;
   border-radius: 32px;
   position: absolute;
