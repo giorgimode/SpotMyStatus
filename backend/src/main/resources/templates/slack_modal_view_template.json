@@ -163,42 +163,6 @@
       "type": "divider"
     },
     {
-      "type": "section",
-      "text": {
-        "type": "mrkdwn",
-        "text": "*Sync status between these hours*"
-      }
-    },
-    {
-      "type": "actions",
-      "block_id": "hours_input_block",
-      "elements": [
-        {
-          "type": "timepicker",
-          "initial_time": "07:00",
-          "placeholder": {
-            "type": "plain_text",
-            "text": "Start time",
-            "emoji": true
-          },
-          "action_id": "start_hour-action"
-        },
-        {
-          "type": "timepicker",
-          "initial_time": "20:00",
-          "placeholder": {
-            "type": "plain_text",
-            "text": "End time",
-            "emoji": true
-          },
-          "action_id": "end_hour-action"
-        }
-      ]
-    },
-    {
-      "type": "divider"
-    },
-    {
       "type": "input",
       "block_id": "spotify_devices_block",
       "label": {

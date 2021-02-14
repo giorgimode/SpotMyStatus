@@ -27,7 +27,6 @@ Customize your experience by running `/spotme` command or by accessing app Home 
 * User can choose to sync music and/or podcasts (default both)
 * User can define emojis to rotate from when app sets a status. Emojis not present in the workspace will not be added 
 (default 🎧, 🎵, 🎶)
-* Uer can define working hours, or the hours during which syncing is active (default 7AM-8PM user's local time)
 * User can define Spotify devices to sync from (default all)
 * User can purge all their data from SpotMyStatus server
 
@@ -35,7 +34,6 @@ On each status update the status emoji is randomly picked from `:headphones:`, `
 
 On each poll the application does various checks:
 * has user paused status updates
-* is it outside working hours
 * is user offline
 * has user manually changed their status(to avoid overwriting it)
 

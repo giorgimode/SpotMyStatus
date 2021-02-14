@@ -22,7 +22,6 @@ import lombok.Setter;
 public class CachedUser implements Serializable {
 
     private String id;
-    private Integer timezoneOffsetSeconds;
     private String slackStatus;
     private boolean manualStatus;
     private String slackAccessToken;
@@ -35,15 +34,13 @@ public class CachedUser implements Serializable {
     private List<String> emojis;
     private List<SpotifyItem> spotifyItems;
     private List<String> spotifyDeviceIds;
-    private Integer syncStartHour;
-    private Integer syncEndHour;
+
 
     @Override
     public String toString() {
         return MoreObjects
             .toStringHelper(this)
             .add("userId", id)
-            .add("timezoneOffsetSeconds", timezoneOffsetSeconds)
             .add("slackStatus", slackStatus)
             .add("manualStatus", manualStatus)
             .add("spotifyAccessToken", spotifyAccessToken)
@@ -53,8 +50,6 @@ public class CachedUser implements Serializable {
             .add("emojis", emojis)
             .add("spotifyItems", spotifyItems)
             .add("spotifyDeviceIds", spotifyDeviceIds)
-            .add("syncStartHour", syncStartHour)
-            .add("syncEndHour", syncEndHour)
             .add("disabled", disabled)
             .add("cleaned", cleaned)
             .add("updatedAt", updatedAt)
@@ -68,7 +63,6 @@ public class CachedUser implements Serializable {
     public static final class CachedUserBuilder {
 
         private String id;
-        private Integer timezoneOffsetSeconds;
         private String slackAccessToken;
         private String slackBotToken;
         private String spotifyAccessToken;
@@ -77,19 +71,12 @@ public class CachedUser implements Serializable {
         private String emojis;
         private String spotifyItems;
         private String spotifyDeviceIds;
-        private Integer syncStartHour;
-        private Integer syncEndHour;
 
         private CachedUserBuilder() {
         }
 
         public CachedUserBuilder id(String id) {
             this.id = id;
-            return this;
-        }
-
-        public CachedUserBuilder timezoneOffsetSeconds(Integer timezoneOffsetSeconds) {
-            this.timezoneOffsetSeconds = timezoneOffsetSeconds;
             return this;
         }
 
@@ -133,20 +120,9 @@ public class CachedUser implements Serializable {
             return this;
         }
 
-        public CachedUserBuilder syncStartHour(Integer syncStartHour) {
-            this.syncStartHour = syncStartHour;
-            return this;
-        }
-
-        public CachedUserBuilder syncEndHour(Integer syncEndHour) {
-            this.syncEndHour = syncEndHour;
-            return this;
-        }
-
         public CachedUser build() {
             CachedUser cachedUser = new CachedUser();
             cachedUser.setId(requireNonBlank(id));
-            cachedUser.setTimezoneOffsetSeconds(requireNonNull(timezoneOffsetSeconds));
             cachedUser.setSlackAccessToken(requireNonBlank(slackAccessToken));
             cachedUser.setSlackBotToken(requireNonBlank(slackBotToken));
             cachedUser.setSpotifyRefreshToken(requireNonBlank(spotifyRefreshToken));
@@ -155,8 +131,6 @@ public class CachedUser implements Serializable {
             cachedUser.setSpotifyItems(splitItems(spotifyItems));
             cachedUser.setSpotifyDeviceIds(split(spotifyDeviceIds));
             cachedUser.setDisabled(disabled);
-            cachedUser.setSyncStartHour(syncStartHour);
-            cachedUser.setSyncEndHour(syncEndHour);
             return cachedUser;
         }
 
