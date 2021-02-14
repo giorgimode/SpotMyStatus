@@ -36,14 +36,14 @@ public class State {
     @SuppressWarnings("unchecked")
     private StateValue collectValues(Map.Entry<String, Object> value) {
         Map<String, Object> valueMap = (Map<String, Object>) value.getValue();
-        if (valueMap.containsKey(ACTION_START_HOUR)) {
-            return createHourStateValue(valueMap);
-        } else {
+//        if (valueMap.containsKey(ACTION_START_HOUR)) {
+//            return createHourStateValue(valueMap);
+//        } else {
             return valueMap.values().stream().findFirst()
                            .map(map -> (Map<String, Object>) map)
                            .map(this::createOptionsStateValue)
                            .orElseGet(StateValue::new);
-        }
+//        }
     }
 
     private StateValue createOptionsStateValue(Map<String, Object> firstValue) {
@@ -61,11 +61,11 @@ public class State {
     @SuppressWarnings("unchecked")
     private StateValue createHourStateValue(Map<String, Object> valueMap) {
         StateValue stateValue = new StateValue();
-        String startHour = safeGet(((Map<String, Object>) valueMap.get(ACTION_START_HOUR)), "selected_time");
-        String endHour = safeGet(((Map<String, Object>) valueMap.get(ACTION_END_HOUR)), "selected_time");
+        String startHour = safeGet(((Map<String, Object>) valueMap.get(ACTION_START_HOUR)), "value");
+        String endHour = safeGet(((Map<String, Object>) valueMap.get(ACTION_END_HOUR)), "value");
         stateValue.setType("timepicker");
-        stateValue.setStartHour(startHour);
-        stateValue.setEndHour(endHour);
+//        stateValue.setStartHour(startHour);
+//        stateValue.setEndHour(endHour);
         return stateValue;
     }
 

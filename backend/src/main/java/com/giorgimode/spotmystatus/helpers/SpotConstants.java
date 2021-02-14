@@ -1,5 +1,6 @@
 package com.giorgimode.spotmystatus.helpers;
 
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -30,4 +31,5 @@ public final class SpotConstants {
     public static final List<String> SLACK_PROFILE_SCOPES = List.of("users:read", "users.profile:read", "users.profile:write");
     public static final List<String> SLACK_BOT_SCOPES = List.of("chat:write", "commands");
     public static final String MODAL_FOOTER_MESSAGE = ":house: <%1$s|_*SpotMyStatus Home*_> | :male-mechanic: <%1$s/support|_*SpotMyStatus Support*_>";
+    public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("hh:mm a");
 }

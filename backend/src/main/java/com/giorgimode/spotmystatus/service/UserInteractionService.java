@@ -12,6 +12,7 @@ import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_SPOTIFY
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_SPOTIFY_ITEMS;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_SUBMIT;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_SYNC_TOGGLE;
+import static com.giorgimode.spotmystatus.helpers.SpotConstants.DATE_TIME_FORMATTER;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.EMOJI_REGEX;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.MODAL_FOOTER_MESSAGE;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.PAYLOAD_TYPE_BLOCK_ACTIONS;
@@ -157,19 +158,24 @@ public class UserInteractionService {
 
     private void prepareHoursBlock(CachedUser cachedUser, Block block) {
         if (cachedUser.getSyncStartHour() != null && cachedUser.getSyncEndHour() != null) {
-            Integer syncStartHour = cachedUser.getSyncStartHour();
-            Integer setSyncEndHour = cachedUser.getSyncEndHour();
-            OffsetTime offsetStartTime = LocalTime.of(syncStartHour / 100, syncStartHour % 100)
-                                                  .atOffset(ZoneOffset.ofTotalSeconds(-cachedUser.getTimezoneOffsetSeconds()))
-                                                  .withOffsetSameInstant(ZoneOffset.UTC);
-            OffsetTime offsetEndTime = LocalTime.of(setSyncEndHour / 100, setSyncEndHour % 100)
-                                                .atOffset(ZoneOffset.ofTotalSeconds(-cachedUser.getTimezoneOffsetSeconds()))
-                                                .withOffsetSameInstant(ZoneOffset.UTC);
-
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
-            block.getElements().get(0).setInitialTime(offsetStartTime.format(formatter));
-            block.getElements().get(1).setInitialTime(offsetEndTime.format(formatter));
+            Option syncStartHourInitialOption = createSyncHourInitialOption(cachedUser.getSyncStartHour(), cachedUser.getTimezoneOffsetSeconds());
+            Option syncEndHourInitialOption = createSyncHourInitialOption(cachedUser.getSyncEndHour(), cachedUser.getTimezoneOffsetSeconds());
+            block.getElements().get(0).setInitialOption(syncStartHourInitialOption);
+            block.getElements().get(1).setInitialOption(syncEndHourInitialOption);
         }
+    }
+
+    private Option createSyncHourInitialOption(Integer syncStartHour, int timezoneOffsetSeconds) {
+        OffsetTime offsetTime = LocalTime.of(syncStartHour / 100, syncStartHour % 100)
+                                              .atOffset(ZoneOffset.ofTotalSeconds(-timezoneOffsetSeconds))
+                                              .withOffsetSameInstant(ZoneOffset.UTC);
+        Option initialOption = new Option();
+        Text hourText = new Text();
+        hourText.setType(PLAIN_TEXT);
+        hourText.setTextValue(offsetTime.format(DATE_TIME_FORMATTER));
+        initialOption.setText(hourText);
+        initialOption.setValue(String.valueOf(offsetTime.getHour()));
+        return initialOption;
     }
 
     private void prepareSyncToggleBlock(CachedUser cachedUser, Accessory accessory) {
@@ -241,8 +247,8 @@ public class UserInteractionService {
         log.debug("User {} submitted the form", cachedUser.getId());
         for (Block block : blocks) {
             if (BLOCK_ID_HOURS_INPUT.equals(block.getBlockId())) {
-                String startHour = getStateValue(payload, BLOCK_ID_HOURS_INPUT).getStartHour();
-                String endHour = getStateValue(payload, BLOCK_ID_HOURS_INPUT).getEndHour();
+                String startHour = getStateValue(payload, BLOCK_ID_HOURS_INPUT).getSelectedOptions().get(0).getValue();
+                String endHour = getStateValue(payload, BLOCK_ID_HOURS_INPUT).getSelectedOptions().get(1).getValue();
                 if (startHour.equals(endHour)) {
                     return returnModalWithWarning(payload);
                 } else {
@@ -307,8 +313,8 @@ public class UserInteractionService {
     }
 
     private void handleHoursInput(InvocationModal payload, List<Block> blocks) {
-        String startHour = getStateValue(payload, BLOCK_ID_HOURS_INPUT).getStartHour();
-        String endHour = getStateValue(payload, BLOCK_ID_HOURS_INPUT).getEndHour();
+        String startHour = getStateValue(payload, BLOCK_ID_HOURS_INPUT).getSelectedOptions().get(0).getValue();
+        String endHour = getStateValue(payload, BLOCK_ID_HOURS_INPUT).getSelectedOptions().get(1).getValue();
         InteractionModal slackModal = createModalResponse(payload);
         if (startHour != null && startHour.equals(endHour)) {
             addWarningBlock(blocks, slackModal, getUserId(payload));

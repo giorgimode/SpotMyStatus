@@ -29,5 +29,8 @@ public class Element {
 
     @JsonProperty("initial_options")
     private List<Option> initialOptions;
+
+    @JsonProperty("initial_option")
+    private Option initialOption;
     private List<Option> options;
 }

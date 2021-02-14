@@ -174,23 +174,365 @@
       "block_id": "hours_input_block",
       "elements": [
         {
-          "type": "timepicker",
-          "initial_time": "07:00",
-          "placeholder": {
-            "type": "plain_text",
-            "text": "Start time",
-            "emoji": true
+          "type": "static_select",
+          "initial_option": {
+            "text": {
+              "type": "plain_text",
+              "text": "12:00 AM"
+            },
+            "value": "0"
           },
+          "options": [
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "12:00 AM"
+              },
+              "value": "0"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "1:00 AM"
+              },
+              "value": "1"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "2:00 AM"
+              },
+              "value": "2"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "3:00 AM"
+              },
+              "value": "3"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "4:00 AM"
+              },
+              "value": "4"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "5:00 AM"
+              },
+              "value": "5"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "6:00 AM"
+              },
+              "value": "6"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "7:00 AM"
+              },
+              "value": "7"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "8:00 AM"
+              },
+              "value": "8"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "9:00 AM"
+              },
+              "value": "9"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "10:00 AM"
+              },
+              "value": "10"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "11:00 AM"
+              },
+              "value": "11"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "12:00 PM"
+              },
+              "value": "12"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "1:00 PM"
+              },
+              "value": "13"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "2:00 PM"
+              },
+              "value": "14"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "3:00 PM"
+              },
+              "value": "15"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "4:00 PM"
+              },
+              "value": "16"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "5:00 PM"
+              },
+              "value": "17"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "6:00 PM"
+              },
+              "value": "18"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "7:00 PM"
+              },
+              "value": "19"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "8:00 PM"
+              },
+              "value": "20"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "9:00 PM"
+              },
+              "value": "21"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "10:00 PM"
+              },
+              "value": "22"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "11:00 PM"
+              },
+              "value": "23"
+            }
+          ],
           "action_id": "start_hour-action"
         },
         {
-          "type": "timepicker",
-          "initial_time": "20:00",
-          "placeholder": {
-            "type": "plain_text",
-            "text": "End time",
-            "emoji": true
+          "type": "static_select",
+          "initial_option": {
+            "text": {
+              "type": "plain_text",
+              "text": "12:00 AM"
+            },
+            "value": "0"
           },
+          "options": [
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "12:00 AM"
+              },
+              "value": "0"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "1:00 AM"
+              },
+              "value": "1"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "2:00 AM"
+              },
+              "value": "2"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "3:00 AM"
+              },
+              "value": "3"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "4:00 AM"
+              },
+              "value": "4"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "5:00 AM"
+              },
+              "value": "5"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "6:00 AM"
+              },
+              "value": "6"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "7:00 AM"
+              },
+              "value": "7"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "8:00 AM"
+              },
+              "value": "8"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "9:00 AM"
+              },
+              "value": "9"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "10:00 AM"
+              },
+              "value": "10"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "11:00 AM"
+              },
+              "value": "11"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "12:00 PM"
+              },
+              "value": "12"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "1:00 PM"
+              },
+              "value": "13"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "2:00 PM"
+              },
+              "value": "14"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "3:00 PM"
+              },
+              "value": "15"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "4:00 PM"
+              },
+              "value": "16"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "5:00 PM"
+              },
+              "value": "17"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "6:00 PM"
+              },
+              "value": "18"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "7:00 PM"
+              },
+              "value": "19"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "8:00 PM"
+              },
+              "value": "20"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "9:00 PM"
+              },
+              "value": "21"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "10:00 PM"
+              },
+              "value": "22"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "11:00 PM"
+              },
+              "value": "23"
+            }
+          ],
           "action_id": "end_hour-action"
         }
       ]
