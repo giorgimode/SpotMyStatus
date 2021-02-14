@@ -23,7 +23,6 @@ public final class SpotUtil {
                          .slackBotToken(user.getSlackBotToken())
                          .spotifyRefreshToken(user.getSpotifyRefreshToken())
                          .spotifyAccessToken(spotifyAccessToken)
-                         .timezoneOffsetSeconds(user.getTimezoneOffsetSeconds())
                          .disabled(user.isDisabled())
                          .emojis(user.getEmojis())
                          .spotifyItems(user.getSpotifyItems())

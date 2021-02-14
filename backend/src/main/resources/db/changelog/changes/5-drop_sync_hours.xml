@@ -6,5 +6,6 @@
     <changeSet author="gio" id="drop_sync_hours">
         <dropColumn tableName="users" columnName="sync_from"/>
         <dropColumn tableName="users" columnName="sync_to"/>
+        <dropColumn tableName="users" columnName="tz_offset_sec"/>
     </changeSet>
 </databaseChangeLog>

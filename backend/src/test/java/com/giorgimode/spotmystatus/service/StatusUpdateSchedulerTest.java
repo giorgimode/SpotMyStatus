@@ -219,7 +219,6 @@ class StatusUpdateSchedulerTest {
                                           .slackBotToken("testSlackBotToken")
                                           .spotifyRefreshToken("testSpotifyRefreshToken")
                                           .spotifyAccessToken("testSpotifyAccessToken")
-                                          .timezoneOffsetSeconds(0)
                                           .build();
         userCache.put("user1", cachedUser);
         return cachedUser;

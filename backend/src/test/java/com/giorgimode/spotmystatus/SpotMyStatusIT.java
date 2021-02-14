@@ -60,7 +60,6 @@ class SpotMyStatusIT extends SpotMyStatusITBase {
         CachedUser cachedUser = userCache.getIfPresent("user123");
         assertNotNull(cachedUser);
         assertEquals("user123", cachedUser.getId());
-        assertEquals(3600, cachedUser.getTimezoneOffsetSeconds());
         assertFalse(cachedUser.isManualStatus());
         assertFalse(cachedUser.isDisabled());
         assertFalse(cachedUser.isCleaned());

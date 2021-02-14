@@ -22,7 +22,6 @@ import lombok.Setter;
 public class CachedUser implements Serializable {
 
     private String id;
-    private Integer timezoneOffsetSeconds;
     private String slackStatus;
     private boolean manualStatus;
     private String slackAccessToken;
@@ -42,7 +41,6 @@ public class CachedUser implements Serializable {
         return MoreObjects
             .toStringHelper(this)
             .add("userId", id)
-            .add("timezoneOffsetSeconds", timezoneOffsetSeconds)
             .add("slackStatus", slackStatus)
             .add("manualStatus", manualStatus)
             .add("spotifyAccessToken", spotifyAccessToken)
@@ -65,7 +63,6 @@ public class CachedUser implements Serializable {
     public static final class CachedUserBuilder {
 
         private String id;
-        private Integer timezoneOffsetSeconds;
         private String slackAccessToken;
         private String slackBotToken;
         private String spotifyAccessToken;
@@ -80,11 +77,6 @@ public class CachedUser implements Serializable {
 
         public CachedUserBuilder id(String id) {
             this.id = id;
-            return this;
-        }
-
-        public CachedUserBuilder timezoneOffsetSeconds(Integer timezoneOffsetSeconds) {
-            this.timezoneOffsetSeconds = timezoneOffsetSeconds;
             return this;
         }
 
@@ -131,7 +123,6 @@ public class CachedUser implements Serializable {
         public CachedUser build() {
             CachedUser cachedUser = new CachedUser();
             cachedUser.setId(requireNonBlank(id));
-            cachedUser.setTimezoneOffsetSeconds(requireNonNull(timezoneOffsetSeconds));
             cachedUser.setSlackAccessToken(requireNonBlank(slackAccessToken));
             cachedUser.setSlackBotToken(requireNonBlank(slackBotToken));
             cachedUser.setSpotifyRefreshToken(requireNonBlank(spotifyRefreshToken));

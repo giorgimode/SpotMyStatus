@@ -27,7 +27,6 @@ class SpotUtilTest {
         user.setSlackAccessToken("test_slack_token");
         user.setSlackBotToken("test_slack_bot_token");
         user.setSpotifyRefreshToken("test_spotify_token");
-        user.setTimezoneOffsetSeconds(1000);
         user.setState(UUID.randomUUID());
         CachedUser cachedUser = SpotUtil.toCachedUser(user, "test_token");
         assertNotNull(cachedUser);
@@ -35,7 +34,6 @@ class SpotUtilTest {
         assertEquals(user.getSlackAccessToken(), cachedUser.getSlackAccessToken());
         assertEquals(user.getSpotifyRefreshToken(), cachedUser.getSpotifyRefreshToken());
         assertEquals("test_token", cachedUser.getSpotifyAccessToken());
-        assertEquals(1000, cachedUser.getTimezoneOffsetSeconds());
     }
 
     @Test

@@ -239,7 +239,6 @@ class UserInteractionServiceTest {
                                           .slackBotToken("testSlackNotToken")
                                           .spotifyRefreshToken("testSpotifyRefreshToken")
                                           .spotifyAccessToken("testSpotifyAccessToken")
-                                          .timezoneOffsetSeconds(0)
                                           .build();
         userCache.put(TEST_USER_ID, cachedUser);
         return cachedUser;
