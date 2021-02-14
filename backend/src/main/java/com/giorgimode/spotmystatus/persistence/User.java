@@ -34,12 +34,6 @@ public class User implements Serializable {
     @Column(name = ("tz_offset_sec"))
     private Integer timezoneOffsetSeconds;
 
-    @Column(name = ("sync_from"))
-    private Integer syncFrom;
-
-    @Column(name = ("sync_to"))
-    private Integer syncTo;
-
     @Column(name = "state")
     private UUID state;
 

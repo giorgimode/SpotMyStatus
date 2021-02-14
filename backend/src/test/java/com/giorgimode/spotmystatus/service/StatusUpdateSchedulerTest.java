@@ -17,8 +17,6 @@ import com.giorgimode.spotmystatus.slack.SlackClient;
 import com.giorgimode.spotmystatus.spotify.SpotifyClient;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
@@ -93,28 +91,6 @@ class StatusUpdateSchedulerTest {
         mockExecutor();
         cachedUser.setDisabled(true);
         userCache.put("user1", cachedUser);
-        statusUpdateScheduler.scheduleFixedDelayTask();
-        verifyNoInteractions(slackClient);
-        verifyNoInteractions(spotifyClient);
-    }
-
-    @Test
-    void schedulerShouldSkipPollingDuringOfflineHours() {
-        mockExecutor();
-        cachedUser.setSyncStartHour(cachedUser.getSyncStartHour() + 1);
-        cachedUser.setSyncEndHour(cachedUser.getSyncStartHour() + 2);
-        statusUpdateScheduler.scheduleFixedDelayTask();
-        verifyNoInteractions(slackClient);
-        verifyNoInteractions(spotifyClient);
-    }
-
-    @Test
-    void schedulerShouldSkipPollingDuringDefaultOfflineHours() {
-        mockExecutor();
-        spotMyStatusProperties.setSyncStartHr(cachedUser.getSyncStartHour() + 100);
-        spotMyStatusProperties.setSyncEndHr(cachedUser.getSyncStartHour() + 200);
-        cachedUser.setSyncStartHour(null);
-        cachedUser.setSyncEndHour(null);
         statusUpdateScheduler.scheduleFixedDelayTask();
         verifyNoInteractions(slackClient);
         verifyNoInteractions(spotifyClient);
@@ -237,8 +213,6 @@ class StatusUpdateSchedulerTest {
     }
 
     private CachedUser createCachedUser() {
-        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
-        int syncStartHour = now.getHour();
         CachedUser cachedUser = CachedUser.builder()
                                           .id("user1")
                                           .slackAccessToken("testSlackToken")
@@ -246,8 +220,6 @@ class StatusUpdateSchedulerTest {
                                           .spotifyRefreshToken("testSpotifyRefreshToken")
                                           .spotifyAccessToken("testSpotifyAccessToken")
                                           .timezoneOffsetSeconds(0)
-                                          .syncStartHour(syncStartHour * 100)
-                                          .syncEndHour((syncStartHour + 1) * 100)
                                           .build();
         userCache.put("user1", cachedUser);
         return cachedUser;

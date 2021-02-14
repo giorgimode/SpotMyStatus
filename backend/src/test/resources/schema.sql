@@ -10,7 +10,5 @@ create table if not exists users
     created_at timestamp,
     emojis text,
     spotify_items text,
-    sync_from smallint,
-    sync_to smallint,
     spotify_devices text
 );

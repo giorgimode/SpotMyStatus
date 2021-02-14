@@ -71,8 +71,6 @@ class SpotMyStatusIT extends SpotMyStatusITBase {
         assertTrue(cachedUser.getEmojis().containsAll(List.of("headphones", "musical_note", "notes")));
         assertTrue(cachedUser.getSpotifyItems().contains(SpotifyItem.TRACK));
         assertTrue(cachedUser.getSpotifyDeviceIds().contains("macbookId123"));
-        assertEquals(600, cachedUser.getSyncStartHour());
-        assertEquals(559, cachedUser.getSyncEndHour());
         assertEquals("Guns N' Roses - November Rain", cachedUser.getSlackStatus());
 
         verify(restTemplate).postForEntity(eq("https://fake-spotify.com/api/token"), any(HttpEntity.class), eq(SpotifyTokenResponse.class));

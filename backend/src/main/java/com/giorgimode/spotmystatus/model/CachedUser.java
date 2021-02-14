@@ -35,8 +35,7 @@ public class CachedUser implements Serializable {
     private List<String> emojis;
     private List<SpotifyItem> spotifyItems;
     private List<String> spotifyDeviceIds;
-    private Integer syncStartHour;
-    private Integer syncEndHour;
+
 
     @Override
     public String toString() {
@@ -53,8 +52,6 @@ public class CachedUser implements Serializable {
             .add("emojis", emojis)
             .add("spotifyItems", spotifyItems)
             .add("spotifyDeviceIds", spotifyDeviceIds)
-            .add("syncStartHour", syncStartHour)
-            .add("syncEndHour", syncEndHour)
             .add("disabled", disabled)
             .add("cleaned", cleaned)
             .add("updatedAt", updatedAt)
@@ -77,8 +74,6 @@ public class CachedUser implements Serializable {
         private String emojis;
         private String spotifyItems;
         private String spotifyDeviceIds;
-        private Integer syncStartHour;
-        private Integer syncEndHour;
 
         private CachedUserBuilder() {
         }
@@ -133,16 +128,6 @@ public class CachedUser implements Serializable {
             return this;
         }
 
-        public CachedUserBuilder syncStartHour(Integer syncStartHour) {
-            this.syncStartHour = syncStartHour;
-            return this;
-        }
-
-        public CachedUserBuilder syncEndHour(Integer syncEndHour) {
-            this.syncEndHour = syncEndHour;
-            return this;
-        }
-
         public CachedUser build() {
             CachedUser cachedUser = new CachedUser();
             cachedUser.setId(requireNonBlank(id));
@@ -155,8 +140,6 @@ public class CachedUser implements Serializable {
             cachedUser.setSpotifyItems(splitItems(spotifyItems));
             cachedUser.setSpotifyDeviceIds(split(spotifyDeviceIds));
             cachedUser.setDisabled(disabled);
-            cachedUser.setSyncStartHour(syncStartHour);
-            cachedUser.setSyncEndHour(syncEndHour);
             return cachedUser;
         }
 

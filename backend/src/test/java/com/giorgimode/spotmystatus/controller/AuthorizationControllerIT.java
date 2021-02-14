@@ -156,8 +156,6 @@ class AuthorizationControllerIT extends SpotMyStatusITBase {
                                           .spotifyRefreshToken("old_spotify_refresh_token")
                                           .spotifyAccessToken("old_spotify_access_token")
                                           .timezoneOffsetSeconds(7200)
-                                          .syncStartHour(900)
-                                          .syncEndHour(1100)
                                           .build();
         cachedUser.setSlackStatus("Swans - Power and Sacrifice");
         userCache.put(testUserId, cachedUser);
