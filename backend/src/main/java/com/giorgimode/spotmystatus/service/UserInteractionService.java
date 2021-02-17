@@ -143,7 +143,7 @@ public class UserInteractionService {
                                                    .collect(toList());
         if (spotifyDevices.isEmpty()) {
             block.getElement().getPlaceholder().setTextValue("All your Spotify devices are offline");
-            block.getElement().setOptions(List.of(createOption(ALL_DEVICES_OFFLINE_VALUE, "All your Spotify devices are offline")));
+            block.getElement().setOptions(List.of(createOption(ALL_DEVICES_OFFLINE_VALUE, " ")));
         } else {
             block.getElement().setOptions(spotifyDevices);
             List<Option> selectedDevices = spotifyDevices.stream()
@@ -519,7 +519,10 @@ public class UserInteractionService {
             } else if (BLOCK_ID_EMOJI_LIST.equals(blocks.get(i).getBlockId())) {
                 blocks.get(i).getElement().getPlaceholder().setTextValue("Your emojis. Default emojis will be set if none selected");
             } else if (BLOCK_ID_SPOTIFY_DEVICES.equals(blocks.get(i).getBlockId())) {
-                blocks.get(i).getElement().getPlaceholder().setTextValue("Select devices. All devices will be included if none selected");
+                Text devicesPlaceholder = blocks.get(i).getElement().getPlaceholder();
+                if (isBlank(devicesPlaceholder.getTextValue())) {
+                    devicesPlaceholder.setTextValue("Select devices. All devices will be included if none selected");
+                }
             }
         }
     }
