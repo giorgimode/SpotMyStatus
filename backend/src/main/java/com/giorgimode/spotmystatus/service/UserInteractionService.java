@@ -1,5 +1,6 @@
 package com.giorgimode.spotmystatus.service;
 
+import static com.giorgimode.spotmystatus.helpers.SpotConstants.ALL_DEVICES_OFFLINE_VALUE;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_APP_URI;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_EMOJI_INPUT;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_EMOJI_LIST;
@@ -140,11 +141,16 @@ public class UserInteractionService {
                                                    .stream()
                                                    .map(device -> createOption(device.getId(), device.getName()))
                                                    .collect(toList());
-        block.getElement().setOptions(spotifyDevices);
-        List<Option> selectedDevices = spotifyDevices.stream()
-                                                     .filter(device -> cachedUser.getSpotifyDeviceIds().contains(device.getValue()))
-                                                     .collect(toList());
-        block.getElement().setInitialOptions(CollectionUtils.isEmpty(selectedDevices) ? spotifyDevices : selectedDevices);
+        if (spotifyDevices.isEmpty()) {
+            block.getElement().getPlaceholder().setTextValue("All your Spotify devices are offline");
+            block.getElement().setOptions(List.of(createOption(ALL_DEVICES_OFFLINE_VALUE, "All your Spotify devices are offline")));
+        } else {
+            block.getElement().setOptions(spotifyDevices);
+            List<Option> selectedDevices = spotifyDevices.stream()
+                                                         .filter(device -> cachedUser.getSpotifyDeviceIds().contains(device.getValue()))
+                                                         .collect(toList());
+            block.getElement().setInitialOptions(CollectionUtils.isEmpty(selectedDevices) ? spotifyDevices : selectedDevices);
+        }
     }
 
     private void prepareSyncToggleBlock(CachedUser cachedUser, Accessory accessory) {
@@ -248,12 +254,7 @@ public class UserInteractionService {
         if (BLOCK_ID_EMOJI_INPUT.equals(userAction.getBlockId())) {
             handleEmojiAdd(payload, userAction.getValue());
         } else if (BLOCK_ID_PURGE.equals(userAction.getBlockId())) {
-            try {
-                updateHomeTabForMissingUser(userId);
-            } catch (Exception e) {
-                log.error("Failed to update home tab");
-            }
-            slackClient.purge(userId);
+            purge(userId);
         } else if (BLOCK_ID_SUBMIT.equals(userAction.getBlockId())) {
             handleSubmission(payload);
         }
@@ -303,12 +304,11 @@ public class UserInteractionService {
     }
 
     private void updateSpotifyDevices(CachedUser cachedUser, List<Option> spotifyDevices) {
-        if (CollectionUtils.isEmpty(spotifyDevices)) {
-            cachedUser.setSpotifyDeviceIds(List.of());
-        } else {
-            List<String> spotifyDevicesList = getOptionValues(spotifyDevices);
-            cachedUser.setSpotifyDeviceIds(spotifyDevicesList);
-        }
+        List<String> deviceValues = spotifyDevices == null ? List.of() : spotifyDevices.stream()
+                                                                                       .map(Option::getValue)
+                                                                                       .filter(not(ALL_DEVICES_OFFLINE_VALUE::equals))
+                                                                                       .collect(toList());
+        cachedUser.setSpotifyDeviceIds(deviceValues);
     }
 
     private List<String> getOptionValues(List<Option> options) {
@@ -449,21 +449,26 @@ public class UserInteractionService {
     }
 
     public String purge(String userId) {
+        updateHomeTabForMissingUser(userId);
         return slackClient.purge(userId);
     }
 
     public void updateHomeTabForMissingUser(String userId) {
-        InteractionModal homeModal = new InteractionModal();
-        homeModal.setUserId(userId);
-        ModalView modalView = new ModalView();
-        modalView.setType("home");
-        homeModal.setView(modalView);
-        Block noUserHeader = createHeaderForMissingUser();
-        Block signupBlock = createSignupBlockForMissingUser();
-        modalView.setBlocks(List.of(noUserHeader, signupBlock));
+        try {
+            InteractionModal homeModal = new InteractionModal();
+            homeModal.setUserId(userId);
+            ModalView modalView = new ModalView();
+            modalView.setType("home");
+            homeModal.setView(modalView);
+            Block noUserHeader = createHeaderForMissingUser();
+            Block signupBlock = createSignupBlockForMissingUser();
+            modalView.setBlocks(List.of(noUserHeader, signupBlock));
 
-        String response = slackClient.notifyUser(SLACK_VIEW_PUBLISH_URI, homeModal, userId);
-        log.trace("Slack returned response when updating home tab {}", response);
+            String response = slackClient.notifyUser(SLACK_VIEW_PUBLISH_URI, homeModal, userId);
+            log.trace("Slack returned response when updating home tab {}", response);
+        } catch (Exception e) {
+            log.error("Failed to update home tab");
+        }
     }
 
     public void updateHomeTab(String userId) {
