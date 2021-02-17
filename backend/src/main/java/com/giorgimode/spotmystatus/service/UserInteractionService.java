@@ -248,12 +248,7 @@ public class UserInteractionService {
         if (BLOCK_ID_EMOJI_INPUT.equals(userAction.getBlockId())) {
             handleEmojiAdd(payload, userAction.getValue());
         } else if (BLOCK_ID_PURGE.equals(userAction.getBlockId())) {
-            try {
-                updateHomeTabForMissingUser(userId);
-            } catch (Exception e) {
-                log.error("Failed to update home tab");
-            }
-            slackClient.purge(userId);
+            purge(userId);
         } else if (BLOCK_ID_SUBMIT.equals(userAction.getBlockId())) {
             handleSubmission(payload);
         }
@@ -449,21 +444,26 @@ public class UserInteractionService {
     }
 
     public String purge(String userId) {
+        updateHomeTabForMissingUser(userId);
         return slackClient.purge(userId);
     }
 
     public void updateHomeTabForMissingUser(String userId) {
-        InteractionModal homeModal = new InteractionModal();
-        homeModal.setUserId(userId);
-        ModalView modalView = new ModalView();
-        modalView.setType("home");
-        homeModal.setView(modalView);
-        Block noUserHeader = createHeaderForMissingUser();
-        Block signupBlock = createSignupBlockForMissingUser();
-        modalView.setBlocks(List.of(noUserHeader, signupBlock));
+        try {
+            InteractionModal homeModal = new InteractionModal();
+            homeModal.setUserId(userId);
+            ModalView modalView = new ModalView();
+            modalView.setType("home");
+            homeModal.setView(modalView);
+            Block noUserHeader = createHeaderForMissingUser();
+            Block signupBlock = createSignupBlockForMissingUser();
+            modalView.setBlocks(List.of(noUserHeader, signupBlock));
 
-        String response = slackClient.notifyUser(SLACK_VIEW_PUBLISH_URI, homeModal, userId);
-        log.trace("Slack returned response when updating home tab {}", response);
+            String response = slackClient.notifyUser(SLACK_VIEW_PUBLISH_URI, homeModal, userId);
+            log.trace("Slack returned response when updating home tab {}", response);
+        } catch (Exception e) {
+            log.error("Failed to update home tab");
+        }
     }
 
     public void updateHomeTab(String userId) {
