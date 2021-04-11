@@ -1,5 +1,7 @@
 package com.giorgimode.spotmystatus.service;
 
+import static com.giorgimode.spotmystatus.helpers.SpotConstants.ALL_DEVICES_ALLOWED_TEXT;
+import static com.giorgimode.spotmystatus.helpers.SpotConstants.ALL_DEVICES_ALLOWED_VALUE;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.ALL_DEVICES_OFFLINE_VALUE;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_APP_URI;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_EMOJI_INPUT;
@@ -24,6 +26,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
+import static org.springframework.util.CollectionUtils.isEmpty;
 import com.giorgimode.spotmystatus.helpers.PropertyVault;
 import com.giorgimode.spotmystatus.helpers.SpotMyStatusProperties;
 import com.giorgimode.spotmystatus.model.CachedUser;
@@ -44,6 +47,7 @@ import com.giorgimode.spotmystatus.slack.SlackClient;
 import com.giorgimode.spotmystatus.spotify.SpotifyClient;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -145,11 +149,15 @@ public class UserInteractionService {
             block.getElement().getPlaceholder().setTextValue("All your Spotify devices are offline");
             block.getElement().setOptions(List.of(createOption(ALL_DEVICES_OFFLINE_VALUE, " ")));
         } else {
-            block.getElement().setOptions(spotifyDevices);
+            Option allDevicesOption = createOption(ALL_DEVICES_ALLOWED_VALUE, ALL_DEVICES_ALLOWED_TEXT);
+            List<Option> spotifyDevicesWithAnyDeviceOption = new ArrayList<>(spotifyDevices);
+            spotifyDevicesWithAnyDeviceOption.add(allDevicesOption);
+            block.getElement().setOptions(spotifyDevicesWithAnyDeviceOption);
             List<Option> selectedDevices = spotifyDevices.stream()
                                                          .filter(device -> cachedUser.getSpotifyDeviceIds().contains(device.getValue()))
                                                          .collect(toList());
-            block.getElement().setInitialOptions(CollectionUtils.isEmpty(selectedDevices) ? spotifyDevices : selectedDevices);
+            List<Option> initialOptions = isEmpty(selectedDevices) ? List.of(allDevicesOption) : selectedDevices;
+            block.getElement().setInitialOptions(initialOptions);
         }
     }
 
@@ -180,7 +188,7 @@ public class UserInteractionService {
                                                           spotMyStatusProperties.getDefaultSpotifyItems().get(spotifyItem.title())))
                                                       .collect(toList());
         block.getElement().setOptions(defaultItemOptions);
-        if (CollectionUtils.isEmpty(selectedItemsOptions)) {
+        if (isEmpty(selectedItemsOptions)) {
             block.getElement().setInitialOptions(defaultItemOptions);
         } else {
             block.getElement().setInitialOptions(selectedItemsOptions);
@@ -207,7 +215,7 @@ public class UserInteractionService {
     }
 
     private List<String> getUserEmojis(CachedUser cachedUser) {
-        if (CollectionUtils.isEmpty(cachedUser.getEmojis())) {
+        if (isEmpty(cachedUser.getEmojis())) {
             return spotMyStatusProperties.getDefaultEmojis();
         }
         return cachedUser.getEmojis();
@@ -281,7 +289,7 @@ public class UserInteractionService {
 
     private void updateEmojis(CachedUser cachedUser, List<Option> selectedEmojiOptions) {
         List<String> selectedEmojis = getOptionValues(selectedEmojiOptions);
-        if (CollectionUtils.isEmpty(selectedEmojis)) {
+        if (isEmpty(selectedEmojis)) {
             cachedUser.setEmojis(List.of());
         } else {
             cachedUser.setEmojis(selectedEmojis);
@@ -294,7 +302,7 @@ public class UserInteractionService {
     }
 
     private void updateSpotifyItems(CachedUser cachedUser, List<Option> selectedSpotifyItems) {
-        if (CollectionUtils.isEmpty(selectedSpotifyItems)) {
+        if (isEmpty(selectedSpotifyItems)) {
             cachedUser.setSpotifyItems(List.of());
         } else {
             Collection<String> spotifyItemsList = getOptionValues(selectedSpotifyItems);
@@ -308,7 +316,12 @@ public class UserInteractionService {
                                                                                        .map(Option::getValue)
                                                                                        .filter(not(ALL_DEVICES_OFFLINE_VALUE::equals))
                                                                                        .collect(toList());
-        cachedUser.setSpotifyDeviceIds(deviceValues);
+
+        if (deviceValues.contains(ALL_DEVICES_ALLOWED_VALUE)) {
+            cachedUser.setSpotifyDeviceIds(List.of());
+        } else {
+            cachedUser.setSpotifyDeviceIds(deviceValues);
+        }
     }
 
     private List<String> getOptionValues(List<Option> options) {
@@ -320,7 +333,7 @@ public class UserInteractionService {
                                        .filter(StringUtils::isNotBlank)
                                        .map(String::trim)
                                        .collect(toList());
-        if (CollectionUtils.isEmpty(emojiList)) {
+        if (isEmpty(emojiList)) {
             return;
         }
         List<String> validationErrors = emojiList.stream().map(this::getValidationError).flatMap(Optional::stream).collect(toList());

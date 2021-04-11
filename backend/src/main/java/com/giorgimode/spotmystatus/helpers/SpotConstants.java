@@ -20,6 +20,8 @@ public final class SpotConstants {
     public static final String BLOCK_ID_SUBMIT = "submit_block";
     public static final String BLOCK_ID_FIRST_DIVIDER = "first_divider_block";
     public static final String ALL_DEVICES_OFFLINE_VALUE = "all_devices_offline";
+    public static final String ALL_DEVICES_ALLOWED_VALUE = "all_devices_allowed";
+    public static final String ALL_DEVICES_ALLOWED_TEXT = "Any Device";
     public static final String EMOJI_REGEX = "^[a-z0-9-_]+$";
     public static final String SLACK_REDIRECT_PATH = "/slack/redirect";
     public static final String SPOTIFY_REDIRECT_PATH = "/spotify/redirect";
