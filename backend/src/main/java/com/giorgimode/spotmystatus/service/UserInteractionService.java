@@ -47,6 +47,7 @@ import com.giorgimode.spotmystatus.slack.SlackClient;
 import com.giorgimode.spotmystatus.spotify.SpotifyClient;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -148,16 +149,16 @@ public class UserInteractionService {
             block.getElement().getPlaceholder().setTextValue("All your Spotify devices are offline");
             block.getElement().setOptions(List.of(createOption(ALL_DEVICES_OFFLINE_VALUE, " ")));
         } else {
-            block.getElement().setOptions(spotifyDevices);
+            Option allDevicesOption = createOption(ALL_DEVICES_ALLOWED_VALUE, ALL_DEVICES_ALLOWED_TEXT);
+            List<Option> spotifyDevicesWithAnyDeviceOption = new ArrayList<>(spotifyDevices);
+            spotifyDevicesWithAnyDeviceOption.add(allDevicesOption);
+            block.getElement().setOptions(spotifyDevicesWithAnyDeviceOption);
             List<Option> selectedDevices = spotifyDevices.stream()
                                                          .filter(device -> cachedUser.getSpotifyDeviceIds().contains(device.getValue()))
                                                          .collect(toList());
-            block.getElement().setInitialOptions(isEmpty(selectedDevices) ? createAllDevicesOption() : selectedDevices);
+            List<Option> initialOptions = isEmpty(selectedDevices) ? List.of(allDevicesOption) : selectedDevices;
+            block.getElement().setInitialOptions(initialOptions);
         }
-    }
-
-    private List<Option> createAllDevicesOption() {
-        return List.of(createOption(ALL_DEVICES_ALLOWED_VALUE, ALL_DEVICES_ALLOWED_TEXT));
     }
 
     private void prepareSyncToggleBlock(CachedUser cachedUser, Accessory accessory) {
