@@ -11,6 +11,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
+import org.checkerframework.checker.index.qual.NonNegative;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -33,22 +34,28 @@ public class StatusUpdateScheduler {
         this.executor = executor;
     }
 
-    @Scheduled(fixedDelayString = "${spotmystatus.polling_rate}")
+    @Scheduled(fixedDelay = 1000)
     public void scheduleFixedDelayTask() {
         try {
-            userCache.asMap().values().forEach(this::pollUserAsync);
+            userCache.asMap().values().forEach(cachedUser -> pollUserAsync(cachedUser, userCache.estimatedSize()));
         } catch (Exception e) {
             log.error("Failed to poll users", e);
         }
     }
 
-    private void pollUserAsync(CachedUser cachedUser) {
+    private void pollUserAsync(CachedUser cachedUser, long userCount) {
         try {
+            sleep(userCount);
             CompletableFuture<Void> future = CompletableFuture.runAsync(() -> pollUser(cachedUser), executor);
             future.completeOnTimeout(null, spotMyStatusProperties.getTimeout(), TimeUnit.MILLISECONDS);
         } catch (Exception e) {
             log.error("Polling user {} timed out", cachedUser.getId());
         }
+    }
+
+    void sleep(long userCount) throws InterruptedException {
+        // to mitigate Spotify's rate-limit throttling requests
+        Thread.sleep(spotMyStatusProperties.getPollingRate() / userCount);
     }
 
     private void pollUser(CachedUser cachedUser) {
