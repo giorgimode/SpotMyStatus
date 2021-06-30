@@ -1,5 +1,6 @@
 package com.giorgimode.spotmystatus.spotify;
 
+import static java.lang.Thread.sleep;
 import com.giorgimode.spotmystatus.helpers.RestHelper;
 import com.giorgimode.spotmystatus.helpers.SpotUtil;
 import com.giorgimode.spotmystatus.model.CachedUser;
@@ -129,6 +130,8 @@ public class SpotifyClient {
             } else if (ex.getStatusCode() == HttpStatus.BAD_REQUEST && ex.getResponseBodyAsString().contains("invalid_grant")) {
                 log.error("User's Spotify token has been invalidated. Cleaning up user {}", user.getId());
                 invalidateUser(user.getId());
+            } else if (ex.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS) {
+                sleepForExceededAPILimit(ex);
             } else {
                 log.error("Failed to call spotify for user {}", user.getId(), ex);
             }
@@ -136,6 +139,19 @@ public class SpotifyClient {
             log.error("Failed to call spotify for user {}", user.getId(), e);
         }
         return defaultValue;
+    }
+
+    private void sleepForExceededAPILimit(HttpClientErrorException ex) {
+        try {
+            Integer retryAfterSeconds = Optional.ofNullable(ex.getResponseHeaders())
+                                      .map(httpHeaders -> httpHeaders.getFirst("Retry-After"))
+                                      .map(Integer::valueOf)
+                                      .orElse(5);
+            log.error("Spotify API rate limit exceeded. Sleeping for {} seconds", retryAfterSeconds);
+            sleep(retryAfterSeconds * 1000);
+        } catch (Exception e) {
+            log.error("Exception thrown when handling Spotify rate limit", e);
+        }
     }
 
     public void invalidateUser(String userId) {
