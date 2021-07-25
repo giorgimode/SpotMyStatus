@@ -32,6 +32,7 @@ public class CachedUser implements Serializable {
     private boolean cleaned = true;
     private LocalDateTime updatedAt;
     private List<String> emojis;
+    private String currentEmoji;
     private List<SpotifyItem> spotifyItems;
     private List<String> spotifyDeviceIds;
 

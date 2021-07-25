@@ -9,6 +9,8 @@ import lombok.Setter;
 public class SlackStatusPayload {
 
     private StatusPayload profile;
+    private boolean ok;
+    private String error;
 
     public SlackStatusPayload(String statusText, String statusEmoji, Long statusExpiration) {
         StatusPayload payload = new StatusPayload();

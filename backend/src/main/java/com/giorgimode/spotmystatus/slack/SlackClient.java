@@ -162,30 +162,39 @@ public class SlackClient {
         if (EPISODE.title().equals(currentTrack.getType())) {
             return ":" + configProperties.getPodcastEmoji() + ":";
         }
-        List<String> emojis = user.getEmojis();
-        if (emojis.isEmpty()) {
-            emojis = configProperties.getDefaultEmojis();
-        } else if (emojis.size() == 1) {
-            return ":" + emojis.get(0) + ":";
+
+        if (user.getEmojis().isEmpty()) {
+            List<String> defaultEmojis = configProperties.getDefaultEmojis();
+            return String.format(":%s:", defaultEmojis.get(RANDOM.nextInt(defaultEmojis.size())));
+        } else if (user.getEmojis().size() == 1) {
+            return String.format(":%s:", user.getEmojis().get(0));
+        } else {
+            String currentEmoji = Optional.ofNullable(user.getCurrentEmoji())
+                                          .filter(StringUtils::isNotBlank)
+                                          .map(emoji -> emoji.replace(":", ""))
+                                          .orElse(null);
+            List<String> emojis = user.getEmojis().stream()
+                                      .filter(emoji -> !emoji.equalsIgnoreCase(currentEmoji))
+                                      .collect(Collectors.toList());
+            return String.format(":%s:", emojis.get(RANDOM.nextInt(emojis.size())));
         }
-        return ":" + emojis.get(RANDOM.nextInt(emojis.size())) + ":";
     }
 
-    private boolean updateStatus(CachedUser cachedUser, SlackStatusPayload statusPayload) {
+    private boolean updateStatus(CachedUser cachedUser, SlackStatusPayload requestStatusPayload) {
         //noinspection deprecation: Slack issues warning on missing charset
-        SlackResponse response = RestHelper.builder()
-                                           .withBaseUrl(configProperties.getSlackUri() + "/api/users.profile.set")
-                                           .withBearer(cachedUser.getSlackAccessToken())
-                                           .withContentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
-                                           .withBody(statusPayload)
-                                           .postAndGetBody(restTemplate, SlackResponse.class);
+        SlackStatusPayload responseStatusPayload = RestHelper.builder()
+                                                             .withBaseUrl(configProperties.getSlackUri() + "/api/users.profile.set")
+                                                             .withBearer(cachedUser.getSlackAccessToken())
+                                                             .withContentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
+                                                             .withBody(requestStatusPayload)
+                                                             .postAndGetBody(restTemplate, SlackStatusPayload.class);
 
-        log.trace("Slack response to status update {}", response);
-        validateSlackResult(cachedUser, statusPayload, response);
-        return response.isOk();
+        log.trace("Slack response to status update {}", responseStatusPayload);
+        validateSlackResult(cachedUser, requestStatusPayload, responseStatusPayload);
+        return responseStatusPayload.isOk();
     }
 
-    private void validateSlackResult(CachedUser cachedUser, SlackStatusPayload statusPayload, SlackResponse response) {
+    private void validateSlackResult(CachedUser cachedUser, SlackStatusPayload statusPayload, SlackStatusPayload response) {
         if ("profile_status_set_failed_not_valid_emoji".equals(response.getError())) {
             String emojiToRemove = statusPayload.getProfile().getStatusEmoji().replace(":", "");
             log.warn("Removing invalid emoji {} from user {}", emojiToRemove, cachedUser.getId());
@@ -261,18 +270,19 @@ public class SlackClient {
     }
 
     public boolean checkStatusHasBeenChanged(CachedUser user) {
-        SlackResponse response = RestHelper.builder()
-                                           .withBaseUrl(configProperties.getSlackUri() + "/api/users.profile.get")
-                                           .withBearer(user.getSlackAccessToken())
-                                           .getBody(restTemplate, SlackResponse.class);
+        SlackStatusPayload response = RestHelper.builder()
+                                                .withBaseUrl(configProperties.getSlackUri() + "/api/users.profile.get")
+                                                .withBearer(user.getSlackAccessToken())
+                                                .getBody(restTemplate, SlackStatusPayload.class);
 
         // Slack escapes reserved characters, see here https://api.slack.com/reference/surfaces/formatting#escaping
-        String sanitizedStatus = response.getStatusText()
+        String sanitizedStatus = response.getProfile().getStatusText()
                                          .replace("&amp;", "&")
                                          .replace("&lt;", "<")
                                          .replace("&gt;", ">");
         boolean statusHasBeenManuallyChanged = isNotBlank(sanitizedStatus) &&
             (!sanitizedStatus.equalsIgnoreCase(user.getSlackStatus()) || user.isManualStatus());
+        user.setCurrentEmoji(response.getProfile().getStatusEmoji());
         if (statusHasBeenManuallyChanged) {
             log.debug("Status for user {} has been manually changed. Skipping the update.", user.getId());
             user.setManualStatus(true);
