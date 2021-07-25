@@ -1,5 +1,6 @@
 package com.giorgimode.spotmystatus.configuration;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import com.giorgimode.spotmystatus.helpers.SpotUtil;
 import com.giorgimode.spotmystatus.model.CachedUser;
 import com.giorgimode.spotmystatus.model.SpotifyTokenResponse;
@@ -32,6 +33,7 @@ public class CacheConfiguration {
     private void populateCache(LoadingCache<String, CachedUser> cache, SpotifyAuthClient spotifyAuthClient, UserRepository userRepository) {
         userRepository.findAll()
                       .stream()
+                      .filter(user -> isNotBlank(user.getSpotifyRefreshToken()))
                       .map(user -> cacheUser(spotifyAuthClient, user, userRepository))
                       .filter(Objects::nonNull)
                       .forEach(cachedUser -> cache.put(cachedUser.getId(), cachedUser));
@@ -48,6 +50,7 @@ public class CacheConfiguration {
         UserRepository userRepository) {
 
         return userRepository.findById(userId)
+                             .filter(user -> isNotBlank(user.getSpotifyRefreshToken()))
                              .map(user -> cacheUser(spotifyAuthClient, user, userRepository))
                              .orElse(null);
     }
