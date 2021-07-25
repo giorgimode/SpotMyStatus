@@ -37,6 +37,7 @@ import com.giorgimode.spotmystatus.persistence.User;
 import com.giorgimode.spotmystatus.persistence.UserRepository;
 import com.giorgimode.spotmystatus.service.UserInteractionService;
 import com.giorgimode.spotmystatus.slack.SlackClient;
+import com.giorgimode.spotmystatus.slack.SlackStatusPayload;
 import com.giorgimode.spotmystatus.spotify.SpotifyClient;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import java.util.List;
@@ -115,10 +116,10 @@ class UserInteractionControllerIT extends SpotMyStatusITBase {
         assertNotNull(cachedUser);
         assertFalse(cachedUser.isDisabled());
 
-        SlackResponse slackStatusUpdateResponse = new SlackResponse();
+        SlackStatusPayload slackStatusUpdateResponse = new SlackStatusPayload();
         slackStatusUpdateResponse.setOk(true);
         when(restTemplate.postForEntity(eq("https://fake-slack.com/api/users.profile.set"), any(HttpEntity.class), eq(
-            SlackResponse.class))).thenReturn(new ResponseEntity<>(slackStatusUpdateResponse, HttpStatus.OK));
+            SlackStatusPayload.class))).thenReturn(new ResponseEntity<>(slackStatusUpdateResponse, HttpStatus.OK));
 
         mockMvc.perform(post("/api/slack/command")
             .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
@@ -130,7 +131,7 @@ class UserInteractionControllerIT extends SpotMyStatusITBase {
                .andExpect(content().string("Status updates have been paused"));
 
         verify(restTemplate, atLeastOnce()).postForEntity(eq("https://fake-slack.com/api/users.profile.set"), any(HttpEntity.class), eq(
-            SlackResponse.class));
+            SlackStatusPayload.class));
         assertTrue(user.isDisabled());
         assertTrue(cachedUser.isDisabled());
     }
@@ -160,10 +161,10 @@ class UserInteractionControllerIT extends SpotMyStatusITBase {
 
     @Test
     void shouldHandlePurgeCommand() throws Exception {
-        SlackResponse slackStatusUpdateResponse = new SlackResponse();
+        SlackStatusPayload slackStatusUpdateResponse = new SlackStatusPayload();
         slackStatusUpdateResponse.setOk(true);
         when(restTemplate.postForEntity(eq("https://fake-slack.com/api/users.profile.set"), any(HttpEntity.class), eq(
-            SlackResponse.class))).thenReturn(new ResponseEntity<>(slackStatusUpdateResponse, HttpStatus.OK));
+            SlackStatusPayload.class))).thenReturn(new ResponseEntity<>(slackStatusUpdateResponse, HttpStatus.OK));
         String testUserId = "user123";
         mockMvc.perform(post("/api/slack/command")
             .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
@@ -175,7 +176,7 @@ class UserInteractionControllerIT extends SpotMyStatusITBase {
                .andExpect(content().string("User data has been purged. To sign up again visit the <https://localhost|app home page>"));
 
         verify(restTemplate).postForEntity(eq("https://fake-slack.com/api/users.profile.set"), any(HttpEntity.class), eq(
-            SlackResponse.class));
+            SlackStatusPayload.class));
         assertNull(userCache.getIfPresent(testUserId));
         assertFalse(userRepository.existsById(testUserId));
     }

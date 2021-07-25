@@ -18,6 +18,7 @@ import com.giorgimode.spotmystatus.model.SpotifyDevice;
 import com.giorgimode.spotmystatus.model.SpotifyItem;
 import com.giorgimode.spotmystatus.model.SpotifyTokenResponse;
 import com.giorgimode.spotmystatus.service.StatusUpdateScheduler;
+import com.giorgimode.spotmystatus.slack.SlackStatusPayload;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -52,7 +53,7 @@ class SpotMyStatusIT extends SpotMyStatusITBase {
         mockSlackUpdateCall();
     }
 
-    @SuppressWarnings("ResultOfMethodCallIgnored") @Test
+    @Test
     void shouldUpdateUserStatus() {
         statusUpdateScheduler.scheduleFixedDelayTask();
         assertNotNull(userCache);
@@ -76,11 +77,11 @@ class SpotMyStatusIT extends SpotMyStatusITBase {
         verify(restTemplate).exchange(eq("https://fake-slack.com/api/users.getPresence"), eq(HttpMethod.GET), any(HttpEntity.class),
             eq(SlackResponse.class));
         verify(restTemplate).exchange(eq("https://fake-slack.com/api/users.profile.get"), eq(HttpMethod.GET), any(HttpEntity.class), eq(
-            SlackResponse.class));
+            SlackStatusPayload.class));
         verify(restTemplate).exchange(eq("https://fake-api.spotify.com/v1/me/player?additional_types=track,episode"), eq(HttpMethod.GET),
             any(HttpEntity.class), eq(SpotifyCurrentItem.class));
         verify(restTemplate).postForEntity(eq("https://fake-slack.com/api/users.profile.set"), any(HttpEntity.class), eq(
-            SlackResponse.class));
+            SlackStatusPayload.class));
         verify(restTemplate).setMessageConverters(any());
         verify(restTemplate).getMessageConverters();
         verifyNoMoreInteractions(restTemplate);
@@ -89,20 +90,17 @@ class SpotMyStatusIT extends SpotMyStatusITBase {
     }
 
 
-
-
     private void mockSlackProfileCall() {
-        SlackResponse slackProfileResponse = new SlackResponse();
-        slackProfileResponse.setStatusText("");
+        SlackStatusPayload slackProfileResponse = new SlackStatusPayload("", "", 5000L);
         when(restTemplate.exchange(eq("https://fake-slack.com/api/users.profile.get"), eq(HttpMethod.GET), any(HttpEntity.class), eq(
-            SlackResponse.class))).thenReturn(new ResponseEntity<>(slackProfileResponse, HttpStatus.OK));
+            SlackStatusPayload.class))).thenReturn(new ResponseEntity<>(slackProfileResponse, HttpStatus.OK));
     }
 
     private void mockSlackUpdateCall() {
-        SlackResponse slackStatusUpdateResponse = new SlackResponse();
+        SlackStatusPayload slackStatusUpdateResponse = new SlackStatusPayload();
         slackStatusUpdateResponse.setOk(true);
         when(restTemplate.postForEntity(eq("https://fake-slack.com/api/users.profile.set"), any(HttpEntity.class), eq(
-            SlackResponse.class))).thenReturn(new ResponseEntity<>(slackStatusUpdateResponse, HttpStatus.OK));
+            SlackStatusPayload.class))).thenReturn(new ResponseEntity<>(slackStatusUpdateResponse, HttpStatus.OK));
     }
 
     private void mockSpotifyCall() {
