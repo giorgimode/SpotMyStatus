@@ -14,6 +14,7 @@ spotmystatus:
   spotify_api_uri: https://api.spotify.com
   core_pool_size: ${CORE_POOL_SIZE:0}
   polling_rate: ${SLACK_POLLING_RATE:10000}
+  min_sleep_on_api_rate_exceeded: ${API_RATE_EXCEEDED_MIN_SLEEP:2000}
   timeout: ${POLLING_TIMEOUT:2000}
   expiration_overhead: ${EXPIRATION_OVERHEAD:120000}
   default_emojis:

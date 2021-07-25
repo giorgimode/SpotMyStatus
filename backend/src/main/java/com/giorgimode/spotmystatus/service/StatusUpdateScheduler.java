@@ -8,10 +8,10 @@ import com.giorgimode.spotmystatus.slack.SlackClient;
 import com.giorgimode.spotmystatus.spotify.SpotifyClient;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
-import org.checkerframework.checker.index.qual.NonNegative;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -37,20 +37,26 @@ public class StatusUpdateScheduler {
     @Scheduled(fixedDelay = 1000)
     public void scheduleFixedDelayTask() {
         try {
-            userCache.asMap().values().forEach(cachedUser -> pollUserAsync(cachedUser, userCache.estimatedSize()));
+            var completableFutures = userCache.asMap().values().stream()
+                                              .map(cachedUser -> pollUserAsync(cachedUser, userCache.estimatedSize()))
+                                              .toArray(CompletableFuture[]::new);
+            CompletableFuture.allOf(completableFutures).join();
+        } catch (CompletionException e) {
+            log.error("Caught CompletionException while polling users", e);
         } catch (Exception e) {
             log.error("Failed to poll users", e);
         }
     }
 
-    private void pollUserAsync(CachedUser cachedUser, long userCount) {
+    private CompletableFuture<Void> pollUserAsync(CachedUser cachedUser, long userCount) {
         try {
             sleep(userCount);
-            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> pollUser(cachedUser), executor);
-            future.completeOnTimeout(null, spotMyStatusProperties.getTimeout(), TimeUnit.MILLISECONDS);
+            return CompletableFuture.runAsync(() -> pollUser(cachedUser), executor)
+                                    .completeOnTimeout(null, spotMyStatusProperties.getTimeout(), TimeUnit.MILLISECONDS);
         } catch (Exception e) {
             log.error("Polling user {} timed out", cachedUser.getId());
         }
+        return CompletableFuture.completedFuture(null);
     }
 
     void sleep(long userCount) throws InterruptedException {
