@@ -2,6 +2,7 @@ package com.giorgimode.spotmystatus.spotify;
 
 import static java.lang.Thread.sleep;
 import com.giorgimode.spotmystatus.helpers.RestHelper;
+import com.giorgimode.spotmystatus.helpers.SpotMyStatusProperties;
 import com.giorgimode.spotmystatus.helpers.SpotUtil;
 import com.giorgimode.spotmystatus.model.CachedUser;
 import com.giorgimode.spotmystatus.model.SpotifyCurrentItem;
@@ -16,7 +17,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
@@ -30,17 +30,17 @@ public class SpotifyClient {
     private final UserRepository userRepository;
     private final RestTemplate restTemplate;
     private final LoadingCache<String, CachedUser> userCache;
-    private final String spotifyApiUri;
+    private final SpotMyStatusProperties spotMyStatusProperties;
 
     public SpotifyClient(SpotifyAuthClient spotifyAuthClient, UserRepository userRepository,
         RestTemplate restTemplate, LoadingCache<String, CachedUser> userCache,
-        @Value("${spotmystatus.spotify_api_uri}") String spotifyApiUri) {
+        SpotMyStatusProperties spotMyStatusProperties) {
 
         this.spotifyAuthClient = spotifyAuthClient;
         this.userRepository = userRepository;
         this.restTemplate = restTemplate;
         this.userCache = userCache;
-        this.spotifyApiUri = spotifyApiUri;
+        this.spotMyStatusProperties = spotMyStatusProperties;
     }
 
     public String requestAuthorization(UUID state) {
@@ -84,7 +84,7 @@ public class SpotifyClient {
 
     private Optional<SpotifyCurrentItem> tryGetSpotifyCurrentTrack(CachedUser user) {
         SpotifyCurrentItem currentItem = RestHelper.builder()
-                                                   .withBaseUrl(spotifyApiUri + "/v1/me/player")
+                                                   .withBaseUrl(spotMyStatusProperties.getSpotifyApiUri() + "/v1/me/player")
                                                    .withBearer(user.getSpotifyAccessToken())
                                                    .withQueryParam("additional_types", "track,episode")
                                                    .getBody(restTemplate, SpotifyCurrentItem.class);
@@ -109,7 +109,7 @@ public class SpotifyClient {
 
     private List<SpotifyDevice> tryGetSpotifyDevices(CachedUser user) {
         SpotifyDevices spotifyDevices = RestHelper.builder()
-                                                  .withBaseUrl(spotifyApiUri + "/v1/me/player/devices")
+                                                  .withBaseUrl(spotMyStatusProperties.getSpotifyApiUri() + "/v1/me/player/devices")
                                                   .withBearer(user.getSpotifyAccessToken())
                                                   .getBody(restTemplate, SpotifyDevices.class);
         if (spotifyDevices == null || spotifyDevices.getDevices() == null) {
@@ -144,11 +144,11 @@ public class SpotifyClient {
     private void sleepForExceededAPILimit(HttpClientErrorException ex) {
         try {
             Integer retryAfterSeconds = Optional.ofNullable(ex.getResponseHeaders())
-                                      .map(httpHeaders -> httpHeaders.getFirst("Retry-After"))
-                                      .map(Integer::valueOf)
-                                      .orElse(5);
+                                                .map(httpHeaders -> httpHeaders.getFirst("Retry-After"))
+                                                .map(Integer::valueOf)
+                                                .orElse(5);
             log.error("Spotify API rate limit exceeded. Sleeping for {} seconds", retryAfterSeconds);
-            sleep(retryAfterSeconds * 1000);
+            sleep(Math.max(retryAfterSeconds * 1000, spotMyStatusProperties.getMinSleepOnApiRateExceeded()));
         } catch (Exception e) {
             log.error("Exception thrown when handling Spotify rate limit", e);
         }
