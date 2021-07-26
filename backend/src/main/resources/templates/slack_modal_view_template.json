@@ -205,7 +205,7 @@
           "action_id": "purge_action",
           "text": {
             "type": "plain_text",
-            "text": "Purge"
+            "text": "Delete My User"
           },
           "confirm": {
             "title": {
@@ -218,7 +218,7 @@
             },
             "confirm": {
               "type": "plain_text",
-              "text": "Purge"
+              "text": "Delete My User"
             }
           },
           "style": "danger"

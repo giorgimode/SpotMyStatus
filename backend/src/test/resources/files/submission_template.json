@@ -309,7 +309,7 @@
             "action_id": "purge_action",
             "text": {
               "type": "plain_text",
-              "text": "Purge",
+              "text": "Delete My User",
               "emoji": true
             },
             "style": "danger",
@@ -326,7 +326,7 @@
               },
               "confirm": {
                 "type": "plain_text",
-                "text": "Purge",
+                "text": "Delete My User",
                 "emoji": true
               }
             }
