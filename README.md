@@ -21,7 +21,8 @@ Following parameters can be passed to `/spotme` command in Slack
 Customize your experience by running `/spotme` command or by accessing app Home Tab
 ![SpotMyStatus Home Tab Screenshot](/frontend/img/github_screenshot.png?raw=true)
 
-        
+NOTE: The syncing hours feature displayed here uses Slack's time picker element, which is a beta feature and not supported on apps in Slack App Directory. As soon as this element becomes official, syncing hours field will be reactivated.
+
 ## Features
 * User can pause/play status syncing
 * User can choose to sync music and/or podcasts (default both)
