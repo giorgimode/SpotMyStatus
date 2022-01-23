@@ -29,12 +29,6 @@
 <div id="tabs_navbar">
 </div>
 
-<div>
-  <script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="gmode"
-          data-description="" data-message="" data-color="#5F7FFF" data-position="Right" data-x_margin="18"
-          data-y_margin="18"></script>
-</div>
-
 <!-- Masthead -->
 <header class="masthead text-white text-center">
   <div class="overlay"></div>
@@ -124,8 +118,7 @@
   <div class="container">
     <div class="row">
       <div class="col-12"  style="position: relative; text-align: center;" id="coffee">
-        <h2>Loving the app? You can buy me a coffee</h2><br><br><br><br>
-      </div>
+        <h2>Loving the app? You can buy me a coffee</h2><br><br>
     </div>
   </div>
 </section>
@@ -193,14 +186,18 @@
 <script src="vendor/jquery/jquery.min.js"></script>
 <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 <script type="text/javascript">
-  $(function () {
+  $(function(){
     $("#tabs_navbar").load("navbar.html");
     $("#footer").load("footer.html");
-    $("#bmc-wbtn")
-    .removeAttr('style')
-    .appendTo("#coffee")
-    .addClass("donation-widget");
-    $("#bmc-wbtn img").css("height", "100%");
+  });
+</script>
+<script src='https://storage.ko-fi.com/cdn/scripts/overlay-widget.js'></script>
+<script>
+  kofiWidgetOverlay.draw('gmode', {
+    'type': 'floating-chat',
+    'floating-chat.donateButton.text': 'Support us',
+    'floating-chat.donateButton.background-color': '#5cb85c',
+    'floating-chat.donateButton.text-color': '#fff'
   });
 </script>
 </body>

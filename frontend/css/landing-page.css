@@ -147,30 +147,6 @@ header.masthead h1, header.masthead-fail h1 {
   padding-bottom: 5rem;
 }
 
-.donation-widget {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 84px;
-  height: 84px;
-  background: #1db954;
-  color: white;
-  border-radius: 62px;
-  position: absolute;
-  right: 0px;
-  bottom: 0px;
-  box-shadow: rgb(0 0 0 / 40%) 0px 4px 8px;
-  z-index: 9999;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.2s ease 0s;
-  left: 45%;
-}
-
-.donation-widget:hover, .call-to-action a:hover  {
-  background: #2aa256;
-  border-color: #2aa256;
-}
 .spotify-slack {
   width: 30%;
   height: 30%;
