@@ -145,11 +145,11 @@ public class UserInteractionService {
                                                    .stream()
                                                    .map(device -> createOption(device.getId(), device.getName()))
                                                    .collect(toList());
+        Option allDevicesOption = createOption(ALL_DEVICES_ALLOWED_VALUE, ALL_DEVICES_ALLOWED_TEXT);
         if (spotifyDevices.isEmpty()) {
             block.getElement().getPlaceholder().setTextValue("All your Spotify devices are offline");
-            block.getElement().setOptions(List.of(createOption(ALL_DEVICES_OFFLINE_VALUE, " ")));
+            block.getElement().setOptions(List.of(allDevicesOption));
         } else {
-            Option allDevicesOption = createOption(ALL_DEVICES_ALLOWED_VALUE, ALL_DEVICES_ALLOWED_TEXT);
             List<Option> spotifyDevicesWithAnyDeviceOption = new ArrayList<>(spotifyDevices);
             spotifyDevicesWithAnyDeviceOption.add(allDevicesOption);
             block.getElement().setOptions(spotifyDevicesWithAnyDeviceOption);
