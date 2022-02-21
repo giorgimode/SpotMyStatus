@@ -19,6 +19,7 @@ spotmystatus:
   sync_start_hr: ${SYNC_START:8}
   sync_end_hr: ${SYNC_END:19}
   expiration_overhead: ${EXPIRATION_OVERHEAD:120000}
+  shutdown_cleanup_enabled: ${SHUTDOWN_CLEANUP_ENABLED:false}
   default_emojis:
     - "headphones"
     - "musical_note"

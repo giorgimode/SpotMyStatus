@@ -363,16 +363,18 @@ public class SlackClient {
 
     @PreDestroy
     public void onDestroy() {
-        userCache.asMap().values().forEach(cachedUser -> {
-            try {
-                log.debug("Cleaning status of user {} before shutdown", cachedUser.getId());
-                if (!statusHasBeenManuallyChanged(cachedUser)) {
-                    updateStatus(cachedUser, new SlackStatusPayload());
+        if (Boolean.TRUE.equals(configProperties.getShutdownCleanupEnabled())) {
+            userCache.asMap().values().forEach(cachedUser -> {
+                try {
+                    log.debug("Cleaning status of user {} before shutdown", cachedUser.getId());
+                    if (!statusHasBeenManuallyChanged(cachedUser)) {
+                        updateStatus(cachedUser, new SlackStatusPayload());
+                    }
+                } catch (Exception e) {
+                    log.debug("Failed to clean status of user {}", cachedUser.getId());
                 }
-            } catch (Exception e) {
-                log.debug("Failed to clean status of user {}", cachedUser.getId());
-            }
-        });
+            });
+        }
     }
 
     private boolean tryCheck(BooleanSupplier supplier) {

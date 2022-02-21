@@ -24,6 +24,7 @@ public class SpotMyStatusProperties {
     private Integer syncEndHr;
     private Integer timeout;
     private Integer expirationOverhead;
+    private Boolean shutdownCleanupEnabled;
     private List<String> defaultEmojis;
     private String podcastEmoji;
     private Map<String, String> defaultSpotifyItems;
