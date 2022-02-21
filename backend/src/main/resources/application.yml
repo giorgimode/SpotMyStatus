@@ -16,8 +16,8 @@ spotmystatus:
   polling_rate: ${SPOTIFY_POLLING_RATE:10000}
   min_sleep_on_api_rate_exceeded: ${API_RATE_EXCEEDED_MIN_SLEEP:2000}
   timeout: ${POLLING_TIMEOUT:2000}
-  sync_start_hr: ${SYNC_START:7}
-  sync_end_hr: ${SYNC_END:20}
+  sync_start_hr: ${SYNC_START:8}
+  sync_end_hr: ${SYNC_END:19}
   expiration_overhead: ${EXPIRATION_OVERHEAD:120000}
   default_emojis:
     - "headphones"
