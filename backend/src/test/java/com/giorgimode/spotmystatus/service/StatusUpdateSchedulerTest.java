@@ -20,6 +20,8 @@ import com.giorgimode.spotmystatus.slack.SlackClient;
 import com.giorgimode.spotmystatus.spotify.SpotifyClient;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
@@ -48,7 +50,7 @@ class StatusUpdateSchedulerTest {
     private CachedUser cachedUser;
 
     @BeforeEach
-    void setUp() throws InterruptedException {
+    void setUp() {
         spotMyStatusProperties = new SpotMyStatusProperties();
         spotMyStatusProperties.setTimeout(1000);
         userCache = Caffeine.newBuilder()
@@ -104,6 +106,30 @@ class StatusUpdateSchedulerTest {
     }
 
     @Test
+    void schedulerShouldSkipPollingDuringOfflineHours() throws InterruptedException {
+        doNothing().when(statusUpdateScheduler).sleep(anyLong());
+        mockExecutor();
+        cachedUser.setSyncStartHour(cachedUser.getSyncStartHour() + 1);
+        cachedUser.setSyncEndHour(cachedUser.getSyncStartHour() + 2);
+        statusUpdateScheduler.scheduleFixedDelayTask();
+        verifyNoInteractions(slackClient);
+        verifyNoInteractions(spotifyClient);
+    }
+
+    @Test
+    void schedulerShouldSkipPollingDuringDefaultOfflineHours() throws InterruptedException {
+        doNothing().when(statusUpdateScheduler).sleep(anyLong());
+        mockExecutor();
+        spotMyStatusProperties.setSyncStartHr(cachedUser.getSyncStartHour() + 100);
+        spotMyStatusProperties.setSyncEndHr(cachedUser.getSyncStartHour() + 200);
+        cachedUser.setSyncStartHour(null);
+        cachedUser.setSyncEndHour(null);
+        statusUpdateScheduler.scheduleFixedDelayTask();
+        verifyNoInteractions(slackClient);
+        verifyNoInteractions(spotifyClient);
+    }
+
+    @Test
     void schedulerShouldSkipPollingWhenUserIsOffline() throws InterruptedException {
         doNothing().when(statusUpdateScheduler).sleep(anyLong());
         mockExecutor();
@@ -141,7 +167,6 @@ class StatusUpdateSchedulerTest {
         verify(spotifyClient).getCurrentTrack(cachedUser);
         verifyNoMoreInteractions(slackClient);
         verifyNoMoreInteractions(spotifyClient);
-        //noinspection ResultOfMethodCallIgnored
         verify(currentItem).getIsPlaying();
         verifyNoMoreInteractions(currentItem);
     }
@@ -163,9 +188,7 @@ class StatusUpdateSchedulerTest {
         verify(slackClient).cleanStatus(cachedUser);
         verifyNoMoreInteractions(slackClient);
         verifyNoMoreInteractions(spotifyClient);
-        //noinspection ResultOfMethodCallIgnored
         verify(currentItem).getIsPlaying();
-        //noinspection ResultOfMethodCallIgnored
         verify(currentItem, atLeastOnce()).getType();
         verifyNoMoreInteractions(currentItem);
     }
@@ -189,9 +212,7 @@ class StatusUpdateSchedulerTest {
         verify(spotifyClient).getCurrentTrack(cachedUser);
         verifyNoMoreInteractions(slackClient);
         verifyNoMoreInteractions(spotifyClient);
-        //noinspection ResultOfMethodCallIgnored
         verify(currentItem).getIsPlaying();
-        //noinspection ResultOfMethodCallIgnored
         verify(currentItem).getDevice();
         verifyNoMoreInteractions(currentItem);
     }
@@ -216,22 +237,24 @@ class StatusUpdateSchedulerTest {
         verify(slackClient).updateAndPersistStatus(cachedUser, currentItem);
         verifyNoMoreInteractions(slackClient);
         verifyNoMoreInteractions(spotifyClient);
-        //noinspection ResultOfMethodCallIgnored
         verify(currentItem, atLeastOnce()).getType();
-        //noinspection ResultOfMethodCallIgnored
         verify(currentItem).getIsPlaying();
-        //noinspection ResultOfMethodCallIgnored
         verify(currentItem).getDevice();
         verifyNoMoreInteractions(currentItem);
     }
 
     private CachedUser createCachedUser() {
+        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+        int syncStartHour = now.getHour();
         CachedUser cachedUser = CachedUser.builder()
                                           .id("user1")
                                           .slackAccessToken("testSlackToken")
                                           .slackBotToken("testSlackBotToken")
                                           .spotifyRefreshToken("testSpotifyRefreshToken")
                                           .spotifyAccessToken("testSpotifyAccessToken")
+                                          .timezoneOffsetSeconds(0)
+                                          .syncStartHour(syncStartHour * 100)
+                                          .syncEndHour((syncStartHour + 1) * 100)
                                           .build();
         userCache.put("user1", cachedUser);
         return cachedUser;
