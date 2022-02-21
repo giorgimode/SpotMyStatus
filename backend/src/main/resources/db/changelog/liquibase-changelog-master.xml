@@ -8,4 +8,5 @@
     <include file="/db/changelog/changes/3-add_sync_hours.xml"/>
     <include file="/db/changelog/changes/4-add_spotify_devices.xml"/>
     <include file="/db/changelog/changes/5-drop_sync_hours.xml"/>
+    <include file="/db/changelog/changes/6-restore_sync_hours.xml"/>
 </databaseChangeLog>
