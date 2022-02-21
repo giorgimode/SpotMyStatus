@@ -103,8 +103,21 @@ public class SlackClient {
         user.setId(slackToken.getId());
         user.setSlackAccessToken(slackToken.getAccessToken());
         user.setSlackBotToken(slackToken.getBotToken());
+        user.setTimezoneOffsetSeconds(getUserTimezone(slackToken));
         user.setState(state);
         userRepository.save(user);
+    }
+
+    private Integer getUserTimezone(SlackToken slackToken) {
+        SlackResponse response = tryCall(() -> RestHelper.builder()
+                                                         .withBaseUrl(configProperties.getSlackUri() + "/api/users.info")
+                                                         .withBearer(slackToken.getAccessToken())
+                                                         .withContentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+                                                         .withQueryParam("user", slackToken.getId())
+                                                         .get(restTemplate, SlackResponse.class));
+
+        log.trace("Received response {}", response);
+        return response.getTimezoneOffset();
     }
 
     public <T> T tryCall(Supplier<ResponseEntity<T>> responseTypeSupplier) {

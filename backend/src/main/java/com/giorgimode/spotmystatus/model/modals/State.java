@@ -1,6 +1,8 @@
 
 package com.giorgimode.spotmystatus.model.modals;
 
+import static com.giorgimode.spotmystatus.helpers.SpotConstants.ACTION_END_HOUR;
+import static com.giorgimode.spotmystatus.helpers.SpotConstants.ACTION_START_HOUR;
 import static com.giorgimode.spotmystatus.helpers.SpotUtil.OBJECT_MAPPER;
 import static com.giorgimode.spotmystatus.helpers.SpotUtil.safeGet;
 import static java.util.stream.Collectors.toMap;
@@ -34,10 +36,14 @@ public class State {
     @SuppressWarnings("unchecked")
     private StateValue collectValues(Map.Entry<String, Object> value) {
         Map<String, Object> valueMap = (Map<String, Object>) value.getValue();
-        return valueMap.values().stream().findFirst()
-                       .map(map -> (Map<String, Object>) map)
-                       .map(this::createOptionsStateValue)
-                       .orElseGet(StateValue::new);
+        if (valueMap.containsKey(ACTION_START_HOUR)) {
+            return createHourStateValue(valueMap);
+        } else {
+            return valueMap.values().stream().findFirst()
+                           .map(map -> (Map<String, Object>) map)
+                           .map(this::createOptionsStateValue)
+                           .orElseGet(StateValue::new);
+        }
     }
 
     private StateValue createOptionsStateValue(Map<String, Object> firstValue) {
@@ -49,6 +55,17 @@ public class State {
         List<Option> selectedOptions = OBJECT_MAPPER.convertValue(optionsList, new TypeReference<>() {
         });
         stateValue.setSelectedOptions(selectedOptions);
+        return stateValue;
+    }
+
+    @SuppressWarnings("unchecked")
+    private StateValue createHourStateValue(Map<String, Object> valueMap) {
+        StateValue stateValue = new StateValue();
+        String startHour = safeGet(((Map<String, Object>) valueMap.get(ACTION_START_HOUR)), "selected_time");
+        String endHour = safeGet(((Map<String, Object>) valueMap.get(ACTION_END_HOUR)), "selected_time");
+        stateValue.setType("timepicker");
+        stateValue.setStartHour(startHour);
+        stateValue.setEndHour(endHour);
         return stateValue;
     }
 
