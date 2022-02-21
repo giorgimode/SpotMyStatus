@@ -21,13 +21,13 @@ Following parameters can be passed to `/spotme` command in Slack
 Customize your experience by running `/spotme` command or by accessing app Home Tab
 ![SpotMyStatus Home Tab Screenshot](/frontend/img/github_screenshot.png?raw=true)
 
-NOTE: The syncing hours feature displayed here uses Slack's time picker element, which is a beta feature and not supported on apps in Slack App Directory. As soon as this element becomes official, syncing hours field will be reactivated.
-
+        
 ## Features
 * User can pause/play status syncing
 * User can choose to sync music and/or podcasts (default both)
 * User can define emojis to rotate from when app sets a status. Emojis not present in the workspace will not be added 
 (default 🎧, 🎵, 🎶)
+* Uer can define working hours, or the hours during which syncing is active (default 7AM-8PM user's local time)
 * User can define Spotify devices to sync from (default all)
 * User can purge all their data from SpotMyStatus server
 
@@ -35,6 +35,7 @@ On each status update the status emoji is randomly picked from `:headphones:`, `
 
 On each poll the application does various checks:
 * has user paused status updates
+* is it outside working hours
 * is user offline
 * has user manually changed their status(to avoid overwriting it)
 
