@@ -212,6 +212,45 @@
         "block_id": "yK2ot"
       },
       {
+        "type": "section",
+        "block_id": "LLAm",
+        "text": {
+          "type": "mrkdwn",
+          "text": "*Sync status between these hours*",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "actions",
+        "block_id": "hours_input_block",
+        "elements": [
+          {
+            "type": "timepicker",
+            "action_id": "start_hour-action",
+            "initial_time": "07:00",
+            "placeholder": {
+              "type": "plain_text",
+              "text": "Start time",
+              "emoji": true
+            }
+          },
+          {
+            "type": "timepicker",
+            "action_id": "end_hour-action",
+            "initial_time": "20:00",
+            "placeholder": {
+              "type": "plain_text",
+              "text": "End time",
+              "emoji": true
+            }
+          }
+        ]
+      },
+      {
+        "type": "divider",
+        "block_id": "+dT"
+      },
+      {
         "type": "input",
         "block_id": "spotify_devices_block",
         "label": {
@@ -414,6 +453,16 @@
                 "value": "notes"
               }
             ]
+          }
+        },
+        "hours_input_block": {
+          "start_hour-action": {
+            "type": "timepicker",
+            "selected_time": "07:00"
+          },
+          "end_hour-action": {
+            "type": "timepicker",
+            "selected_time": "20:00"
           }
         },
         "spotify_devices_block": {

@@ -7,6 +7,8 @@ import com.giorgimode.spotmystatus.model.SpotifyItem;
 import com.giorgimode.spotmystatus.slack.SlackClient;
 import com.giorgimode.spotmystatus.spotify.SpotifyClient;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
@@ -70,7 +72,10 @@ public class StatusUpdateScheduler {
                 log.trace("Skipping the polling for {} since user account is disabled", cachedUser.getId());
                 return;
             }
-
+            if (isInOfflineHours(cachedUser)) {
+                log.trace("Skipping the polling for {} outside working hours", cachedUser.getId());
+                return;
+            }
             if (slackClient.isUserOffline(cachedUser)) {
                 log.trace("Skipping the polling for {} since user is offline", cachedUser.getId());
                 return;
@@ -85,6 +90,20 @@ public class StatusUpdateScheduler {
         }
     }
 
+
+    private boolean isInOfflineHours(CachedUser user) {
+        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+        int currentTime = now.getHour() * 100 + now.getMinute();
+        Integer offlineStart = user.getSyncEndHour();
+        Integer offlineEnd = user.getSyncStartHour();
+        if (offlineStart == null || offlineEnd == null) {
+            offlineStart = spotMyStatusProperties.getSyncEndHr() * 100;
+            offlineEnd = spotMyStatusProperties.getSyncStartHr() * 100;
+        }
+
+        return offlineEnd > offlineStart && currentTime >= offlineStart && currentTime <= offlineEnd
+            || offlineEnd < offlineStart && (currentTime >= offlineStart || currentTime <= offlineEnd);
+    }
 
     private void updateSlackStatus(CachedUser user) {
         spotifyClient.getCurrentTrack(user)

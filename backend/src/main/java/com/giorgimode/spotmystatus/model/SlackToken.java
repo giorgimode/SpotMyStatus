@@ -1,5 +1,6 @@
 package com.giorgimode.spotmystatus.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Optional;
 import lombok.Data;
@@ -7,6 +8,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SlackToken {
 
     @JsonProperty("access_token")
@@ -29,6 +31,7 @@ public class SlackToken {
 
     @Getter
     @Setter
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class SlackTokenPayload {
 
         private String id;
