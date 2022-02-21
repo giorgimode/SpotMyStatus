@@ -7,9 +7,7 @@
         <addColumn tableName="users">
             <column name="sync_from" type="smallint"/>
             <column name="sync_to" type="smallint"/>
-            <column name="tz_offset_sec" type="int">
-                <constraints nullable="false"/>
-            </column>
+            <column name="tz_offset_sec" type="int"/>
         </addColumn>
     </changeSet>
 </databaseChangeLog>
