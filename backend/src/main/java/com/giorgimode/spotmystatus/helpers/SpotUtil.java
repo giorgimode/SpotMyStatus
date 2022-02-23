@@ -51,6 +51,9 @@ public final class SpotUtil {
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static <T> T safeGet(Map map, String field) {
         try {
+            if (map == null) {
+                return null;
+            }
             Object o = map.get(field);
             if (o != null) {
                 return (T) o;

@@ -61,7 +61,14 @@ public class SpotifyClient {
         userCache.put(user.getId(), newCachedUser);
     }
 
-    public Optional<SpotifyCurrentItem> getCurrentTrack(CachedUser user) {
+    public Optional<SpotifyCurrentItem> getCurrentLiveTrack(CachedUser user) {
+        return getCurrentTrack(user)
+            .filter(SpotifyCurrentItem::getIsPlaying)
+            .filter(user::isPlayingDeviceEnabled)
+            .filter(user::isItemEnabled);
+    }
+
+    private Optional<SpotifyCurrentItem> getCurrentTrack(CachedUser user) {
         return tryCallSpotify(user, this::tryGetSpotifyCurrentTrack, Optional.empty());
     }
 

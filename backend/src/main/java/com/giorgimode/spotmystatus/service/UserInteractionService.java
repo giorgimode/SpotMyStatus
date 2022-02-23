@@ -28,8 +28,10 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.util.CollectionUtils.isEmpty;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.giorgimode.spotmystatus.helpers.SpotMyStatusProperties;
 import com.giorgimode.spotmystatus.model.CachedUser;
+import com.giorgimode.spotmystatus.model.SpotifyCurrentItem;
 import com.giorgimode.spotmystatus.model.SpotifyItem;
 import com.giorgimode.spotmystatus.model.modals.Accessory;
 import com.giorgimode.spotmystatus.model.modals.Action;
@@ -615,5 +617,46 @@ public class UserInteractionService {
         Block divider = new Block();
         divider.setType("divider");
         blocks.add(index + 2, divider);
+    }
+
+    public String getCurrentTracksMessage(String userId) {
+        Optional<SpotifyCurrentItem> currentTrack = getCurrentTrack(userId);
+        return currentTrack.map(this::buildSpotifyTracksMessage)
+                           .flatMap(this::safeWrite)
+                           .orElse("Failed to fetch the tracks");
+    }
+
+    private Optional<SpotifyCurrentItem> getCurrentTrack(String userId) {
+        CachedUser cachedUser = getCachedUser(userId);
+        if (slackClient.isUserLive(cachedUser)) {
+            return spotifyClient.getCurrentLiveTrack(cachedUser);
+        }
+        return Optional.empty();
+    }
+
+    private Optional<String> safeWrite(ModalView trackMessage) {
+        try {
+            return Optional.of(OBJECT_MAPPER.writeValueAsString(trackMessage));
+        } catch (JsonProcessingException e) {
+            log.warn("Failed to parse class", e);
+            return Optional.empty();
+        }
+    }
+
+    private ModalView buildSpotifyTracksMessage(SpotifyCurrentItem spotifyCurrentItem) {
+        ModalView modalView = new ModalView();
+        Block trackBlock = new Block();
+        trackBlock.setType("section");
+        Text titleText = new Text();
+        titleText.setType("mrkdwn");
+        titleText.setTextValue(String.format("<%s|%s>", spotifyCurrentItem.getTrackUrl(), spotifyCurrentItem.generateFullTitle(150)));
+        trackBlock.setText(titleText);
+        Accessory imageAccessory = new Accessory();
+        imageAccessory.setType("image");
+        imageAccessory.setImageUrl(spotifyCurrentItem.getImageUrl());
+        imageAccessory.setAltText("Album Art");
+        trackBlock.setAccessory(imageAccessory);
+        modalView.setBlocks(List.of(trackBlock));
+        return modalView;
     }
 }

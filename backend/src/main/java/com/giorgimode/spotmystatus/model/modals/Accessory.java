@@ -22,4 +22,10 @@ public class Accessory {
     private List<Option> initialOptions;
 
     private Text placeholder;
+
+    @JsonProperty("image_url")
+    private String imageUrl;
+
+    @JsonProperty("alt_text")
+    private String altText;
 }

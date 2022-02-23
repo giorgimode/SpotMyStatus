@@ -39,6 +39,7 @@ public class CommandHandler {
             .put("pause", new PauseCommand(slackClient))
             .put("play", new PlayCommand(slackClient))
             .put("purge", new PurgeCommand(slackClient, userInteractionService))
+            .put("links", new TrackUrlPrinterCommand(userInteractionService))
             .build();
     }
 

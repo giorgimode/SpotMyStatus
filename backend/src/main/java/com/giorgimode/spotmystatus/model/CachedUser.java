@@ -15,10 +15,12 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
+@Slf4j
 public class CachedUser implements Serializable {
 
     private String id;
@@ -178,5 +180,21 @@ public class CachedUser implements Serializable {
                            .map(SpotifyItem::from)
                            .collect(Collectors.toList());
         }
+    }
+
+    public boolean isItemEnabled(SpotifyCurrentItem currentItem) {
+        boolean isItemEnabled = getSpotifyItems().isEmpty() || getSpotifyItems().contains(SpotifyItem.from(currentItem.getType()));
+        if (!isItemEnabled) {
+            log.debug("Skipping syncing, since spotify item type {} is not enabled for user {}", currentItem.getType(), getId());
+        }
+        return isItemEnabled;
+    }
+
+    public boolean isPlayingDeviceEnabled(SpotifyCurrentItem spotifyCurrentItem) {
+        boolean isCurrentDeviceEnabled = getSpotifyDeviceIds().isEmpty() || getSpotifyDeviceIds().contains(spotifyCurrentItem.getDevice().getId());
+        if (!isCurrentDeviceEnabled) {
+            log.debug("Skipping syncing, since spotify device is not enabled for user {}", getId());
+        }
+        return isCurrentDeviceEnabled;
     }
 }
