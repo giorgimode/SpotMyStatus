@@ -21,7 +21,6 @@ import static com.giorgimode.spotmystatus.helpers.SpotConstants.PAYLOAD_TYPE_BLO
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.PAYLOAD_TYPE_SUBMISSION;
 import static com.giorgimode.spotmystatus.helpers.SpotUtil.OBJECT_MAPPER;
 import static com.giorgimode.spotmystatus.helpers.SpotUtil.baseUri;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -29,7 +28,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.util.CollectionUtils.isEmpty;
-import com.giorgimode.spotmystatus.helpers.PropertyVault;
 import com.giorgimode.spotmystatus.helpers.SpotMyStatusProperties;
 import com.giorgimode.spotmystatus.model.CachedUser;
 import com.giorgimode.spotmystatus.model.SpotifyItem;
@@ -59,9 +57,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-import javax.xml.bind.DatatypeConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -74,7 +69,6 @@ import org.springframework.web.server.ResponseStatusException;
 @Slf4j
 public class UserInteractionService {
 
-    private static final String SHA_256_ALGORITHM = "HmacSHA256";
     public static final String SLACK_VIEW_UPDATE_URI = "/api/views.update";
     public static final String SLACK_VIEW_OPEN_URI = "/api/views.open";
     public static final String SLACK_VIEW_PUBLISH_URI = "/api/views.publish";
@@ -85,24 +79,19 @@ public class UserInteractionService {
     private final LoadingCache<String, CachedUser> userCache;
     private final SlackClient slackClient;
     private final SpotifyClient spotifyClient;
-    private final PropertyVault propertyVault;
 
     @Value("classpath:templates/slack_modal_view_template.json")
     private Resource resourceFile;
 
-    @Value("${signature_verification_enabled}")
-    private boolean shouldVerifySignature;
-
     public UserInteractionService(UserRepository userRepository,
         SpotMyStatusProperties spotMyStatusProperties, LoadingCache<String, CachedUser> userCache,
-        SlackClient slackClient, SpotifyClient spotifyClient, PropertyVault propertyVault) {
+        SlackClient slackClient, SpotifyClient spotifyClient) {
 
         this.userRepository = userRepository;
         this.spotMyStatusProperties = spotMyStatusProperties;
         this.userCache = userCache;
         this.slackClient = slackClient;
         this.spotifyClient = spotifyClient;
-        this.propertyVault = propertyVault;
     }
 
     public boolean isUserMissing(String userId) {
@@ -521,39 +510,9 @@ public class UserInteractionService {
                        .map(actions -> actions.get(0));
     }
 
-    public boolean isValidSignature(Long timestamp, String signature, String bodyString) {
-        if (!shouldVerifySignature) {
-            return true;
-        }
-
-        return calculateSha256("v0:" + timestamp + ":" + bodyString)
-            .map(hashedString -> ("v0=" + hashedString).equalsIgnoreCase(signature))
-            .orElse(false);
-    }
-
-    private Optional<String> calculateSha256(String message) {
-        try {
-            Mac mac = Mac.getInstance(SHA_256_ALGORITHM);
-            mac.init(new SecretKeySpec(propertyVault.getSlack().getSigningSecret().getBytes(UTF_8), SHA_256_ALGORITHM));
-            byte[] hashedMessage = mac.doFinal(message.getBytes(UTF_8));
-            return Optional.of(DatatypeConverter.printHexBinary(hashedMessage));
-        } catch (Exception e) {
-            log.error("Failed to calculate hmac-sha256", e);
-            return Optional.empty();
-        }
-    }
-
-    public String pause(String userId) {
-        return slackClient.pause(userId);
-    }
-
-    public String resume(String userId) {
-        return slackClient.resume(userId);
-    }
-
-    public String purge(String userId) {
+    private void purge(String userId) {
         updateHomeTabForMissingUser(userId);
-        return slackClient.purge(userId);
+        slackClient.purge(userId);
     }
 
     public void updateHomeTabForMissingUser(String userId) {

@@ -40,6 +40,10 @@ public final class SpotUtil {
         return string;
     }
 
+    public static String baseUri() {
+        return baseUri("https");
+    }
+
     public static String baseUri(String scheme) {
         return ServletUriComponentsBuilder.fromCurrentContextPath().scheme(scheme).build().toUriString();
     }

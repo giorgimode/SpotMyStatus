@@ -12,15 +12,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import com.giorgimode.spotmystatus.TestUtils;
-import com.giorgimode.spotmystatus.helpers.OauthProperties;
-import com.giorgimode.spotmystatus.helpers.PropertyVault;
 import com.giorgimode.spotmystatus.helpers.SpotMyStatusProperties;
 import com.giorgimode.spotmystatus.model.CachedUser;
 import com.giorgimode.spotmystatus.model.SpotifyItem;
@@ -64,7 +61,6 @@ class UserInteractionServiceTest {
     private static final String TEST_USER_ID = "user1";
     private LoadingCache<String, CachedUser> userCache;
     private CachedUser cachedUser;
-    private PropertyVault propertyVault;
     private UserInteractionService userInteractionService;
 
     @Mock
@@ -101,13 +97,10 @@ class UserInteractionServiceTest {
         spotMyStatusProperties.setDefaultSpotifyItems(Map.of("track", "Music", "episode", "Podcast"));
         spotMyStatusProperties.setDefaultEmojis(List.of("headphones", "musical_note", "notes"));
         spotMyStatusProperties.setRedirectUriScheme("https");
-        propertyVault = new PropertyVault();
-        userInteractionService = new UserInteractionService(userRepository, spotMyStatusProperties, userCache, slackClient, spotifyClient,
-            propertyVault);
+        userInteractionService = new UserInteractionService(userRepository, spotMyStatusProperties, userCache, slackClient, spotifyClient);
 
         cachedUser = createCachedUser();
         ReflectionTestUtils.setField(userInteractionService, "resourceFile", resourceFile);
-        ReflectionTestUtils.setField(userInteractionService, "shouldVerifySignature", true);
     }
 
     @Test
@@ -240,52 +233,6 @@ class UserInteractionServiceTest {
         assertEquals("macbookDeviceId123,echoDotId123", storedUser.getSpotifyDevices());
         assertEquals(700, storedUser.getSyncFrom());
         assertEquals(2000, storedUser.getSyncTo());
-    }
-
-    @Test
-    void shouldSkipValidatingSignature() {
-        ReflectionTestUtils.setField(userInteractionService, "shouldVerifySignature", false);
-        assertTrue(userInteractionService.isValidSignature(null, null, null));
-    }
-
-    @Test
-    void shouldValidateSignature() {
-        ReflectionTestUtils.setField(userInteractionService, "shouldVerifySignature", true);
-        OauthProperties slackVault = new OauthProperties();
-        slackVault.setSigningSecret("signing_secret_123");
-        propertyVault.setSlack(slackVault);
-        assertTrue(userInteractionService.isValidSignature(1609327004L, "v0=5e26f6dd3afeb452b6faab9e9269c6e6c76716c5f8b7664c9661d0c6fb800add",
-            "{ \"type\": \"block_actions\", \"api_app_id\": \"test_api_id\", \"token\": \"test_token123\" }"));
-    }
-
-    @Test
-    void shouldNotValidateSignature() {
-        ReflectionTestUtils.setField(userInteractionService, "shouldVerifySignature", true);
-        OauthProperties slackVault = new OauthProperties();
-        slackVault.setSigningSecret("signing_secret_123");
-        propertyVault.setSlack(slackVault);
-        assertFalse(userInteractionService.isValidSignature(1609327004L, "v0=5e26f6dd3afeb452b6faab9e9269c6e6c76716c5f8b7664c9661d0c6fb800addX",
-            "{ \"type\": \"block_actions\", \"api_app_id\": \"test_api_id\", \"token\": \"test_token123\" }"));
-    }
-
-
-    @Test
-    void pause() {
-        userInteractionService.pause(TEST_USER_ID);
-        verify(slackClient).pause(TEST_USER_ID);
-    }
-
-    @Test
-    void resume() {
-        userInteractionService.resume(TEST_USER_ID);
-        verify(slackClient).resume(TEST_USER_ID);
-    }
-
-    @Test
-    void purge() {
-        userInteractionService.purge(TEST_USER_ID);
-        verify(slackClient).purge(TEST_USER_ID);
-        verify(slackClient).notifyUser(eq(SLACK_VIEW_PUBLISH_URI), any(), any());
     }
 
     @Test
