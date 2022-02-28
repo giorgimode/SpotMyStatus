@@ -44,6 +44,7 @@ import com.giorgimode.spotmystatus.model.modals.ModalView;
 import com.giorgimode.spotmystatus.model.modals.Option;
 import com.giorgimode.spotmystatus.model.modals.StateValue;
 import com.giorgimode.spotmystatus.model.modals.Text;
+import com.giorgimode.spotmystatus.persistence.User;
 import com.giorgimode.spotmystatus.persistence.UserRepository;
 import com.giorgimode.spotmystatus.slack.SlackClient;
 import com.giorgimode.spotmystatus.spotify.SpotifyClient;
@@ -620,10 +621,17 @@ public class UserInteractionService {
     }
 
     public String getCurrentTracksMessage(String userId) {
-        Optional<SpotifyCurrentItem> currentTrack = getCurrentTrack(userId);
-        return currentTrack.map(this::buildSpotifyTracksMessage)
-                           .flatMap(this::safeWrite)
-                           .orElse("Failed to fetch the tracks");
+        CachedUser cachedUser = getCachedUser(userId);
+        List<User> users = userRepository.findAllByTeamId(cachedUser.getTeamId());
+        ModalView trackMessage = new ModalView();
+        List<Block> trackBlocks = users.stream()
+                                   .map(user -> getCurrentTrack(user.getId()))
+                                   .flatMap(Optional::stream)
+                                   .map(this::buildSpotifyTracksMessage)
+                                   .collect(toList());
+
+        trackMessage.setBlocks(trackBlocks);
+        return safeWrite(trackMessage).orElse("Failed to fetch the tracks");
     }
 
     private Optional<SpotifyCurrentItem> getCurrentTrack(String userId) {
@@ -643,8 +651,7 @@ public class UserInteractionService {
         }
     }
 
-    private ModalView buildSpotifyTracksMessage(SpotifyCurrentItem spotifyCurrentItem) {
-        ModalView modalView = new ModalView();
+    private Block buildSpotifyTracksMessage(SpotifyCurrentItem spotifyCurrentItem) {
         Block trackBlock = new Block();
         trackBlock.setType("section");
         Text titleText = new Text();
@@ -656,7 +663,6 @@ public class UserInteractionService {
         imageAccessory.setImageUrl(spotifyCurrentItem.getImageUrl());
         imageAccessory.setAltText("Album Art");
         trackBlock.setAccessory(imageAccessory);
-        modalView.setBlocks(List.of(trackBlock));
-        return modalView;
+        return trackBlock;
     }
 }
