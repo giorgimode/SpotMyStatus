@@ -1,6 +1,7 @@
 create table if not exists users
 (
     id varchar(255) primary key,
+    team_id varchar(255) not null,
     slack_access_token text not null,
     slack_bot_token text not null,
     spotify_refresh_token text,

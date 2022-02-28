@@ -123,7 +123,7 @@ public class SlackClient {
         return response.getTimezoneOffset();
     }
 
-    public <T> T tryCall(Supplier<ResponseEntity<T>> responseTypeSupplier) {
+    private <T> T tryCall(Supplier<ResponseEntity<T>> responseTypeSupplier) {
         ResponseEntity<T> responseEntity;
         try {
             responseEntity = responseTypeSupplier.get();
@@ -226,7 +226,7 @@ public class SlackClient {
         }
     }
 
-    public boolean isUserOffline(CachedUser user) {
+    private boolean isUserOffline(CachedUser user) {
         try {
             return checkIsUserOffline(user);
         } catch (HttpClientErrorException e) {
@@ -269,11 +269,11 @@ public class SlackClient {
         }
     }
 
-    public boolean statusHasBeenManuallyChanged(CachedUser user) {
+    private boolean statusHasBeenManuallyChanged(CachedUser user) {
         return tryCheck(() -> checkStatusHasBeenChanged(user));
     }
 
-    public boolean checkStatusHasBeenChanged(CachedUser user) {
+    private boolean checkStatusHasBeenChanged(CachedUser user) {
         SlackStatusPayload response = RestHelper.builder()
                                                 .withBaseUrl(configProperties.getSlackUri() + "/api/users.profile.get")
                                                 .withBearer(user.getSlackAccessToken())
@@ -347,7 +347,7 @@ public class SlackClient {
                        .orElse(MISSING_USER_ERROR);
     }
 
-    public CachedUser getCachedUser(String userId) {
+    private CachedUser getCachedUser(String userId) {
         return Optional.ofNullable(userCache.getIfPresent(userId))
                        .orElseThrow(() -> new UserNotFoundException(MISSING_USER_ERROR));
     }

@@ -5,7 +5,7 @@
     "domain": "test_domain"
   },
   "user": {
-    "id": "user1",
+    "id": "test_user_id",
     "username": "giorgi",
     "name": "giorgi",
     "team_id": "test_team_id"

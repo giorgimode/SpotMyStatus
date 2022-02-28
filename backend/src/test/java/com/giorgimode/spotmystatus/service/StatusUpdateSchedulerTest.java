@@ -2,7 +2,6 @@ package com.giorgimode.spotmystatus.service;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
@@ -87,45 +86,9 @@ class StatusUpdateSchedulerTest {
     void schedulerShouldHandlePollingUserException() throws InterruptedException {
         doNothing().when(statusUpdateScheduler).sleep(anyLong());
         mockExecutor();
-        when(slackClient.isUserOffline(cachedUser)).thenThrow(new RuntimeException());
+        when(slackClient.isUserLive(cachedUser)).thenThrow(new RuntimeException());
         statusUpdateScheduler.scheduleFixedDelayTask();
-        verify(slackClient).isUserOffline(cachedUser);
         verifyNoMoreInteractions(slackClient);
-        verifyNoInteractions(spotifyClient);
-    }
-
-    @Test
-    void schedulerShouldSkipPollingForDisabledUser() throws InterruptedException {
-        doNothing().when(statusUpdateScheduler).sleep(anyLong());
-        mockExecutor();
-        cachedUser.setDisabled(true);
-        userCache.put("user1", cachedUser);
-        statusUpdateScheduler.scheduleFixedDelayTask();
-        verifyNoInteractions(slackClient);
-        verifyNoInteractions(spotifyClient);
-    }
-
-    @Test
-    void schedulerShouldSkipPollingDuringOfflineHours() throws InterruptedException {
-        doNothing().when(statusUpdateScheduler).sleep(anyLong());
-        mockExecutor();
-        cachedUser.setSyncStartHour(cachedUser.getSyncStartHour() + 1);
-        cachedUser.setSyncEndHour(cachedUser.getSyncStartHour() + 2);
-        statusUpdateScheduler.scheduleFixedDelayTask();
-        verifyNoInteractions(slackClient);
-        verifyNoInteractions(spotifyClient);
-    }
-
-    @Test
-    void schedulerShouldSkipPollingDuringDefaultOfflineHours() throws InterruptedException {
-        doNothing().when(statusUpdateScheduler).sleep(anyLong());
-        mockExecutor();
-        spotMyStatusProperties.setSyncStartHr(cachedUser.getSyncStartHour() + 100);
-        spotMyStatusProperties.setSyncEndHr(cachedUser.getSyncStartHour() + 200);
-        cachedUser.setSyncStartHour(null);
-        cachedUser.setSyncEndHour(null);
-        statusUpdateScheduler.scheduleFixedDelayTask();
-        verifyNoInteractions(slackClient);
         verifyNoInteractions(spotifyClient);
     }
 
@@ -133,23 +96,11 @@ class StatusUpdateSchedulerTest {
     void schedulerShouldSkipPollingWhenUserIsOffline() throws InterruptedException {
         doNothing().when(statusUpdateScheduler).sleep(anyLong());
         mockExecutor();
-        when(slackClient.isUserOffline(cachedUser)).thenReturn(true);
+        when(slackClient.isUserLive(cachedUser)).thenReturn(false);
         statusUpdateScheduler.scheduleFixedDelayTask();
-        verify(slackClient).isUserOffline(cachedUser);
+        verify(slackClient).isUserLive(cachedUser);
         verifyNoMoreInteractions(slackClient);
         verifyNoInteractions(spotifyClient);
-    }
-
-    @Test
-    void schedulerShouldSkipPollingWhenStatusHasBeenManuallyChanged() throws InterruptedException {
-        doNothing().when(statusUpdateScheduler).sleep(anyLong());
-        mockExecutor();
-        when(slackClient.statusHasBeenManuallyChanged(cachedUser)).thenReturn(true);
-        statusUpdateScheduler.scheduleFixedDelayTask();
-        verify(slackClient).isUserOffline(cachedUser);
-        verify(slackClient).statusHasBeenManuallyChanged(cachedUser);
-        verifyNoMoreInteractions(slackClient);
-        verifyNoMoreInteractions(spotifyClient);
     }
 
     @Test
@@ -157,65 +108,18 @@ class StatusUpdateSchedulerTest {
         doNothing().when(statusUpdateScheduler).sleep(anyLong());
         mockExecutor();
         cachedUser.setCleaned(false);
+        when(slackClient.isUserLive(cachedUser)).thenReturn(true);
         SpotifyCurrentItem currentItem = mock(SpotifyCurrentItem.class);
-        when(currentItem.getIsPlaying()).thenReturn(false);
-        when(spotifyClient.getCurrentTrack(cachedUser)).thenReturn(Optional.of(currentItem));
+        when(spotifyClient.getCurrentLiveTrack(cachedUser)).thenReturn(Optional.empty());
         statusUpdateScheduler.scheduleFixedDelayTask();
-        verify(slackClient).isUserOffline(cachedUser);
-        verify(slackClient).statusHasBeenManuallyChanged(cachedUser);
+        verify(slackClient).isUserLive(cachedUser);
         verify(slackClient).cleanStatus(cachedUser);
-        verify(spotifyClient).getCurrentTrack(cachedUser);
+        verify(spotifyClient).getCurrentLiveTrack(cachedUser);
         verifyNoMoreInteractions(slackClient);
         verifyNoMoreInteractions(spotifyClient);
-        verify(currentItem).getIsPlaying();
         verifyNoMoreInteractions(currentItem);
     }
 
-    @Test
-    void schedulerShouldSkipStatusUpdateWhenSpotifyItemNotEnabled() throws InterruptedException {
-        doNothing().when(statusUpdateScheduler).sleep(anyLong());
-        mockExecutor();
-        cachedUser.setCleaned(false);
-        cachedUser.setSpotifyItems(List.of(SpotifyItem.TRACK));
-        SpotifyCurrentItem currentItem = mock(SpotifyCurrentItem.class);
-        when(currentItem.getIsPlaying()).thenReturn(true);
-        when(currentItem.getType()).thenReturn("episode");
-        when(spotifyClient.getCurrentTrack(cachedUser)).thenReturn(Optional.of(currentItem));
-        statusUpdateScheduler.scheduleFixedDelayTask();
-        verify(slackClient).isUserOffline(cachedUser);
-        verify(slackClient).statusHasBeenManuallyChanged(cachedUser);
-        verify(spotifyClient).getCurrentTrack(cachedUser);
-        verify(slackClient).cleanStatus(cachedUser);
-        verifyNoMoreInteractions(slackClient);
-        verifyNoMoreInteractions(spotifyClient);
-        verify(currentItem).getIsPlaying();
-        verify(currentItem, atLeastOnce()).getType();
-        verifyNoMoreInteractions(currentItem);
-    }
-
-    @Test
-    void schedulerShouldSkipStatusUpdateWhenSpotifyDeviceNotEnabled() throws InterruptedException {
-        doNothing().when(statusUpdateScheduler).sleep(anyLong());
-        mockExecutor();
-        cachedUser.setCleaned(false);
-        cachedUser.setSpotifyDeviceIds(List.of("device123"));
-        SpotifyCurrentItem currentItem = mock(SpotifyCurrentItem.class);
-        when(currentItem.getIsPlaying()).thenReturn(true);
-        SpotifyDevice spotifyDevice = new SpotifyDevice();
-        spotifyDevice.setId("device456");
-        when(currentItem.getDevice()).thenReturn(spotifyDevice);
-        when(spotifyClient.getCurrentTrack(cachedUser)).thenReturn(Optional.of(currentItem));
-        statusUpdateScheduler.scheduleFixedDelayTask();
-        verify(slackClient).isUserOffline(cachedUser);
-        verify(slackClient).statusHasBeenManuallyChanged(cachedUser);
-        verify(slackClient).cleanStatus(cachedUser);
-        verify(spotifyClient).getCurrentTrack(cachedUser);
-        verifyNoMoreInteractions(slackClient);
-        verifyNoMoreInteractions(spotifyClient);
-        verify(currentItem).getIsPlaying();
-        verify(currentItem).getDevice();
-        verifyNoMoreInteractions(currentItem);
-    }
 
     @Test
     void schedulerShouldUpdateStatus() throws InterruptedException {
@@ -224,22 +128,14 @@ class StatusUpdateSchedulerTest {
         cachedUser.setSpotifyItems(List.of(SpotifyItem.EPISODE));
         cachedUser.setSpotifyDeviceIds(List.of("device123"));
         SpotifyCurrentItem currentItem = mock(SpotifyCurrentItem.class);
-        when(currentItem.getIsPlaying()).thenReturn(true);
-        when(currentItem.getType()).thenReturn("episode");
         SpotifyDevice spotifyDevice = new SpotifyDevice();
         spotifyDevice.setId("device123");
-        when(currentItem.getDevice()).thenReturn(spotifyDevice);
-        when(spotifyClient.getCurrentTrack(cachedUser)).thenReturn(Optional.of(currentItem));
+        when(slackClient.isUserLive(cachedUser)).thenReturn(true);
+        when(spotifyClient.getCurrentLiveTrack(cachedUser)).thenReturn(Optional.of(currentItem));
         statusUpdateScheduler.scheduleFixedDelayTask();
-        verify(spotifyClient).getCurrentTrack(cachedUser);
-        verify(slackClient).isUserOffline(cachedUser);
-        verify(slackClient).statusHasBeenManuallyChanged(cachedUser);
         verify(slackClient).updateAndPersistStatus(cachedUser, currentItem);
         verifyNoMoreInteractions(slackClient);
         verifyNoMoreInteractions(spotifyClient);
-        verify(currentItem, atLeastOnce()).getType();
-        verify(currentItem).getIsPlaying();
-        verify(currentItem).getDevice();
         verifyNoMoreInteractions(currentItem);
     }
 
@@ -248,6 +144,7 @@ class StatusUpdateSchedulerTest {
         int syncStartHour = now.getHour();
         CachedUser cachedUser = CachedUser.builder()
                                           .id("user1")
+                                          .teamId("teamId")
                                           .slackAccessToken("testSlackToken")
                                           .slackBotToken("testSlackBotToken")
                                           .spotifyRefreshToken("testSpotifyRefreshToken")

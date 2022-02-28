@@ -76,6 +76,7 @@ public class UserInteractionService {
     public static final String SLACK_VIEW_UPDATE_URI = "/api/views.update";
     public static final String SLACK_VIEW_OPEN_URI = "/api/views.open";
     public static final String SLACK_VIEW_PUBLISH_URI = "/api/views.publish";
+    public static final String SLACK_VIEW_PUSH_URI = "/api/views.push";
     private static final String PLAIN_TEXT = "plain_text";
 
     private final UserRepository userRepository;
@@ -353,7 +354,7 @@ public class UserInteractionService {
 
     private void handleSpotifyLinks(InvocationModal payload, String userId) {
         InteractionModal slackModal = createSpotifyLinksView(payload, userId);
-        String response = slackClient.notifyUser("/api/views.push", slackModal, userId);
+        String response = slackClient.notifyUser(SLACK_VIEW_PUSH_URI, slackModal, userId);
         log.trace("Received response on spotify links block: {}", response);
     }
 
