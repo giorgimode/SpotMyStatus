@@ -103,6 +103,7 @@ public class SlackClient {
     private void persistNewUser(SlackToken slackToken, UUID state) {
         User user = new User();
         user.setId(slackToken.getId());
+        user.setTeamId(slackToken.getTeamId());
         user.setSlackAccessToken(slackToken.getAccessToken());
         user.setSlackBotToken(slackToken.getBotToken());
         user.setTimezoneOffsetSeconds(getUserTimezone(slackToken));

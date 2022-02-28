@@ -19,6 +19,7 @@ public final class SpotUtil {
     public static CachedUser toCachedUser(User user, String spotifyAccessToken) {
         return CachedUser.builder()
                          .id(user.getId())
+                         .teamId(user.getTeamId())
                          .slackAccessToken(user.getSlackAccessToken())
                          .slackBotToken(user.getSlackBotToken())
                          .spotifyRefreshToken(user.getSpotifyRefreshToken())

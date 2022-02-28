@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 public class CachedUser implements Serializable {
 
     private String id;
+    private String teamId;
     private Integer timezoneOffsetSeconds;
     private String slackStatus;
     private boolean manualStatus;
@@ -46,6 +47,7 @@ public class CachedUser implements Serializable {
         return MoreObjects
             .toStringHelper(this)
             .add("userId", id)
+            .add("teamId", teamId)
             .add("timezoneOffsetSeconds", timezoneOffsetSeconds)
             .add("slackStatus", slackStatus)
             .add("manualStatus", manualStatus)
@@ -71,6 +73,7 @@ public class CachedUser implements Serializable {
     public static final class CachedUserBuilder {
 
         private String id;
+        private String teamId;
         private Integer timezoneOffsetSeconds;
         private String slackAccessToken;
         private String slackBotToken;
@@ -88,6 +91,11 @@ public class CachedUser implements Serializable {
 
         public CachedUserBuilder id(String id) {
             this.id = id;
+            return this;
+        }
+
+        public CachedUserBuilder teamId(String teamId) {
+            this.teamId = teamId;
             return this;
         }
 
@@ -149,6 +157,7 @@ public class CachedUser implements Serializable {
         public CachedUser build() {
             CachedUser cachedUser = new CachedUser();
             cachedUser.setId(requireNonBlank(id));
+            cachedUser.setTeamId(requireNonBlank(teamId));
             cachedUser.setTimezoneOffsetSeconds(requireNonNull(timezoneOffsetSeconds));
             cachedUser.setSlackAccessToken(requireNonBlank(slackAccessToken));
             cachedUser.setSlackBotToken(requireNonBlank(slackBotToken));

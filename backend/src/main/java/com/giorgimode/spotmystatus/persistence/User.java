@@ -22,6 +22,9 @@ public class User implements Serializable {
     @Column(name = "id")
     private String id;
 
+    @Column(name = "team_id", nullable = false)
+    private String teamId;
+
     @Column(name = "slack_access_token", unique = true, nullable = false)
     private String slackAccessToken;
 
@@ -63,6 +66,7 @@ public class User implements Serializable {
         return MoreObjects
             .toStringHelper(this)
             .add("userId", id)
+            .add("teamId", teamId)
             .add("slackAccessToken", slackAccessToken)
             .add("slackBotToken", slackBotToken)
             .add("spotifyRefreshToken", spotifyRefreshToken)
