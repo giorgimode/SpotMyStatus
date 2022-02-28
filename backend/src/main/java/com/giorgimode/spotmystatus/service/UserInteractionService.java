@@ -77,7 +77,9 @@ public class UserInteractionService {
     public static final String SLACK_VIEW_OPEN_URI = "/api/views.open";
     public static final String SLACK_VIEW_PUBLISH_URI = "/api/views.publish";
     public static final String SLACK_VIEW_PUSH_URI = "/api/views.push";
-    private static final String PLAIN_TEXT = "plain_text";
+    static final String NO_TRACK_WARNING_MESSAGE = "Currently none of your teammates are listening to anything";
+    private static final String TEXT_TYPE_PLAIN = "plain_text";
+    private static final String TEXT_TYPE_MARKDOWN = "mrkdwn";
 
     private final UserRepository userRepository;
     private final SpotMyStatusProperties spotMyStatusProperties;
@@ -227,7 +229,7 @@ public class UserInteractionService {
         Option option = new Option();
         option.setValue(itemValue);
         Text text = new Text();
-        text.setType(PLAIN_TEXT);
+        text.setType(TEXT_TYPE_PLAIN);
         text.setTextValue(itemText);
         option.setText(text);
         return option;
@@ -346,7 +348,7 @@ public class UserInteractionService {
         block.setType("context");
         block.setBlockId(blockId);
         Element element = new Element();
-        element.setType("mrkdwn");
+        element.setType(TEXT_TYPE_MARKDOWN);
         element.setText(":warning: " + warningMessage);
         block.setElements(List.of(element));
         return block;
@@ -354,20 +356,22 @@ public class UserInteractionService {
 
     private void handleSpotifyLinks(InvocationModal payload, String userId) {
         InteractionModal slackModal = createSpotifyLinksView(payload, userId);
-        String response = slackClient.notifyUser(SLACK_VIEW_PUSH_URI, slackModal, userId);
+        String slackEndpoint = "home".equals(slackModal.getView().getType()) ? SLACK_VIEW_PUBLISH_URI : SLACK_VIEW_PUSH_URI;
+        String response = slackClient.notifyUser(slackEndpoint, slackModal, userId);
         log.trace("Received response on spotify links block: {}", response);
     }
 
     private InteractionModal createSpotifyLinksView(InvocationModal payload, String userId) {
         InteractionModal slackModal = new InteractionModal();
-        slackModal.setResponseAction("push");
         ModalView currentTracksView = getCurrentTracksView(userId);
         Text title = new Text();
-        title.setType(PLAIN_TEXT);
+        title.setType(TEXT_TYPE_PLAIN);
         title.setTextValue("Current tracks");
         currentTracksView.setTitle(title);
+        currentTracksView.setType(payload.getView().getType());
         slackModal.setTriggerId(payload.getTriggerId());
         slackModal.setView(currentTracksView);
+        slackModal.setUserId(userId);
         return slackModal;
     }
 
@@ -580,7 +584,7 @@ public class UserInteractionService {
         Block signupBlock = new Block();
         signupBlock.setType("section");
         Text signupText = new Text();
-        signupText.setType("mrkdwn");
+        signupText.setType(TEXT_TYPE_MARKDOWN);
         signupText.setTextValue(String.format("You can sign up <%s|here>", baseUri(spotMyStatusProperties.getRedirectUriScheme()) + "/api/start"));
         signupBlock.setText(signupText);
         return signupBlock;
@@ -591,7 +595,7 @@ public class UserInteractionService {
         noUserBlock.setType("header");
         Text text = new Text();
         text.setTextValue(":no_entry_sign: User not found");
-        text.setType(PLAIN_TEXT);
+        text.setType(TEXT_TYPE_PLAIN);
         text.setEmoji(true);
         noUserBlock.setText(text);
         return noUserBlock;
@@ -623,15 +627,15 @@ public class UserInteractionService {
         button.setType("button");
         button.setStyle("primary");
         Text buttonText = new Text();
-        buttonText.setType(PLAIN_TEXT);
+        buttonText.setType(TEXT_TYPE_PLAIN);
         buttonText.setTextValue("Save Changes");
         ConfirmDialog confirmDialog = new ConfirmDialog();
         Text confirmText = new Text();
-        confirmText.setType(PLAIN_TEXT);
+        confirmText.setType(TEXT_TYPE_PLAIN);
         confirmText.setTextValue("Would you like to submit changes?");
         confirmDialog.setText(confirmText);
         Text confirmButtonText = new Text();
-        confirmButtonText.setType(PLAIN_TEXT);
+        confirmButtonText.setType(TEXT_TYPE_PLAIN);
         confirmButtonText.setTextValue("Submit");
         confirmDialog.setConfirm(confirmButtonText);
         button.setConfirm(confirmDialog);
@@ -657,8 +661,18 @@ public class UserInteractionService {
                                    .flatMap(Optional::stream)
                                    .map(this::buildSpotifyTracksMessage)
                                    .collect(toList());
-        trackMessage.setBlocks(trackBlocks);
+        trackMessage.setBlocks(trackBlocks.isEmpty() ? createEmptyLinksBlock() : trackBlocks);
         return trackMessage;
+    }
+
+    private List<Block> createEmptyLinksBlock() {
+        Block trackBlock = new Block();
+        trackBlock.setType("section");
+        Text titleText = new Text();
+        titleText.setType(TEXT_TYPE_MARKDOWN);
+        titleText.setTextValue(NO_TRACK_WARNING_MESSAGE);
+        trackBlock.setText(titleText);
+        return List.of(trackBlock);
     }
 
     private Optional<SpotifyCurrentItem> getCurrentTrack(String userId) {
@@ -682,7 +696,7 @@ public class UserInteractionService {
         Block trackBlock = new Block();
         trackBlock.setType("section");
         Text titleText = new Text();
-        titleText.setType("mrkdwn");
+        titleText.setType(TEXT_TYPE_MARKDOWN);
         titleText.setTextValue(String.format("<%s|%s>", spotifyCurrentItem.getTrackUrl(), spotifyCurrentItem.generateFullTitle(150)));
         trackBlock.setText(titleText);
         Accessory imageAccessory = new Accessory();

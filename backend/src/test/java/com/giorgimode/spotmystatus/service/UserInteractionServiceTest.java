@@ -5,6 +5,7 @@ import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_INVALID
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_PURGE;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_SPOTIFY_LINKS;
 import static com.giorgimode.spotmystatus.helpers.SpotUtil.OBJECT_MAPPER;
+import static com.giorgimode.spotmystatus.service.UserInteractionService.NO_TRACK_WARNING_MESSAGE;
 import static com.giorgimode.spotmystatus.service.UserInteractionService.SLACK_VIEW_OPEN_URI;
 import static com.giorgimode.spotmystatus.service.UserInteractionService.SLACK_VIEW_PUBLISH_URI;
 import static com.giorgimode.spotmystatus.service.UserInteractionService.SLACK_VIEW_PUSH_URI;
@@ -231,8 +232,9 @@ class UserInteractionServiceTest {
         verify(slackClient).notifyUser(eq(SLACK_VIEW_PUSH_URI), interactionModalCaptor.capture(), eq(TEST_USER_ID));
         InteractionModal updateModal = interactionModalCaptor.getValue();
         assertNotNull(updateModal.getView());
-        assertEquals("push", updateModal.getResponseAction());
+        assertNotNull(updateModal.getView());
         assertEquals(triggerId, updateModal.getTriggerId());
+        assertEquals(NO_TRACK_WARNING_MESSAGE, updateModal.getView().getBlocks().get(0).getText().getTextValue());
     }
 
     @Test
