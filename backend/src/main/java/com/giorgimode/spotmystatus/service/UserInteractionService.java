@@ -13,6 +13,7 @@ import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_INVALID
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_PURGE;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_SPOTIFY_DEVICES;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_SPOTIFY_ITEMS;
+import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_SPOTIFY_LINKS;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_SUBMIT;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_SYNC_TOGGLE;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.EMOJI_REGEX;
@@ -302,6 +303,8 @@ public class UserInteractionService {
             purge(userId);
         } else if (BLOCK_ID_HOURS_INPUT.equals(userAction.getBlockId())) {
             handleHoursInput(payload, blocks);
+        } else if (BLOCK_ID_SPOTIFY_LINKS.equals(userAction.getBlockId())) {
+            handleSpotifyLinks(payload, userId);
         } else if (BLOCK_ID_SUBMIT.equals(userAction.getBlockId())) {
             handleSubmission(payload);
         }
@@ -346,6 +349,25 @@ public class UserInteractionService {
         element.setText(":warning: " + warningMessage);
         block.setElements(List.of(element));
         return block;
+    }
+
+    private void handleSpotifyLinks(InvocationModal payload, String userId) {
+        InteractionModal slackModal = createSpotifyLinksView(payload, userId);
+        String response = slackClient.notifyUser("/api/views.push", slackModal, userId);
+        log.trace("Received response on spotify links block: {}", response);
+    }
+
+    private InteractionModal createSpotifyLinksView(InvocationModal payload, String userId) {
+        InteractionModal slackModal = new InteractionModal();
+        slackModal.setResponseAction("push");
+        ModalView currentTracksView = getCurrentTracksView(userId);
+        Text title = new Text();
+        title.setType(PLAIN_TEXT);
+        title.setTextValue("Current tracks");
+        currentTracksView.setTitle(title);
+        slackModal.setTriggerId(payload.getTriggerId());
+        slackModal.setView(currentTracksView);
+        return slackModal;
     }
 
     private void updateSync(String userId, boolean disableSync) {
@@ -621,17 +643,21 @@ public class UserInteractionService {
     }
 
     public String getCurrentTracksMessage(String userId) {
+        ModalView currentTracksView = getCurrentTracksView(userId);
+        return safeWrite(currentTracksView).orElse("Failed to fetch the tracks");
+    }
+
+    private ModalView getCurrentTracksView(String userId) {
+        ModalView trackMessage = new ModalView();
         CachedUser cachedUser = getCachedUser(userId);
         List<User> users = userRepository.findAllByTeamId(cachedUser.getTeamId());
-        ModalView trackMessage = new ModalView();
         List<Block> trackBlocks = users.stream()
                                    .map(user -> getCurrentTrack(user.getId()))
                                    .flatMap(Optional::stream)
                                    .map(this::buildSpotifyTracksMessage)
                                    .collect(toList());
-
         trackMessage.setBlocks(trackBlocks);
-        return safeWrite(trackMessage).orElse("Failed to fetch the tracks");
+        return trackMessage;
     }
 
     private Optional<SpotifyCurrentItem> getCurrentTrack(String userId) {

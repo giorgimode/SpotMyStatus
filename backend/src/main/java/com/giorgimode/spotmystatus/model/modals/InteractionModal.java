@@ -21,4 +21,7 @@ public class InteractionModal {
 
     @JsonProperty("response_action")
     private String responseAction;
+
+    @JsonProperty("trigger_id")
+    private String triggerId;
 }

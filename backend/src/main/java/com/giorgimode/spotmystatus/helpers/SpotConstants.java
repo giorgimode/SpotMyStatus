@@ -17,6 +17,7 @@ public final class SpotConstants {
     public static final String BLOCK_ID_SYNC_TOGGLE = "sync_toggle_block";
     public static final String BLOCK_ID_SPOTIFY_ITEMS = "spotify_items_block";
     public static final String BLOCK_ID_HOURS_INPUT = "hours_input_block";
+    public static final String BLOCK_ID_SPOTIFY_LINKS = "spotify_links_block";
     public static final String BLOCK_ID_SPOTIFY_DEVICES = "spotify_devices_block";
     public static final String BLOCK_ID_PURGE = "purge_block";
     public static final String BLOCK_ID_INVALID_HOURS = "invalid_hours_block";

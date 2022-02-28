@@ -11,6 +11,20 @@
   },
   "blocks": [
     {
+      "type": "actions",
+      "block_id": "spotify_links_block",
+      "elements": [
+        {
+          "type": "button",
+          "text": {
+            "type": "plain_text",
+            "text": "Your team's current tracks :notes:",
+            "emoji": true
+          }
+        }
+      ]
+    },
+    {
       "type": "section",
       "block_id": "sync_toggle_block",
       "text": {
