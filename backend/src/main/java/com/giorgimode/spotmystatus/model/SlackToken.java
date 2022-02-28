@@ -17,6 +17,8 @@ public class SlackToken {
     @JsonProperty("authed_user")
     private SlackTokenPayload authUser;
 
+    private Team team;
+
     public String getScope() {
         return Optional.ofNullable(authUser).map(SlackTokenPayload::getScope).orElse(null);
     }
@@ -27,6 +29,18 @@ public class SlackToken {
 
     public String getId() {
         return Optional.ofNullable(authUser).map(SlackTokenPayload::getId).orElse(null);
+    }
+
+    public String getTeamId() {
+        return Optional.ofNullable(team).map(Team::getId).orElse(null);
+    }
+
+    @Getter
+    @Setter
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class Team {
+
+        private String id;
     }
 
     @Getter

@@ -15,13 +15,16 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
+@Slf4j
 public class CachedUser implements Serializable {
 
     private String id;
+    private String teamId;
     private Integer timezoneOffsetSeconds;
     private String slackStatus;
     private boolean manualStatus;
@@ -44,6 +47,7 @@ public class CachedUser implements Serializable {
         return MoreObjects
             .toStringHelper(this)
             .add("userId", id)
+            .add("teamId", teamId)
             .add("timezoneOffsetSeconds", timezoneOffsetSeconds)
             .add("slackStatus", slackStatus)
             .add("manualStatus", manualStatus)
@@ -69,6 +73,7 @@ public class CachedUser implements Serializable {
     public static final class CachedUserBuilder {
 
         private String id;
+        private String teamId;
         private Integer timezoneOffsetSeconds;
         private String slackAccessToken;
         private String slackBotToken;
@@ -86,6 +91,11 @@ public class CachedUser implements Serializable {
 
         public CachedUserBuilder id(String id) {
             this.id = id;
+            return this;
+        }
+
+        public CachedUserBuilder teamId(String teamId) {
+            this.teamId = teamId;
             return this;
         }
 
@@ -147,6 +157,7 @@ public class CachedUser implements Serializable {
         public CachedUser build() {
             CachedUser cachedUser = new CachedUser();
             cachedUser.setId(requireNonBlank(id));
+            cachedUser.setTeamId(requireNonBlank(teamId));
             cachedUser.setTimezoneOffsetSeconds(requireNonNull(timezoneOffsetSeconds));
             cachedUser.setSlackAccessToken(requireNonBlank(slackAccessToken));
             cachedUser.setSlackBotToken(requireNonBlank(slackBotToken));
@@ -178,5 +189,21 @@ public class CachedUser implements Serializable {
                            .map(SpotifyItem::from)
                            .collect(Collectors.toList());
         }
+    }
+
+    public boolean isItemEnabled(SpotifyCurrentItem currentItem) {
+        boolean isItemEnabled = getSpotifyItems().isEmpty() || getSpotifyItems().contains(SpotifyItem.from(currentItem.getType()));
+        if (!isItemEnabled) {
+            log.debug("Skipping syncing, since spotify item type {} is not enabled for user {}", currentItem.getType(), getId());
+        }
+        return isItemEnabled;
+    }
+
+    public boolean isPlayingDeviceEnabled(SpotifyCurrentItem spotifyCurrentItem) {
+        boolean isCurrentDeviceEnabled = getSpotifyDeviceIds().isEmpty() || getSpotifyDeviceIds().contains(spotifyCurrentItem.getDevice().getId());
+        if (!isCurrentDeviceEnabled) {
+            log.debug("Skipping syncing, since spotify device is not enabled for user {}", getId());
+        }
+        return isCurrentDeviceEnabled;
     }
 }

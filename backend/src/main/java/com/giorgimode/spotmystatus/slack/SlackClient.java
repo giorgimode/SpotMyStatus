@@ -24,6 +24,8 @@ import com.giorgimode.spotmystatus.persistence.User;
 import com.giorgimode.spotmystatus.persistence.UserRepository;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -101,6 +103,7 @@ public class SlackClient {
     private void persistNewUser(SlackToken slackToken, UUID state) {
         User user = new User();
         user.setId(slackToken.getId());
+        user.setTeamId(slackToken.getTeamId());
         user.setSlackAccessToken(slackToken.getAccessToken());
         user.setSlackBotToken(slackToken.getBotToken());
         user.setTimezoneOffsetSeconds(getUserTimezone(slackToken));
@@ -120,7 +123,7 @@ public class SlackClient {
         return response.getTimezoneOffset();
     }
 
-    public <T> T tryCall(Supplier<ResponseEntity<T>> responseTypeSupplier) {
+    private <T> T tryCall(Supplier<ResponseEntity<T>> responseTypeSupplier) {
         ResponseEntity<T> responseEntity;
         try {
             responseEntity = responseTypeSupplier.get();
@@ -144,7 +147,8 @@ public class SlackClient {
     private void tryUpdateAndPersistStatus(CachedUser user, SpotifyCurrentItem currentTrack) {
         long expiringInMs = currentTrack.getDurationMs() - currentTrack.getProgressMs() + configProperties.getExpirationOverhead();
         long expiringOnUnixTime = (System.currentTimeMillis() + expiringInMs) / 1000;
-        String newStatus = buildNewStatus(currentTrack);
+        // Slack only allows max 100character as a status
+        String newStatus = currentTrack.generateFullTitle(100);
         SlackStatusPayload statusPayload = new SlackStatusPayload(newStatus, getEmoji(currentTrack, user), expiringOnUnixTime);
         if (!newStatus.equalsIgnoreCase(user.getSlackStatus())) {
             if (updateStatus(user, statusPayload)) {
@@ -156,19 +160,6 @@ public class SlackClient {
         }
         user.setCleaned(false);
         user.setUpdatedAt(LocalDateTime.now());
-    }
-
-    /**
-     * Slack only allows max 100character as a status. In this case we first drop extra artists and also trim if necessary
-     */
-    private String buildNewStatus(SpotifyCurrentItem currentTrack) {
-        String newStatus = EPISODE.title().equals(currentTrack.getType()) ? "PODCAST: " : "";
-        newStatus += String.join(", ", currentTrack.getArtists()) + " - " + currentTrack.getTitle();
-        if (newStatus.length() > 100) {
-            String firstArtistOnly = currentTrack.getArtists().get(0);
-            newStatus = StringUtils.abbreviate(firstArtistOnly + " - " + currentTrack.getTitle(), 100);
-        }
-        return newStatus;
     }
 
     private String getEmoji(SpotifyCurrentItem currentTrack, CachedUser user) {
@@ -235,7 +226,7 @@ public class SlackClient {
         }
     }
 
-    public boolean isUserOffline(CachedUser user) {
+    private boolean isUserOffline(CachedUser user) {
         try {
             return checkIsUserOffline(user);
         } catch (HttpClientErrorException e) {
@@ -278,11 +269,11 @@ public class SlackClient {
         }
     }
 
-    public boolean statusHasBeenManuallyChanged(CachedUser user) {
+    private boolean statusHasBeenManuallyChanged(CachedUser user) {
         return tryCheck(() -> checkStatusHasBeenChanged(user));
     }
 
-    public boolean checkStatusHasBeenChanged(CachedUser user) {
+    private boolean checkStatusHasBeenChanged(CachedUser user) {
         SlackStatusPayload response = RestHelper.builder()
                                                 .withBaseUrl(configProperties.getSlackUri() + "/api/users.profile.get")
                                                 .withBearer(user.getSlackAccessToken())
@@ -356,9 +347,43 @@ public class SlackClient {
                        .orElse(MISSING_USER_ERROR);
     }
 
-    public CachedUser getCachedUser(String userId) {
+    private CachedUser getCachedUser(String userId) {
         return Optional.ofNullable(userCache.getIfPresent(userId))
                        .orElseThrow(() -> new UserNotFoundException(MISSING_USER_ERROR));
+    }
+
+    public boolean isUserLive(CachedUser cachedUser) {
+        if (cachedUser.isDisabled()) {
+            log.trace("Skipping the polling for {} since user account is disabled", cachedUser.getId());
+            return false;
+        }
+        if (isInOfflineHours(cachedUser)) {
+            log.trace("Skipping the polling for {} outside working hours", cachedUser.getId());
+            return false;
+        }
+        if (isUserOffline(cachedUser)) {
+            log.trace("Skipping the polling for {} since user is offline", cachedUser.getId());
+            return false;
+        }
+        if (statusHasBeenManuallyChanged(cachedUser)) {
+            log.trace("Skipping the polling for {} since status has been manually updated", cachedUser.getId());
+            return false;
+        }
+        return true;
+    }
+
+    private boolean isInOfflineHours(CachedUser user) {
+        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+        int currentTime = now.getHour() * 100 + now.getMinute();
+        Integer offlineStart = user.getSyncEndHour();
+        Integer offlineEnd = user.getSyncStartHour();
+        if (offlineStart == null || offlineEnd == null) {
+            offlineStart = configProperties.getSyncEndHr() * 100;
+            offlineEnd = configProperties.getSyncStartHr() * 100;
+        }
+
+        return offlineEnd > offlineStart && currentTime >= offlineStart && currentTime <= offlineEnd
+            || offlineEnd < offlineStart && (currentTime >= offlineStart || currentTime <= offlineEnd);
     }
 
     @PreDestroy

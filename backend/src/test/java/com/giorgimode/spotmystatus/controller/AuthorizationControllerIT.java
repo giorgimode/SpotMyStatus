@@ -18,6 +18,7 @@ import com.giorgimode.spotmystatus.model.CachedUser;
 import com.giorgimode.spotmystatus.model.SlackResponse;
 import com.giorgimode.spotmystatus.model.SlackToken;
 import com.giorgimode.spotmystatus.model.SlackToken.SlackTokenPayload;
+import com.giorgimode.spotmystatus.model.SlackToken.Team;
 import com.giorgimode.spotmystatus.model.SpotifyTokenResponse;
 import com.giorgimode.spotmystatus.persistence.User;
 import com.giorgimode.spotmystatus.persistence.UserRepository;
@@ -128,6 +129,9 @@ class AuthorizationControllerIT extends SpotMyStatusITBase {
         slackTokenPayload.setAccessToken(TEST_SLACK_ACCESS_TOKEN);
         slackToken.setBotToken(TEST_SLACK_BOT_TOKEN);
         slackTokenPayload.setId(newUserId);
+        Team team = new Team();
+        team.setId("team_123");
+        slackToken.setTeam(team);
         slackToken.setAuthUser(slackTokenPayload);
         String slackOauthUri = "https://fake-slack.com/api/oauth.v2.access?"
             + "code=slack_code_123"
@@ -149,8 +153,10 @@ class AuthorizationControllerIT extends SpotMyStatusITBase {
     @Test
     void shouldAuthorizeUserInSpotify() throws Exception {
         String testUserId = "new_user123";
+        String teamId = "team_123";
         CachedUser cachedUser = CachedUser.builder()
                                           .id(testUserId)
+                                          .teamId(teamId)
                                           .slackAccessToken("old_slack_token")
                                           .slackBotToken("old_slack_bot_token")
                                           .spotifyRefreshToken("old_spotify_refresh_token")

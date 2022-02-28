@@ -13,6 +13,7 @@ import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_INVALID
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_PURGE;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_SPOTIFY_DEVICES;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_SPOTIFY_ITEMS;
+import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_SPOTIFY_LINKS;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_SUBMIT;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_SYNC_TOGGLE;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.EMOJI_REGEX;
@@ -21,7 +22,6 @@ import static com.giorgimode.spotmystatus.helpers.SpotConstants.PAYLOAD_TYPE_BLO
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.PAYLOAD_TYPE_SUBMISSION;
 import static com.giorgimode.spotmystatus.helpers.SpotUtil.OBJECT_MAPPER;
 import static com.giorgimode.spotmystatus.helpers.SpotUtil.baseUri;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -29,9 +29,10 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.util.CollectionUtils.isEmpty;
-import com.giorgimode.spotmystatus.helpers.PropertyVault;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.giorgimode.spotmystatus.helpers.SpotMyStatusProperties;
 import com.giorgimode.spotmystatus.model.CachedUser;
+import com.giorgimode.spotmystatus.model.SpotifyCurrentItem;
 import com.giorgimode.spotmystatus.model.SpotifyItem;
 import com.giorgimode.spotmystatus.model.modals.Accessory;
 import com.giorgimode.spotmystatus.model.modals.Action;
@@ -44,6 +45,7 @@ import com.giorgimode.spotmystatus.model.modals.ModalView;
 import com.giorgimode.spotmystatus.model.modals.Option;
 import com.giorgimode.spotmystatus.model.modals.StateValue;
 import com.giorgimode.spotmystatus.model.modals.Text;
+import com.giorgimode.spotmystatus.persistence.User;
 import com.giorgimode.spotmystatus.persistence.UserRepository;
 import com.giorgimode.spotmystatus.slack.SlackClient;
 import com.giorgimode.spotmystatus.spotify.SpotifyClient;
@@ -59,9 +61,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-import javax.xml.bind.DatatypeConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -74,35 +73,32 @@ import org.springframework.web.server.ResponseStatusException;
 @Slf4j
 public class UserInteractionService {
 
-    private static final String SHA_256_ALGORITHM = "HmacSHA256";
     public static final String SLACK_VIEW_UPDATE_URI = "/api/views.update";
     public static final String SLACK_VIEW_OPEN_URI = "/api/views.open";
     public static final String SLACK_VIEW_PUBLISH_URI = "/api/views.publish";
-    private static final String PLAIN_TEXT = "plain_text";
+    public static final String SLACK_VIEW_PUSH_URI = "/api/views.push";
+    static final String NO_TRACK_WARNING_MESSAGE = "Currently none of your teammates are listening to anything";
+    private static final String TEXT_TYPE_PLAIN = "plain_text";
+    private static final String TEXT_TYPE_MARKDOWN = "mrkdwn";
 
     private final UserRepository userRepository;
     private final SpotMyStatusProperties spotMyStatusProperties;
     private final LoadingCache<String, CachedUser> userCache;
     private final SlackClient slackClient;
     private final SpotifyClient spotifyClient;
-    private final PropertyVault propertyVault;
 
     @Value("classpath:templates/slack_modal_view_template.json")
     private Resource resourceFile;
 
-    @Value("${signature_verification_enabled}")
-    private boolean shouldVerifySignature;
-
     public UserInteractionService(UserRepository userRepository,
         SpotMyStatusProperties spotMyStatusProperties, LoadingCache<String, CachedUser> userCache,
-        SlackClient slackClient, SpotifyClient spotifyClient, PropertyVault propertyVault) {
+        SlackClient slackClient, SpotifyClient spotifyClient) {
 
         this.userRepository = userRepository;
         this.spotMyStatusProperties = spotMyStatusProperties;
         this.userCache = userCache;
         this.slackClient = slackClient;
         this.spotifyClient = spotifyClient;
-        this.propertyVault = propertyVault;
     }
 
     public boolean isUserMissing(String userId) {
@@ -233,7 +229,7 @@ public class UserInteractionService {
         Option option = new Option();
         option.setValue(itemValue);
         Text text = new Text();
-        text.setType(PLAIN_TEXT);
+        text.setType(TEXT_TYPE_PLAIN);
         text.setTextValue(itemText);
         option.setText(text);
         return option;
@@ -310,6 +306,8 @@ public class UserInteractionService {
             purge(userId);
         } else if (BLOCK_ID_HOURS_INPUT.equals(userAction.getBlockId())) {
             handleHoursInput(payload, blocks);
+        } else if (BLOCK_ID_SPOTIFY_LINKS.equals(userAction.getBlockId())) {
+            handleSpotifyLinks(payload, userId);
         } else if (BLOCK_ID_SUBMIT.equals(userAction.getBlockId())) {
             handleSubmission(payload);
         }
@@ -350,10 +348,31 @@ public class UserInteractionService {
         block.setType("context");
         block.setBlockId(blockId);
         Element element = new Element();
-        element.setType("mrkdwn");
+        element.setType(TEXT_TYPE_MARKDOWN);
         element.setText(":warning: " + warningMessage);
         block.setElements(List.of(element));
         return block;
+    }
+
+    private void handleSpotifyLinks(InvocationModal payload, String userId) {
+        InteractionModal slackModal = createSpotifyLinksView(payload, userId);
+        String slackEndpoint = "home".equals(slackModal.getView().getType()) ? SLACK_VIEW_PUBLISH_URI : SLACK_VIEW_PUSH_URI;
+        String response = slackClient.notifyUser(slackEndpoint, slackModal, userId);
+        log.trace("Received response on spotify links block: {}", response);
+    }
+
+    private InteractionModal createSpotifyLinksView(InvocationModal payload, String userId) {
+        InteractionModal slackModal = new InteractionModal();
+        ModalView currentTracksView = getCurrentTracksView(userId);
+        Text title = new Text();
+        title.setType(TEXT_TYPE_PLAIN);
+        title.setTextValue("Current tracks");
+        currentTracksView.setTitle(title);
+        currentTracksView.setType(payload.getView().getType());
+        slackModal.setTriggerId(payload.getTriggerId());
+        slackModal.setView(currentTracksView);
+        slackModal.setUserId(userId);
+        return slackModal;
     }
 
     private void updateSync(String userId, boolean disableSync) {
@@ -521,39 +540,9 @@ public class UserInteractionService {
                        .map(actions -> actions.get(0));
     }
 
-    public boolean isValidSignature(Long timestamp, String signature, String bodyString) {
-        if (!shouldVerifySignature) {
-            return true;
-        }
-
-        return calculateSha256("v0:" + timestamp + ":" + bodyString)
-            .map(hashedString -> ("v0=" + hashedString).equalsIgnoreCase(signature))
-            .orElse(false);
-    }
-
-    private Optional<String> calculateSha256(String message) {
-        try {
-            Mac mac = Mac.getInstance(SHA_256_ALGORITHM);
-            mac.init(new SecretKeySpec(propertyVault.getSlack().getSigningSecret().getBytes(UTF_8), SHA_256_ALGORITHM));
-            byte[] hashedMessage = mac.doFinal(message.getBytes(UTF_8));
-            return Optional.of(DatatypeConverter.printHexBinary(hashedMessage));
-        } catch (Exception e) {
-            log.error("Failed to calculate hmac-sha256", e);
-            return Optional.empty();
-        }
-    }
-
-    public String pause(String userId) {
-        return slackClient.pause(userId);
-    }
-
-    public String resume(String userId) {
-        return slackClient.resume(userId);
-    }
-
-    public String purge(String userId) {
+    private void purge(String userId) {
         updateHomeTabForMissingUser(userId);
-        return slackClient.purge(userId);
+        slackClient.purge(userId);
     }
 
     public void updateHomeTabForMissingUser(String userId) {
@@ -595,7 +584,7 @@ public class UserInteractionService {
         Block signupBlock = new Block();
         signupBlock.setType("section");
         Text signupText = new Text();
-        signupText.setType("mrkdwn");
+        signupText.setType(TEXT_TYPE_MARKDOWN);
         signupText.setTextValue(String.format("You can sign up <%s|here>", baseUri(spotMyStatusProperties.getRedirectUriScheme()) + "/api/start"));
         signupBlock.setText(signupText);
         return signupBlock;
@@ -606,7 +595,7 @@ public class UserInteractionService {
         noUserBlock.setType("header");
         Text text = new Text();
         text.setTextValue(":no_entry_sign: User not found");
-        text.setType(PLAIN_TEXT);
+        text.setType(TEXT_TYPE_PLAIN);
         text.setEmoji(true);
         noUserBlock.setText(text);
         return noUserBlock;
@@ -638,15 +627,15 @@ public class UserInteractionService {
         button.setType("button");
         button.setStyle("primary");
         Text buttonText = new Text();
-        buttonText.setType(PLAIN_TEXT);
+        buttonText.setType(TEXT_TYPE_PLAIN);
         buttonText.setTextValue("Save Changes");
         ConfirmDialog confirmDialog = new ConfirmDialog();
         Text confirmText = new Text();
-        confirmText.setType(PLAIN_TEXT);
+        confirmText.setType(TEXT_TYPE_PLAIN);
         confirmText.setTextValue("Would you like to submit changes?");
         confirmDialog.setText(confirmText);
         Text confirmButtonText = new Text();
-        confirmButtonText.setType(PLAIN_TEXT);
+        confirmButtonText.setType(TEXT_TYPE_PLAIN);
         confirmButtonText.setTextValue("Submit");
         confirmDialog.setConfirm(confirmButtonText);
         button.setConfirm(confirmDialog);
@@ -656,5 +645,65 @@ public class UserInteractionService {
         Block divider = new Block();
         divider.setType("divider");
         blocks.add(index + 2, divider);
+    }
+
+    public String getCurrentTracksMessage(String userId) {
+        ModalView currentTracksView = getCurrentTracksView(userId);
+        return safeWrite(currentTracksView).orElse("Failed to fetch the tracks");
+    }
+
+    private ModalView getCurrentTracksView(String userId) {
+        ModalView trackMessage = new ModalView();
+        CachedUser cachedUser = getCachedUser(userId);
+        List<User> users = userRepository.findAllByTeamId(cachedUser.getTeamId());
+        List<Block> trackBlocks = users.stream()
+                                   .map(user -> getCurrentTrack(user.getId()))
+                                   .flatMap(Optional::stream)
+                                   .map(this::buildSpotifyTracksMessage)
+                                   .collect(toList());
+        trackMessage.setBlocks(trackBlocks.isEmpty() ? createEmptyLinksBlock() : trackBlocks);
+        return trackMessage;
+    }
+
+    private List<Block> createEmptyLinksBlock() {
+        Block trackBlock = new Block();
+        trackBlock.setType("section");
+        Text titleText = new Text();
+        titleText.setType(TEXT_TYPE_MARKDOWN);
+        titleText.setTextValue(NO_TRACK_WARNING_MESSAGE);
+        trackBlock.setText(titleText);
+        return List.of(trackBlock);
+    }
+
+    private Optional<SpotifyCurrentItem> getCurrentTrack(String userId) {
+        CachedUser cachedUser = getCachedUser(userId);
+        if (slackClient.isUserLive(cachedUser)) {
+            return spotifyClient.getCurrentLiveTrack(cachedUser);
+        }
+        return Optional.empty();
+    }
+
+    private Optional<String> safeWrite(ModalView trackMessage) {
+        try {
+            return Optional.of(OBJECT_MAPPER.writeValueAsString(trackMessage));
+        } catch (JsonProcessingException e) {
+            log.warn("Failed to parse class", e);
+            return Optional.empty();
+        }
+    }
+
+    private Block buildSpotifyTracksMessage(SpotifyCurrentItem spotifyCurrentItem) {
+        Block trackBlock = new Block();
+        trackBlock.setType("section");
+        Text titleText = new Text();
+        titleText.setType(TEXT_TYPE_MARKDOWN);
+        titleText.setTextValue(String.format("<%s|%s>", spotifyCurrentItem.getTrackUrl(), spotifyCurrentItem.generateFullTitle(150)));
+        trackBlock.setText(titleText);
+        Accessory imageAccessory = new Accessory();
+        imageAccessory.setType("image");
+        imageAccessory.setImageUrl(spotifyCurrentItem.getImageUrl());
+        imageAccessory.setAltText("Album Art");
+        trackBlock.setAccessory(imageAccessory);
+        return trackBlock;
     }
 }

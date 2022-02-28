@@ -19,6 +19,7 @@ public final class SpotUtil {
     public static CachedUser toCachedUser(User user, String spotifyAccessToken) {
         return CachedUser.builder()
                          .id(user.getId())
+                         .teamId(user.getTeamId())
                          .slackAccessToken(user.getSlackAccessToken())
                          .slackBotToken(user.getSlackBotToken())
                          .spotifyRefreshToken(user.getSpotifyRefreshToken())
@@ -40,6 +41,10 @@ public final class SpotUtil {
         return string;
     }
 
+    public static String baseUri() {
+        return baseUri("https");
+    }
+
     public static String baseUri(String scheme) {
         return ServletUriComponentsBuilder.fromCurrentContextPath().scheme(scheme).build().toUriString();
     }
@@ -47,6 +52,9 @@ public final class SpotUtil {
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static <T> T safeGet(Map map, String field) {
         try {
+            if (map == null) {
+                return null;
+            }
             Object o = map.get(field);
             if (o != null) {
                 return (T) o;

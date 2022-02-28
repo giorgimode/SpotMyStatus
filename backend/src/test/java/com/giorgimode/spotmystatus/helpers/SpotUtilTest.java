@@ -24,6 +24,7 @@ class SpotUtilTest {
     void shouldCacheUser() {
         User user = new User();
         user.setId("test_user_id");
+        user.setTeamId("test_team_id");
         user.setSlackAccessToken("test_slack_token");
         user.setSlackBotToken("test_slack_bot_token");
         user.setSpotifyRefreshToken("test_spotify_token");

@@ -2,9 +2,13 @@ package com.giorgimode.spotmystatus.service;
 
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_HOURS_INPUT;
 import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_INVALID_HOURS;
+import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_PURGE;
+import static com.giorgimode.spotmystatus.helpers.SpotConstants.BLOCK_ID_SPOTIFY_LINKS;
 import static com.giorgimode.spotmystatus.helpers.SpotUtil.OBJECT_MAPPER;
+import static com.giorgimode.spotmystatus.service.UserInteractionService.NO_TRACK_WARNING_MESSAGE;
 import static com.giorgimode.spotmystatus.service.UserInteractionService.SLACK_VIEW_OPEN_URI;
 import static com.giorgimode.spotmystatus.service.UserInteractionService.SLACK_VIEW_PUBLISH_URI;
+import static com.giorgimode.spotmystatus.service.UserInteractionService.SLACK_VIEW_PUSH_URI;
 import static com.giorgimode.spotmystatus.service.UserInteractionService.SLACK_VIEW_UPDATE_URI;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -12,17 +16,15 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import com.giorgimode.spotmystatus.TestUtils;
-import com.giorgimode.spotmystatus.helpers.OauthProperties;
-import com.giorgimode.spotmystatus.helpers.PropertyVault;
 import com.giorgimode.spotmystatus.helpers.SpotMyStatusProperties;
 import com.giorgimode.spotmystatus.model.CachedUser;
+import com.giorgimode.spotmystatus.model.SpotifyCurrentItem;
 import com.giorgimode.spotmystatus.model.SpotifyItem;
 import com.giorgimode.spotmystatus.model.modals.Block;
 import com.giorgimode.spotmystatus.model.modals.InteractionModal;
@@ -61,10 +63,10 @@ import org.springframework.web.server.ResponseStatusException;
 class UserInteractionServiceTest {
 
 
-    private static final String TEST_USER_ID = "user1";
+    private static final String TEST_USER_ID = "test_user_id";
+    private static final String TEST_TEAM_ID = "team_123";
     private LoadingCache<String, CachedUser> userCache;
     private CachedUser cachedUser;
-    private PropertyVault propertyVault;
     private UserInteractionService userInteractionService;
 
     @Mock
@@ -101,13 +103,12 @@ class UserInteractionServiceTest {
         spotMyStatusProperties.setDefaultSpotifyItems(Map.of("track", "Music", "episode", "Podcast"));
         spotMyStatusProperties.setDefaultEmojis(List.of("headphones", "musical_note", "notes"));
         spotMyStatusProperties.setRedirectUriScheme("https");
-        propertyVault = new PropertyVault();
-        userInteractionService = new UserInteractionService(userRepository, spotMyStatusProperties, userCache, slackClient, spotifyClient,
-            propertyVault);
+        spotMyStatusProperties.setMinSleepOnApiRateExceeded(1);
+        spotMyStatusProperties.setDefaultEmojis(List.of("notes"));
+        userInteractionService = new UserInteractionService(userRepository, spotMyStatusProperties, userCache, slackClient, spotifyClient);
 
         cachedUser = createCachedUser();
         ReflectionTestUtils.setField(userInteractionService, "resourceFile", resourceFile);
-        ReflectionTestUtils.setField(userInteractionService, "shouldVerifySignature", true);
     }
 
     @Test
@@ -133,7 +134,7 @@ class UserInteractionServiceTest {
         assertNotNull(sentModal.getView());
         assertNotNull(sentModal.getView().getType());
         assertNotNull(sentModal.getView().getSubmit());
-        assertEquals(17, sentModal.getView().getBlocks().size());
+        assertEquals(18, sentModal.getView().getBlocks().size());
     }
 
     @Test
@@ -156,6 +157,19 @@ class UserInteractionServiceTest {
         assertNotNull(updateModal.getView().getType());
         assertNotNull(updateModal.getView().getSubmit());
         assertEquals(17, updateModal.getView().getBlocks().size());
+    }
+
+    @Test
+    void shouldHandlePurgeAction() throws IOException {
+        String triggerId = "trigger123";
+        String modalContent = TestUtils.getFileContent("files/invocation_template.json");
+        InvocationModal invocationModal = OBJECT_MAPPER.readValue(modalContent, InvocationModal.class);
+        invocationModal.setTriggerId(triggerId);
+        invocationModal.getActions().get(0).setBlockId(BLOCK_ID_PURGE);
+        InteractionModal modal = userInteractionService.handleUserInteraction(invocationModal);
+        assertNull(modal);
+        verify(slackClient).notifyUser(eq(SLACK_VIEW_PUBLISH_URI), interactionModalCaptor.capture(), eq(TEST_USER_ID));
+        verify(slackClient).purge(TEST_USER_ID);
     }
 
     @Test
@@ -207,6 +221,43 @@ class UserInteractionServiceTest {
     }
 
     @Test
+    void shouldHandleSpotifyLinksAction() throws IOException {
+        String triggerId = "trigger123";
+        String modalContent = TestUtils.getFileContent("files/invocation_template.json");
+        InvocationModal invocationModal = OBJECT_MAPPER.readValue(modalContent, InvocationModal.class);
+        invocationModal.setTriggerId(triggerId);
+        invocationModal.getActions().get(0).setBlockId(BLOCK_ID_SPOTIFY_LINKS);
+        InteractionModal modal = userInteractionService.handleUserInteraction(invocationModal);
+        assertNull(modal);
+        verify(slackClient).notifyUser(eq(SLACK_VIEW_PUSH_URI), interactionModalCaptor.capture(), eq(TEST_USER_ID));
+        InteractionModal updateModal = interactionModalCaptor.getValue();
+        assertNotNull(updateModal.getView());
+        assertNotNull(updateModal.getView());
+        assertEquals(triggerId, updateModal.getTriggerId());
+        assertEquals(NO_TRACK_WARNING_MESSAGE, updateModal.getView().getBlocks().get(0).getText().getTextValue());
+    }
+
+    @Test
+    void shouldHandleSpotifyLinksCommand() throws IOException {
+        User storedUser = new User();
+        storedUser.setId(TEST_USER_ID);
+        when(slackClient.isUserLive(cachedUser)).thenReturn(true);
+        SpotifyCurrentItem currentItem = new SpotifyCurrentItem();
+        currentItem.setArtists(List.of("Swans"));
+        when(spotifyClient.getCurrentLiveTrack(cachedUser)).thenReturn(Optional.of(currentItem));
+        when(userRepository.findAllByTeamId(TEST_TEAM_ID)).thenReturn(List.of(storedUser));
+        String triggerId = "trigger123";
+        String modalContent = TestUtils.getFileContent("files/invocation_template.json");
+        InvocationModal invocationModal = OBJECT_MAPPER.readValue(modalContent, InvocationModal.class);
+        invocationModal.setTriggerId(triggerId);
+        invocationModal.getActions().get(0).setBlockId(BLOCK_ID_SPOTIFY_LINKS);
+        String response = userInteractionService.getCurrentTracksMessage(TEST_USER_ID);
+        assertNotNull(response);
+        verify(slackClient).isUserLive(cachedUser);
+        verify(spotifyClient).getCurrentLiveTrack(cachedUser);
+    }
+
+    @Test
     void shouldHandleSubmission() throws IOException {
         mockTemplateResource();
         User storedUser = new User();
@@ -225,7 +276,7 @@ class UserInteractionServiceTest {
         assertNull(sentHomeTab.getHash());
         assertNotNull(sentHomeTab.getView().getType());
         assertNull(sentHomeTab.getView().getSubmit());
-        assertEquals(19, sentHomeTab.getView().getBlocks().size());
+        assertEquals(20, sentHomeTab.getView().getBlocks().size());
         assertEquals(List.of("guitar"), cachedUser.getEmojis());
         assertEquals(700, cachedUser.getSyncStartHour());
         assertEquals(2000, cachedUser.getSyncEndHour());
@@ -243,52 +294,6 @@ class UserInteractionServiceTest {
     }
 
     @Test
-    void shouldSkipValidatingSignature() {
-        ReflectionTestUtils.setField(userInteractionService, "shouldVerifySignature", false);
-        assertTrue(userInteractionService.isValidSignature(null, null, null));
-    }
-
-    @Test
-    void shouldValidateSignature() {
-        ReflectionTestUtils.setField(userInteractionService, "shouldVerifySignature", true);
-        OauthProperties slackVault = new OauthProperties();
-        slackVault.setSigningSecret("signing_secret_123");
-        propertyVault.setSlack(slackVault);
-        assertTrue(userInteractionService.isValidSignature(1609327004L, "v0=5e26f6dd3afeb452b6faab9e9269c6e6c76716c5f8b7664c9661d0c6fb800add",
-            "{ \"type\": \"block_actions\", \"api_app_id\": \"test_api_id\", \"token\": \"test_token123\" }"));
-    }
-
-    @Test
-    void shouldNotValidateSignature() {
-        ReflectionTestUtils.setField(userInteractionService, "shouldVerifySignature", true);
-        OauthProperties slackVault = new OauthProperties();
-        slackVault.setSigningSecret("signing_secret_123");
-        propertyVault.setSlack(slackVault);
-        assertFalse(userInteractionService.isValidSignature(1609327004L, "v0=5e26f6dd3afeb452b6faab9e9269c6e6c76716c5f8b7664c9661d0c6fb800addX",
-            "{ \"type\": \"block_actions\", \"api_app_id\": \"test_api_id\", \"token\": \"test_token123\" }"));
-    }
-
-
-    @Test
-    void pause() {
-        userInteractionService.pause(TEST_USER_ID);
-        verify(slackClient).pause(TEST_USER_ID);
-    }
-
-    @Test
-    void resume() {
-        userInteractionService.resume(TEST_USER_ID);
-        verify(slackClient).resume(TEST_USER_ID);
-    }
-
-    @Test
-    void purge() {
-        userInteractionService.purge(TEST_USER_ID);
-        verify(slackClient).purge(TEST_USER_ID);
-        verify(slackClient).notifyUser(eq(SLACK_VIEW_PUBLISH_URI), any(), any());
-    }
-
-    @Test
     void shouldUpdateHomeTabForUnknownUser() {
         userInteractionService.updateHomeTab("unknown_user");
         verifyNoInteractions(slackClient);
@@ -301,13 +306,14 @@ class UserInteractionServiceTest {
         int syncStartHour = now.getHour();
         CachedUser cachedUser = CachedUser.builder()
                                           .id(TEST_USER_ID)
+                                          .teamId(TEST_TEAM_ID)
                                           .slackAccessToken("testSlackToken")
                                           .slackBotToken("testSlackNotToken")
                                           .spotifyRefreshToken("testSpotifyRefreshToken")
                                           .spotifyAccessToken("testSpotifyAccessToken")
                                           .timezoneOffsetSeconds(0)
                                           .syncStartHour(syncStartHour * 100)
-                                          .syncEndHour((syncStartHour + 1) * 100)
+                                          .syncEndHour(syncStartHour * 100 + 30)
                                           .build();
         userCache.put(TEST_USER_ID, cachedUser);
         return cachedUser;

@@ -27,6 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.giorgimode.spotmystatus.SpotMyStatusITBase;
 import com.giorgimode.spotmystatus.SpotMyStatusITBase.SpotMyStatusTestConfig;
 import com.giorgimode.spotmystatus.TestUtils;
+import com.giorgimode.spotmystatus.command.CommandHandler;
 import com.giorgimode.spotmystatus.model.CachedUser;
 import com.giorgimode.spotmystatus.model.SlackEvent;
 import com.giorgimode.spotmystatus.model.SlackEvent.Event;
@@ -70,6 +71,9 @@ class UserInteractionControllerIT extends SpotMyStatusITBase {
     private UserInteractionService userInteractionService;
 
     @Autowired
+    private CommandHandler commandHandler;
+
+    @Autowired
     private UserRepository userRepository;
 
     @Autowired
@@ -83,7 +87,7 @@ class UserInteractionControllerIT extends SpotMyStatusITBase {
 
     @Test
     void shouldHandleInvalidSignature() throws Exception {
-        ReflectionTestUtils.setField(userInteractionService, "shouldVerifySignature", true);
+        ReflectionTestUtils.setField(commandHandler, "shouldVerifySignature", true);
         mockMvc.perform(post("/api/slack/command")
             .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
             .header("X-Slack-Request-Timestamp", "1609327004")
@@ -93,7 +97,7 @@ class UserInteractionControllerIT extends SpotMyStatusITBase {
                .andExpect(status().isOk())
                .andExpect(content().string("Failed to validate signature. "
                    + "If the issue persists, please contact support at https://localhost/support"));
-        ReflectionTestUtils.setField(userInteractionService, "shouldVerifySignature", false);
+        ReflectionTestUtils.setField(commandHandler, "shouldVerifySignature", false);
     }
 
     @Test
@@ -173,7 +177,7 @@ class UserInteractionControllerIT extends SpotMyStatusITBase {
             .queryParam("user_id", testUserId)
             .queryParam("text", "purge"))
                .andExpect(status().isOk())
-               .andExpect(content().string("User data has been purged. To sign up again visit the <https://localhost|app home page>"));
+               .andExpect(content().string("User data has been purged. To sign up again, visit the <https://localhost|app home page>"));
 
         verify(restTemplate).postForEntity(eq("https://fake-slack.com/api/users.profile.set"), any(HttpEntity.class), eq(
             SlackStatusPayload.class));
