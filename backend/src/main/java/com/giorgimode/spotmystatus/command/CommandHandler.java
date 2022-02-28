@@ -65,6 +65,7 @@ public class CommandHandler {
     private String generateDefaultResponse() {
         return "- `pause`/`play` to temporarily pause or resume status updates"
             + "\n- `purge` to purge all user data. Fresh signup will be needed to use the app again"
+            + "\n- `links` to see what your teammates are listening to"
             + "\n- " + signupMessage();
     }
 
