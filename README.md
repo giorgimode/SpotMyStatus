@@ -14,7 +14,8 @@ or to add a ticket [directly in the issue tracker](https://giorgimode.myjetbrain
 Following parameters can be passed to `/spotme` command in Slack
 * /spotme pause
 * /spotme play
-* /spotme purge
+* /spotme purge  _#to remove user completely_
+* /spotme links _#to see what your team is listening to_
 * /spotme help
 
 ## SpotMyStatus customization
