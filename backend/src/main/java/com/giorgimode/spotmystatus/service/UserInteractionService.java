@@ -59,6 +59,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -655,12 +656,15 @@ public class UserInteractionService {
     private ModalView getCurrentTracksView(String userId) {
         ModalView trackMessage = new ModalView();
         CachedUser cachedUser = getCachedUser(userId);
-        List<User> users = userRepository.findAllByTeamId(cachedUser.getTeamId());
-        List<Block> trackBlocks = users.stream()
-                                   .map(user -> getCurrentTrack(user.getId()))
-                                   .flatMap(Optional::stream)
-                                   .map(this::buildSpotifyTracksMessage)
-                                   .collect(toList());
+        List<User> teammates = userRepository.findAllByTeamId(cachedUser.getTeamId());
+        List<Block> trackBlocks = teammates.stream()
+                                       .map(teammate -> getCachedUser(teammate.getId()))
+                                       .filter(Objects::nonNull)
+                                       .filter(slackClient::isUserLive)
+                                       .map(spotifyClient::getCurrentLiveTrack)
+                                       .flatMap(Optional::stream)
+                                       .map(this::buildSpotifyTracksMessage)
+                                       .collect(toList());
         trackMessage.setBlocks(trackBlocks.isEmpty() ? createEmptyLinksBlock() : trackBlocks);
         return trackMessage;
     }
@@ -673,14 +677,6 @@ public class UserInteractionService {
         titleText.setTextValue(NO_TRACK_WARNING_MESSAGE);
         trackBlock.setText(titleText);
         return List.of(trackBlock);
-    }
-
-    private Optional<SpotifyCurrentItem> getCurrentTrack(String userId) {
-        CachedUser cachedUser = getCachedUser(userId);
-        if (slackClient.isUserLive(cachedUser)) {
-            return spotifyClient.getCurrentLiveTrack(cachedUser);
-        }
-        return Optional.empty();
     }
 
     private Optional<String> safeWrite(ModalView trackMessage) {
