@@ -1,6 +1,6 @@
 plugins {
-    id 'org.springframework.boot' version '2.3.4.RELEASE'
-    id 'io.spring.dependency-management' version '1.0.10.RELEASE'
+    id 'org.springframework.boot' version '3.2.2'
+    id 'io.spring.dependency-management' version '1.1.4'
     id 'java'
 }
 
@@ -12,7 +12,7 @@ repositories {
 }
 
 version = "${baseVersion}"
-sourceCompatibility = '11'
+sourceCompatibility = JavaVersion.VERSION_21
 
 configurations {
     compileOnly {
@@ -32,17 +32,18 @@ test {
 
 dependencies {
     implementation(
+            'com.github.ben-manes.caffeine:caffeine:3.1.8',
+            'com.google.guava:guava:33.0.0-jre',
+            'org.apache.commons:commons-lang3:3.14.0',
+            'jakarta.annotation:jakarta.annotation-api:2.1.1',
             'org.springframework.boot:spring-boot-starter-validation',
             'org.springframework.boot:spring-boot-starter-validation',
             'org.springframework.boot:spring-boot-starter-data-jpa',
             'org.springframework.boot:spring-boot-starter-cache',
-            'com.github.ben-manes.caffeine:caffeine:2.8.5',
             'org.liquibase:liquibase-core',
             'org.postgresql:postgresql',
-            'com.google.guava:guava:29.0-jre',
             'org.springframework.boot:spring-boot-starter-actuator',
             'org.springframework.boot:spring-boot-starter-data-rest',
-            'org.apache.commons:commons-lang3:3.11',
             'org.springframework.boot:spring-boot-starter-actuator',
             'org.springframework.boot:spring-boot-starter-security',
             'org.springframework.boot:spring-boot-starter-oauth2-client',
@@ -54,13 +55,11 @@ dependencies {
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
     annotationProcessor 'org.projectlombok:lombok'
 
-    testCompile 'org.junit.jupiter:junit-jupiter:5.7.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.1'
     testImplementation 'com.h2database:h2'
-    testImplementation 'org.mockito:mockito-junit-jupiter:3.5.15'
-    testImplementation('org.springframework.boot:spring-boot-starter-test') {
-        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
-        exclude group: 'junit', module: 'junit'
-    }
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.10.0'
+    testImplementation('org.springframework.boot:spring-boot-starter-test')
 }
 
 task copyTask(type: Copy) {
