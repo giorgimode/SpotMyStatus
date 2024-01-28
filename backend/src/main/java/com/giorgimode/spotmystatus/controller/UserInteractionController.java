@@ -40,7 +40,7 @@ public class UserInteractionController {
         @RequestParam("user_id") String userId,
         @RequestParam(value = "text", required = false) String command,
         @RequestParam(value = "trigger_id", required = false) String triggerId,
-        @RequestBody String body) {
+        @RequestBody(required = false) String body) {
 
         log.trace("Received a slack command {}", body);
         CommandMetaData commandMetaData = CommandMetaData.builder()

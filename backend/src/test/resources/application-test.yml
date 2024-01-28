@@ -8,11 +8,15 @@ spring:
     url: jdbc:h2:mem:testdb
     password: password
     username: sa
-    continue-on-error: true
   liquibase:
     enabled: false
   thymeleaf:
     enabled: false
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.mail.MailSenderAutoConfiguration
+  sql:
+    init:
+      continue-on-error: true
 
 secret:
   spotify:

@@ -46,7 +46,6 @@ spring:
     database: POSTGRESQL
     open-in-view: false
   datasource:
-    platform: postgres
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
@@ -70,6 +69,9 @@ spring:
     enabled: true
     suffix: ".html"
     prefix: "classpath:/static/"
+  sql:
+    init:
+      platform: postgres
 
 email:
   sender: ${SMTP_MAIL_SENDER}
@@ -92,12 +94,7 @@ management:
       enabled: true
     prometheus:
       enabled: true
-  metrics:
-    export:
-      prometheus:
+  prometheus:
+    metrics:
+      export:
         enabled: true
-    web:
-      server:
-        request:
-          autotime:
-            enabled: true

@@ -62,7 +62,7 @@ class AuthorizationControllerIT extends SpotMyStatusITBase {
         String expectedLocation = "https://fake-slack.com/oauth/v2/authorize?scope=chat:write,commands"
             + "&user_scope=users:read,users.profile:read,users.profile:write"
             + "&redirect_uri=https://localhost/api/slack/redirect&client_id=slack_client123";
-        mockMvc.perform(get("/api/start/"))
+        mockMvc.perform(get("/api/start"))
                .andExpect(status().is(302))
                .andExpect(header().string("Location", expectedLocation));
     }

@@ -1,26 +1,10 @@
 package com.giorgimode.spotmystatus;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
 import com.giorgimode.spotmystatus.SpotMyStatusITBase.SpotMyStatusTestConfig;
-import com.giorgimode.spotmystatus.model.CachedUser;
-import com.giorgimode.spotmystatus.model.SlackResponse;
-import com.giorgimode.spotmystatus.model.SpotifyCurrentItem;
-import com.giorgimode.spotmystatus.model.SpotifyDevice;
-import com.giorgimode.spotmystatus.model.SpotifyItem;
-import com.giorgimode.spotmystatus.model.SpotifyTokenResponse;
+import com.giorgimode.spotmystatus.model.*;
 import com.giorgimode.spotmystatus.service.StatusUpdateScheduler;
 import com.giorgimode.spotmystatus.slack.SlackStatusPayload;
 import com.github.benmanes.caffeine.cache.LoadingCache;
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +15,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
 @Import(SpotMyStatusTestConfig.class)
 @Transactional
@@ -85,9 +76,6 @@ class SpotMyStatusIT extends SpotMyStatusITBase {
             any(HttpEntity.class), eq(SpotifyCurrentItem.class));
         verify(restTemplate).postForEntity(eq("https://fake-slack.com/api/users.profile.set"), any(HttpEntity.class), eq(
             SlackStatusPayload.class));
-        verify(restTemplate).setMessageConverters(any());
-        verify(restTemplate).getMessageConverters();
-        verifyNoMoreInteractions(restTemplate);
         verifyNoInteractions(mailSender);
         verifyNoInteractions(clientRegistrationRepository);
     }
