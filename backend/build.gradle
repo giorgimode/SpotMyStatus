@@ -41,7 +41,7 @@ dependencies {
             'org.postgresql:postgresql',
             'com.google.guava:guava:29.0-jre',
             'org.springframework.boot:spring-boot-starter-actuator',
-            'org.springframework.boot:spring-boot-starter-data-rest',
+            'org.springframework.boot:spring-boot-starter-web',
             'org.apache.commons:commons-lang3:3.11',
             'org.springframework.boot:spring-boot-starter-actuator',
             'org.springframework.boot:spring-boot-starter-security',
