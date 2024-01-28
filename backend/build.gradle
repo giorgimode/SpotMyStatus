@@ -43,7 +43,7 @@ dependencies {
             'org.liquibase:liquibase-core',
             'org.postgresql:postgresql',
             'org.springframework.boot:spring-boot-starter-actuator',
-            'org.springframework.boot:spring-boot-starter-data-rest',
+            'org.springframework.boot:spring-boot-starter-web',
             'org.springframework.boot:spring-boot-starter-actuator',
             'org.springframework.boot:spring-boot-starter-security',
             'org.springframework.boot:spring-boot-starter-oauth2-client',
@@ -62,12 +62,12 @@ dependencies {
     testImplementation('org.springframework.boot:spring-boot-starter-test')
 }
 
-task copyTask(type: Copy) {
-    from '../frontend/.'
-    into 'build/resources/main/static'
-}
-
 bootJar {
-    dependsOn copyTask
+    doLast {
+        copy {
+            from '../frontend/.'
+            into 'build/resources/main/static'
+        }
+    }
 }
 project.archivesBaseName = 'spotmystatus'
