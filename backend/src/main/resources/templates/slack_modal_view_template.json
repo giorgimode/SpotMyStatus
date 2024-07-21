@@ -12,7 +12,7 @@
   "blocks": [
     {
       "type": "context",
-      "block_id": "spotmystatus_uri_block",
+      "block_id": "donation_uri_block",
       "elements": [
         {
           "type": "mrkdwn",
