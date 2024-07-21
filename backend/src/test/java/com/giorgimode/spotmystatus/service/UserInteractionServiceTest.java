@@ -134,7 +134,7 @@ class UserInteractionServiceTest {
         assertNotNull(sentModal.getView());
         assertNotNull(sentModal.getView().getType());
         assertNotNull(sentModal.getView().getSubmit());
-        assertEquals(18, sentModal.getView().getBlocks().size());
+        assertEquals(20, sentModal.getView().getBlocks().size());
     }
 
     @Test
@@ -276,7 +276,7 @@ class UserInteractionServiceTest {
         assertNull(sentHomeTab.getHash());
         assertNotNull(sentHomeTab.getView().getType());
         assertNull(sentHomeTab.getView().getSubmit());
-        assertEquals(20, sentHomeTab.getView().getBlocks().size());
+        assertEquals(22, sentHomeTab.getView().getBlocks().size());
         assertEquals(List.of("guitar"), cachedUser.getEmojis());
         assertEquals(700, cachedUser.getSyncStartHour());
         assertEquals(2000, cachedUser.getSyncEndHour());
