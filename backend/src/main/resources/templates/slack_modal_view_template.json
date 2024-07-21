@@ -11,6 +11,19 @@
   },
   "blocks": [
     {
+      "type": "context",
+      "block_id": "spotmystatus_uri_block",
+      "elements": [
+        {
+          "type": "mrkdwn",
+          "text": "<https://ko-fi.com/B0B280GTH/|_*:gift: Donate*_>"
+        }
+      ]
+    },
+    {
+      "type": "divider"
+    },
+    {
       "type": "actions",
       "block_id": "spotify_links_block",
       "elements": [
@@ -250,14 +263,6 @@
       "type": "actions",
       "block_id": "purge_block",
       "elements": [
-        {
-          "type": "button",
-          "text": {
-            "type": "plain_text",
-            "text": "Donate"
-          },
-          "url": "https://ko-fi.com/B0B280GTH"
-        },
         {
           "type": "button",
           "action_id": "purge_action",
