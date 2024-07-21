@@ -252,6 +252,14 @@
       "elements": [
         {
           "type": "button",
+          "text": {
+            "type": "plain_text",
+            "text": "Donate"
+          },
+          "url": "https://ko-fi.com/B0B280GTH"
+        },
+        {
+          "type": "button",
           "action_id": "purge_action",
           "text": {
             "type": "plain_text",
