@@ -23,12 +23,12 @@ public class WebpageController {
     @PostMapping("/support")
     public String handleSupport(@ModelAttribute SubmissionForm supportSubmission, ModelMap model) {
         log.info("Received support message regarding {}", supportSubmission.getSubject());
-        try {
-            mailService.sendEmail(supportSubmission);
-            model.addAttribute("formResult", "success");
-        } catch (Exception e) {
-            model.addAttribute("formResult", "fail");
-        }
+//        try {
+//            mailService.sendEmail(supportSubmission);
+//            model.addAttribute("formResult", "success");
+//        } catch (Exception e) {
+//            model.addAttribute("formResult", "fail");
+//        }
         return "support";
     }
 
