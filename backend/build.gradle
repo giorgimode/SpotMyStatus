@@ -46,7 +46,6 @@ dependencies {
             'org.springframework.boot:spring-boot-starter-actuator',
             'org.springframework.boot:spring-boot-starter-security',
             'org.springframework.boot:spring-boot-starter-oauth2-client',
-            'org.springframework.boot:spring-boot-starter-mail',
             'org.springframework.boot:spring-boot-starter-thymeleaf',
     )
 

@@ -17,7 +17,6 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,9 +26,6 @@ import org.springframework.web.client.RestTemplate;
 @ActiveProfiles("test")
 @Transactional
 public abstract class SpotMyStatusITBase {
-
-    @MockBean
-    protected JavaMailSender mailSender;
 
     @MockBean
     protected ClientRegistrationRepository clientRegistrationRepository;

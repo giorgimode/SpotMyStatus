@@ -85,7 +85,6 @@ class SpotMyStatusIT extends SpotMyStatusITBase {
             any(HttpEntity.class), eq(SpotifyCurrentItem.class));
         verify(restTemplate).postForEntity(eq("https://fake-slack.com/api/users.profile.set"), any(HttpEntity.class), eq(
             SlackStatusPayload.class));
-        verifyNoInteractions(mailSender);
         verifyNoInteractions(clientRegistrationRepository);
     }
 

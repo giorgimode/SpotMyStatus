@@ -51,29 +51,11 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
     driverClassName: org.postgresql.Driver
-  mail:
-    host: ${SMTP_HOST}
-    username: ${SMTP_USERNAME}
-    password: ${SMTP_PASSWORD}
-    properties:
-      mail:
-        smtp:
-          auth: true
-          port: ${SMTP_PORT:587}
-          starttls:
-            enable: true
-            required: true
-        transport:
-          protocol: smtp
   thymeleaf:
     cache: false
     enabled: true
     suffix: ".html"
     prefix: "classpath:/static/"
-
-email:
-  sender: ${SMTP_MAIL_SENDER}
-  recipient: ${SMTP_MAIL_RECIPIENT}
 
 server:
   error:

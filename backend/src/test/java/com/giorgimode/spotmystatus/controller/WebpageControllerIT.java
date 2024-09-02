@@ -1,7 +1,5 @@
 package com.giorgimode.spotmystatus.controller;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
@@ -12,7 +10,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import com.giorgimode.spotmystatus.SpotMyStatusITBase;
 import com.giorgimode.spotmystatus.SpotMyStatusITBase.SpotMyStatusTestConfig;
-import com.giorgimode.spotmystatus.model.SubmissionForm;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -47,42 +44,6 @@ class WebpageControllerIT extends SpotMyStatusITBase {
         mockMvc = MockMvcBuilders.standaloneSetup(webpageController)
                                  .setViewResolvers(viewResolver)
                                  .build();
-    }
-
-    @Test
-    void shouldHandleSupport() throws Exception {
-        String testSubject = "Mastering Invisibility";
-        SubmissionForm submissionForm = new SubmissionForm("Drax", "drax@thedestroyer.com", testSubject,
-            "I'm invisible");
-        mockMvc.perform(post("/support/")
-            .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-            .flashAttr("submissionForm", submissionForm))
-               .andExpect(status().isOk())
-               .andExpect(forwardedUrl("support.html"))
-               .andExpect(model().attribute("formResult", "success"))
-               .andReturn();
-
-        verify(mailSender).send(mailCaptor.capture());
-        SimpleMailMessage sentMessage = mailCaptor.getValue();
-        assertNotNull(sentMessage);
-        assertEquals("sender@test.com", sentMessage.getFrom());
-        assertNotNull(sentMessage.getTo());
-        assertEquals("recipient@test.com", sentMessage.getTo()[0]);
-        assertEquals(testSubject, sentMessage.getSubject());
-        assertEquals("Name: Drax\nEmail: drax@thedestroyer.com\n\nI'm invisible", sentMessage.getText());
-    }
-
-    @Test
-    void shouldReturnSupportFailResult() throws Exception {
-        doThrow(new RuntimeException()).when(mailSender).send(any(SimpleMailMessage.class));
-        mockMvc.perform(post("/support/")
-            .contentType(MediaType.APPLICATION_FORM_URLENCODED))
-               .andExpect(status().isOk())
-               .andExpect(forwardedUrl("support.html"))
-               .andExpect(model().attribute("formResult", "fail"))
-               .andReturn();
-
-        verify(mailSender).send(mailCaptor.capture());
     }
 
     @Test
