@@ -35,58 +35,9 @@
   <div class="container">
     <div class="row">
       <div class="col-xl-9 mx-auto">
-        <div id="successMessage" class="alert alert-success" role="alert" th:if="${formResult} == 'success'">
-         Submission successful!
-        </div>
-        <div id="failMessage" class="alert alert-danger" role="alert"  th:if="${formResult} == 'fail'">
-          Something went wrong. Please try again
-        </div>
         <div class="well well-sm">
           <h1 class="text-center">Contact us</h1>
-          <form class="offset-md-3" action="/support" method="post">
-            <fieldset>
-              <!-- Name input-->
-              <div class="form-group">
-                <div class="col-md-9">
-                  <input id="name" name="name" type="text" placeholder="Your name" class="form-control">
-                </div>
-              </div>
-
-              <!-- Email input-->
-              <div class="form-group">
-                <div class="col-md-9">
-                  <input id="email" required="required" name="email" type="email" placeholder="Your email" class="form-control">
-                </div>
-              </div>
-
-              <!-- Message body -->
-              <div class="form-group">
-                <div class="col-md-9">
-                  <select id="subject" name="subject" class="form-control" required="required">
-                    <option disabled selected value style="display:none"> -- select the subject --</option>
-                    <option value="General Support">General Support</option>
-                    <option value="Suggestions">Suggestions</option>
-                    <option value="Bug Report">Bug Report</option>
-                  </select>
-                </div>
-              </div>
-
-              <!-- Message body -->
-              <div class="form-group">
-                <div class="col-md-9">
-                  <textarea required="required" class="form-control" id="message" name="message" placeholder="Please enter your message here..."
-                            rows="5"></textarea>
-                </div>
-              </div>
-
-              <!-- Form actions -->
-              <div class="form-group">
-                <div class="col-md-12">
-                  <button type="submit" class="btn btn-primary btn-lg offset-3">Submit</button>
-                </div>
-              </div>
-            </fieldset>
-          </form>
+          <div class="offset-md-3">Contact us at spotmystatus@gmail.com</div>
         </div>
       </div>
     </div>
