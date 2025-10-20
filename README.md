@@ -1,12 +1,15 @@
-# SpotMyStatus
+# ========== Deprecation Notice ==========
+Free version of the app has been deprecated and migrated to [spotmystatus.com](https://spotmystatus.com/)
+
+# SpotMyStatus 
 Slack App updating user's status with currently playing song from Spotify
 
-### [App Home page](https://spotmystatus.giomo.de)
+### [App Home page](https://spotmystatus.com)
 
-[![here](/frontend/img/spotify-slack.png?raw=true)](https://spotmystatus.giomo.de)
+[![here](/frontend/img/spotify-slack.png?raw=true)](https://spotmystatus.com)
 
 ## Bugs, Feature Requests
-Feel free to create a support ticket [via home page](https://spotmystatus.giomo.de/support) 
+Feel free to create a support ticket [via home page](https://spotmystatus.com/support) 
 or to add a ticket [directly in the issue tracker](https://giorgimode.myjetbrains.com/youtrack/issues/SMS)
 
 
