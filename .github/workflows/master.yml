@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - deprecate
 
 jobs:
   build:
