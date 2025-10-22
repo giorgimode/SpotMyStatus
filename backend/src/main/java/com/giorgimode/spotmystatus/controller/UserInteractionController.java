@@ -2,7 +2,6 @@ package com.giorgimode.spotmystatus.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.giorgimode.spotmystatus.command.CommandHandler;
-import com.giorgimode.spotmystatus.command.CommandMetaData;
 import com.giorgimode.spotmystatus.helpers.SlackModalConverter;
 import com.giorgimode.spotmystatus.model.SlackEvent;
 import com.giorgimode.spotmystatus.model.modals.InvocationModal;
@@ -29,23 +28,10 @@ public class UserInteractionController {
 
     @PostMapping(value = "/slack/command", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public String receiveSlackCommand(
-            @RequestHeader("X-Slack-Request-Timestamp") Long timestamp,
-            @RequestHeader("X-Slack-Signature") String signature,
-            @RequestParam("user_id") String userId,
-            @RequestParam(value = "text", required = false) String command,
-            @RequestParam(value = "trigger_id", required = false) String triggerId,
             @RequestBody String body) {
 
         log.trace("Received a slack command {}", body);
-        CommandMetaData commandMetaData = CommandMetaData.builder()
-                .body(body)
-                .signature(signature)
-                .command(command)
-                .triggerId(triggerId)
-                .userId(userId)
-                .timestamp(timestamp)
-                .build();
-        return commandHandler.handleCommand(commandMetaData);
+        return commandHandler.handleCommand();
     }
 
     @PostMapping(value = "/slack/events", consumes = MediaType.APPLICATION_JSON_VALUE)
