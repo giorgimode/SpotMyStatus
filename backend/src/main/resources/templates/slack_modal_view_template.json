@@ -11,234 +11,10 @@
   },
   "blocks": [
     {
-      "type": "context",
-      "block_id": "donation_uri_block",
-      "elements": [
-        {
-          "type": "mrkdwn",
-          "text": "<https://ko-fi.com/B0B280GTH/|_*:gift: Donate to keep the app alive*_>"
-        }
-      ]
-    },
-    {
-      "type": "divider"
-    },
-    {
-      "type": "actions",
-      "block_id": "spotify_links_block",
-      "elements": [
-        {
-          "type": "button",
-          "text": {
-            "type": "plain_text",
-            "text": "Your team's current tracks :notes:",
-            "emoji": true
-          }
-        }
-      ]
-    },
-    {
-      "type": "section",
-      "block_id": "sync_toggle_block",
+      "type": "header",
       "text": {
-        "type": "mrkdwn",
-        "text": " "
-      },
-      "accessory": {
-        "type": "checkboxes",
-        "options": [
-          {
-            "text": {
-              "type": "mrkdwn",
-              "text": "Toggle Status Syncing On/Off"
-            },
-            "value": "sync_on"
-          }
-        ],
-        "action_id": "checkboxes-action",
-        "initial_options": [
-          {
-            "value": "sync_on",
-            "text": {
-              "type": "mrkdwn",
-              "text": "Toggle Status Syncing On/Off"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "type": "input",
-      "block_id": "spotify_items_block",
-      "label": {
         "type": "plain_text",
-        "text": "Pick at least one of these Spotify items to sync"
-      },
-      "element": {
-        "type": "checkboxes",
-        "initial_options": [
-          {
-            "text": {
-              "type": "plain_text",
-              "text": "Music"
-            },
-            "value": "track"
-          }
-        ],
-        "options": [
-          {
-            "text": {
-              "type": "plain_text",
-              "text": "Music"
-            },
-            "value": "track"
-          },
-          {
-            "text": {
-              "type": "plain_text",
-              "text": "Podcast"
-            },
-            "value": "episode"
-          }
-        ]
-      }
-    },
-    {
-      "type": "divider"
-    },
-    {
-      "type": "input",
-      "dispatch_action": true,
-      "block_id": "emoji_input_block",
-      "optional": true,
-      "element": {
-        "type": "plain_text_input",
-        "placeholder": {
-          "type": "plain_text",
-          "text": "guitar, the_horns",
-          "emoji": true
-        }
-      },
-      "label": {
-        "type": "plain_text",
-        "text": "Add new emojis to rotate through",
-        "emoji": true
-      }
-    },
-    {
-      "type": "input",
-      "block_id": "emoji_list_block",
-      "label": {
-        "type": "plain_text",
-        "text": " "
-      },
-      "element": {
-        "type": "multi_static_select",
-        "placeholder": {
-          "type": "plain_text",
-          "text": "Your emojis"
-        },
-        "initial_options": [
-          {
-            "value": "musical_note",
-            "text": {
-              "type": "plain_text",
-              "text": ":musical_note:"
-            }
-          },
-          {
-            "value": "headphones",
-            "text": {
-              "type": "plain_text",
-              "text": ":headphones:"
-            }
-          },
-          {
-            "text": {
-              "type": "plain_text",
-              "text": ":notes:"
-            },
-            "value": "notes"
-          }
-        ],
-        "options": [
-          {
-            "text": {
-              "type": "plain_text",
-              "text": ":musical_note:"
-            },
-            "value": "musical_note"
-          },
-          {
-            "text": {
-              "type": "plain_text",
-              "text": ":headphones:"
-            },
-            "value": "headphones"
-          },
-          {
-            "text": {
-              "type": "plain_text",
-              "text": ":notes:"
-            },
-            "value": "notes"
-          }
-        ]
-      }
-    },
-    {
-      "type": "divider"
-    },
-    {
-      "type": "section",
-      "text": {
-        "type": "mrkdwn",
-        "text": "*Sync status between these hours*"
-      }
-    },
-    {
-      "type": "actions",
-      "block_id": "hours_input_block",
-      "elements": [
-        {
-          "type": "timepicker",
-          "initial_time": "07:00",
-          "placeholder": {
-            "type": "plain_text",
-            "text": "Start time",
-            "emoji": true
-          },
-          "action_id": "start_hour-action"
-        },
-        {
-          "type": "timepicker",
-          "initial_time": "20:00",
-          "placeholder": {
-            "type": "plain_text",
-            "text": "End time",
-            "emoji": true
-          },
-          "action_id": "end_hour-action"
-        }
-      ]
-    },
-    {
-      "type": "divider"
-    },
-    {
-      "type": "input",
-      "block_id": "spotify_devices_block",
-      "label": {
-        "type": "plain_text",
-        "text": "Choose Spotify devices to sync from"
-      },
-      "element": {
-        "type": "multi_static_select",
-        "placeholder": {
-          "type": "plain_text",
-          "text": "Select devices"
-        },
-        "options": []
+        "text": "Hey there! SpotMyStatus has a new home"
       }
     },
     {
@@ -246,58 +22,99 @@
       "type": "divider"
     },
     {
-      "type": "divider"
-    },
-    {
-      "type": "divider"
-    },
-    {
-      "type": "header",
+      "type": "section",
       "text": {
-        "type": "plain_text",
-        "text": "Danger Zone",
-        "emoji": true
+        "type": "mrkdwn",
+        "text": ":rocket: <https://spotmystatus.com|*Sign up*> to enjoy rich features:"
       }
     },
     {
-      "type": "actions",
-      "block_id": "purge_block",
+      "type": "rich_text",
       "elements": [
         {
-          "type": "button",
-          "action_id": "purge_action",
-          "text": {
-            "type": "plain_text",
-            "text": "Delete My User"
-          },
-          "confirm": {
-            "title": {
-              "type": "plain_text",
-              "text": "Are you sure?"
-            },
-            "text": {
-              "type": "mrkdwn",
-              "text": "Access tokens granted by you will be revoked. You'll have to sign up again to use the app"
-            },
-            "confirm": {
-              "type": "plain_text",
-              "text": "Delete My User"
+          "type": "rich_text_section",
+          "elements": [
+            {
+              "type": "text",
+              "text": " "
             }
-          },
-          "style": "danger"
-        }
-      ]
-    },
-    {
-      "type": "divider"
-    },
-    {
-      "type": "context",
-      "block_id": "spotmystatus_uri_block",
-      "elements": [
+          ]
+        },
         {
-          "type": "mrkdwn",
-          "text": "<http://spotmystatus.giomo.de/|_*SpotMyStatus Home*_>"
+          "type": "rich_text_list",
+          "style": "bullet",
+          "indent": 0,
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "Custom emojis for your Slack status "
+                },
+                {
+                  "type": "emoji",
+                  "name": "the_horns"
+                }
+              ]
+            },
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "Beautiful dashboard for more insights into your listening habits"
+                },
+                {
+                  "type": "emoji",
+                  "name": "chart_with_upwards_trend"
+                }
+              ]
+            },
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "Updates for both music and podcasts "
+                },
+                {
+                  "type": "emoji",
+                  "name": "notes"
+                },
+                {
+                  "type": "emoji",
+                  "name": "studio_microphone"
+                }
+              ]
+            },
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "Custom sync schedule (e.g. 9am to 6pm) "
+                },
+                {
+                  "type": "emoji",
+                  "name": "clock1"
+                }
+              ]
+            },
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "See what your teammates on Spotmystatus are listening to "
+                },
+                {
+                  "type": "emoji",
+                  "name": "headphones"
+                }
+              ]
+            }
+          ]
         }
       ]
     }
