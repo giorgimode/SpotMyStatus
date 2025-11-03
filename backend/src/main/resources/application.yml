@@ -1,56 +1,4 @@
-secret:
-  spotify:
-    client_id: ${SPOTIFY_CLIENT_ID}
-    client_secret: ${SPOTIFY_CLIENT_SECRET}
-  slack:
-    client_id: ${SLACK_CLIENT_ID}
-    client_secret: ${SLACK_CLIENT_SECRET}
-    signing_secret: ${SIGNING_SECRET}
-
-spotmystatus:
-  redirect_uri_scheme: ${REDIRECT_URI_SCHEME:https}
-  slack_uri: https://slack.com
-  spotify_account_uri: https://accounts.spotify.com
-  spotify_api_uri: https://api.spotify.com
-  core_pool_size: ${CORE_POOL_SIZE:0}
-  polling_rate: ${SPOTIFY_POLLING_RATE:10000}
-  min_sleep_on_api_rate_exceeded: ${API_RATE_EXCEEDED_MIN_SLEEP:2000}
-  timeout: ${POLLING_TIMEOUT:2000}
-  sync_start_hr: ${SYNC_START:8}
-  sync_end_hr: ${SYNC_END:19}
-  expiration_overhead: ${EXPIRATION_OVERHEAD:120000}
-  shutdown_cleanup_enabled: ${SHUTDOWN_CLEANUP_ENABLED:false}
-  default_emojis:
-    - "headphones"
-    - "musical_note"
-    - "notes"
-  podcast_emoji: "headphones"
-  default_spotify_items:
-    track: "Music"
-    episode: "Podcast"
-
-signature_verification_enabled: ${SIGNATURE_VERIFICATION_ENABLED:true}
-admin_users: ${ADMIN_USERS}
-
 spring:
-  security:
-    oauth2:
-      client:
-        registration:
-          google:
-            client-id: ${GOOGLE_CLIENT_ID}
-            client-secret: ${GOOGLE_CLIENT_SECRET}
-  liquibase:
-    change-log: classpath:/db/changelog/liquibase-changelog-master.xml
-  jpa:
-    database: POSTGRESQL
-    open-in-view: false
-  datasource:
-    platform: postgres
-    url: ${SPRING_DATASOURCE_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
-    driverClassName: org.postgresql.Driver
   thymeleaf:
     cache: false
     enabled: true
@@ -68,18 +16,4 @@ management:
     web:
       base-path: /admin
       exposure:
-        include: ${ACTUATOR_ENDPOINTS:env,health,info,metrics,mappings,prometheus,heapdump,threaddump,loggers}
-  endpoint:
-    metrics:
-      enabled: true
-    prometheus:
-      enabled: true
-  metrics:
-    export:
-      prometheus:
-        enabled: true
-    web:
-      server:
-        request:
-          autotime:
-            enabled: true
+        include: ${ACTUATOR_ENDPOINTS:health}
